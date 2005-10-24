@@ -26,9 +26,11 @@
 # spread out over the entire source repository.
 
 mmsp2 -a u-boot-mmsp2 linux-mmsp2
-gp2x -a u-boot-gp2x linux-gp2x
+open2x -a u-boot-open2x linux-open2x
+libs -a libs-gp2x
+SDL -a libs-gp2x/SDL
 
 u-boot-mmsp2 u-boot-mmsp2
 linux-mmsp2 linux-mmsp2
-u-boot-gp2x u-boot-gp2x
+u-boot-open2x u-boot-open2x
 libs-gp2x libs-gp2x
