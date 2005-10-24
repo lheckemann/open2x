@@ -1,0 +1,365 @@
+/*
+ *  linux/kernel/drivers/char/mmsp2_ts.c
+ *
+ *  MMSP2 Touch panel controller driver
+ *
+ * (C) Copyright 2004
+ * DIGNSYS Inc. < www.dignsys.com >
+ * Kane Ahn < hbahn@dignsys.com >
+ *
+ *  Based on s3c2410_ts.c
+ */
+
+#include <linux/module.h>
+#include <linux/types.h>
+#include <linux/wait.h>
+#include <linux/fs.h>
+#include <linux/sched.h>
+#include <linux/poll.h>
+#include <linux/delay.h>
+#include <linux/miscdevice.h>
+#include <linux/init.h>
+#include <linux/compiler.h>
+#include <linux/interrupt.h>
+
+#include <asm/io.h>
+#include <asm/uaccess.h>
+#include <asm/irq.h>
+#include <asm/hardware.h>
+
+struct mmsp2_ts_event {
+	unsigned short pressure;
+	unsigned short x;
+	unsigned short y;
+	unsigned short pad;
+};
+
+enum pen_state {
+	PEN_UP = 0,
+	PEN_DOWN ,
+	PEN_SAMPLE
+};
+
+static int count=0;
+enum pen_state pen_data=PEN_UP;
+
+static unsigned short SwitchConvert(unsigned short sw)
+{
+	unsigned short val = 0;
+
+	printk("***.[%s:%d]-%s : \n",__FUNCTION__,__LINE__,__FILE__);
+#if 0
+	if((sw & TPC_XP_SW) == TPC_XP_SW)
+		val &= ~TPC_XP_SW;
+	else
+		val |= TPC_XP_SW;
+	if((sw & TPC_YP_SW) == TPC_YP_SW)
+		val &= ~TPC_YP_SW;
+	else
+		val |= TPC_YP_SW;
+	if((sw & TPC_XM_SW) == TPC_XM_SW)
+		val |= TPC_XM_SW;
+	else
+		val &= ~TPC_XM_SW;
+	if((sw & TPC_YM_SW) == TPC_YM_SW)
+		val |= TPC_YM_SW;
+	else
+		val &= ~TPC_YM_SW;
+	if((sw & TPC_PU_SW) == TPC_PU_SW)
+		val &= ~TPC_PU_SW;
+	else
+		val |= TPC_PU_SW;
+#else
+	if((sw & TPC_XP_SW) == TPC_XP_SW)
+		val = (unsigned char)(val & ~TPC_XP_SW);
+	else
+		val = (unsigned char)(val | TPC_XP_SW);
+	if((sw & TPC_YP_SW) == TPC_YP_SW)
+		val = (unsigned char)(val & ~TPC_YP_SW);
+	else
+		val = (unsigned char)(val | TPC_YP_SW);
+	if((sw & TPC_XM_SW) == TPC_XM_SW)
+		val = (unsigned char)(val | TPC_XM_SW);
+	else
+		val = (unsigned char)(val & ~TPC_XM_SW);
+	if((sw & TPC_YM_SW) == TPC_YM_SW)
+		val = (unsigned char)(val | TPC_YM_SW);
+	else
+		val = (unsigned char)(val & ~TPC_YM_SW);
+	if((sw & TPC_PU_SW) == TPC_PU_SW)
+		val = (unsigned char)(val & ~TPC_PU_SW);
+	else
+		val = (unsigned char)(val | TPC_PU_SW);
+#endif
+
+	printk("***.[%s:%d]-%s : switch(%x)\n",__FUNCTION__,__LINE__,__FILE__,val);
+	return val;
+}
+
+static void ts_interrupt(int irq, void *dev_id, struct pt_regs *regs)
+{
+	unsigned short i;
+	unsigned short x, y;
+
+	printk("***.[%s:%d]-%s : IRQ(%d)\n",__FUNCTION__,__LINE__,__FILE__,irq);
+	i = TPC_INTR & 0x001f;
+	switch(pen_data) {
+	case PEN_UP:
+	printk("***.[%s:%d]-%s : PEN_UP\n",__FUNCTION__,__LINE__,__FILE__);
+		if(i & TPC_PEN_DWN_INT_FLAG) {
+			pen_data = PEN_DOWN;
+			TPC_INTR = 0;
+			TPC_INTR = (TPC_INTR & 0xFFE0) | 0x001F;
+			TPC_CNTL = 0;
+		}
+		break;
+	case PEN_DOWN:
+	printk("***.[%s:%d]-%s : PEN_DOWN\n",__FUNCTION__,__LINE__,__FILE__);
+		if(i & TPC_U1_CMP_INT_FLAG) {
+			pen_data = PEN_UP;
+//			TPC_INTR = TPC_PEN_DAT_INT_EN;
+			TPC_INTR = TPC_PEN_DWN_INT_EN /*| TPC_PEN_DAT_INT_EN*/;
+			TPC_INTR = (TPC_INTR & 0xFFE0) | 0x001F;
+		}
+		if(i & TPC_PEN_DAT_INT_FLAG) {
+			TPC_INTR = (TPC_INTR & 0xFFE0) | TPC_PEN_DAT_INT_FLAG;
+			x = TPC_X_VALUE & 0x03FF;
+			y = TPC_Y_VALUE & 0x03FF;
+			printk("ts_interrupt(): [%d,%d]\n", x, y);
+		}
+		break;
+	}
+}
+
+static ssize_t mmsp2_ts_read(struct file *filp, char *buf, size_t count, loff_t *l)
+{
+	struct mmsp2_ts_event ts;
+
+	if(pen_data == PEN_DOWN) {
+		ts.pressure = 1;
+		ts.pad = 0;
+
+	printk("***.[%s:%d]-%s : pen_data(%x)\n",__FUNCTION__,__LINE__,__FILE__,pen_data);
+		// Read ADC X
+		udelay(10);
+		TPC_U1_VALUE = SwitchConvert(0) << 11;
+		udelay(10);
+		GPIOCOUT = (GPIOCOUT & ~(1<<12)) | (TPC_GPIO_XM_ON<<12);
+		GPIOCOUT = (GPIOCOUT & ~(1<<13)) | (TPC_GPIO_YM_OFF<<13);
+		GPIOCOUT = (GPIOCOUT & ~(1<<14)) | (TPC_GPIO_nXP_ON<<14);
+		GPIOCOUT = (GPIOCOUT & ~(1<<15)) | (TPC_GPIO_nYP_OFF<<15);
+		udelay(10);
+		TPC_CNTL = 0;
+		TPC_CH_SEL = (TPC_CH_SEL & ~(0x7 << 9)) | (TPC_ADC_CH_1 << 9);
+		TPC_CNTL = (TPC_CNTL & ~0x1E00) | TPC_U1_CH_EN;
+		TPC_CNTL |= (1<<15) | (1<<14) | (1<<4);
+
+		while(!(TPC_CNTL & 0x01));
+		while(TPC_CNTL & 0x01);
+		ts.x = TPC_U1_VALUE & 0x03FF;
+		TPC_CNTL &= ~0x1E00;
+		TPC_CNTL = 0;
+
+		// Read ADC Y
+		udelay(10);
+		TPC_U1_VALUE = SwitchConvert(0) << 11;
+		udelay(10);
+		GPIOCOUT = (GPIOCOUT & ~(1<<12)) | (TPC_GPIO_XM_OFF<<12);
+		GPIOCOUT = (GPIOCOUT & ~(1<<13)) | (TPC_GPIO_YM_ON<<13);
+		GPIOCOUT = (GPIOCOUT & ~(1<<14)) | (TPC_GPIO_nXP_OFF<<14);
+		GPIOCOUT = (GPIOCOUT & ~(1<<15)) | (TPC_GPIO_nYP_ON<<15);
+		udelay(10);
+		TPC_CNTL = 0;
+		TPC_CH_SEL = (TPC_CH_SEL & ~(0x7 << 9)) | (TPC_ADC_CH_0 << 9);
+		TPC_CNTL = (TPC_CNTL & ~0x1E00) | TPC_U1_CH_EN;
+		TPC_CNTL |= (1<<15) | (1<<14) | (1<<4);
+
+		while(!(TPC_CNTL & 0x01));
+		while(TPC_CNTL & 0x01);
+		ts.y = TPC_U1_VALUE & 0x03FF;
+		TPC_CNTL &= ~0x1E00;
+		TPC_CNTL = 0;
+
+		TPC_U1_VALUE = SwitchConvert(TPC_PU_SW /*| TPC_YM_SW*/) << 11;
+		udelay(10);
+		GPIOCOUT = (GPIOIOUT & ~(1<<12)) | (TPC_GPIO_XM_OFF<<12);
+		GPIOCOUT = (GPIOIOUT & ~(1<<15)) | (TPC_GPIO_nYP_OFF<<15);
+		GPIOCOUT = (GPIOIOUT & ~(1<<14)) | (TPC_GPIO_nXP_OFF<<14);
+		GPIOCOUT = (GPIOCOUT & ~(1<<13)) | (TPC_GPIO_YM_ON<<13);
+
+		pen_data = PEN_UP;
+		TPC_INTR = (TPC_INTR & 0xFFE0) | 0x001F;
+//		TPC_INTR = TPC_PEN_DAT_INT_EN;
+		TPC_INTR = TPC_PEN_DWN_INT_EN /*| TPC_PEN_DAT_INT_EN*/;
+		TPC_CNTL |= ((1<<15) | (1<<14) | (1<<4));
+	printk("***.[%s:%d]-%s : pen_data(%x), TPC_INTR(%x),TPC_CNTL(%x),xy(%x,%x)\n",__FUNCTION__,__LINE__,__FILE__,pen_data,TPC_INTR,TPC_CNTL,ts.x,ts.y);
+	}
+	else {
+		ts.pressure = 0;
+		ts.x = 0;
+		ts.y = 0;
+		ts.pad = 0;
+	}
+
+	if(copy_to_user(buf, &ts, sizeof(struct mmsp2_ts_event))) {
+		return -EFAULT;
+	}
+
+	return sizeof(struct mmsp2_ts_event);
+}
+
+static int mmsp2_ts_open(struct inode *inode, struct file *filp)
+{
+	if(count==0) {
+		count = 1;
+		return 0;
+	}
+	else 
+		return -EBUSY;
+}
+
+static int mmsp2_ts_release(struct inode *inode, struct file *filp)
+{
+	count = 0;
+	return 0;
+}
+
+static struct file_operations mmsp2_ts_fops = {
+	owner:		THIS_MODULE,
+	read:		mmsp2_ts_read,
+	open:		mmsp2_ts_open,
+	release:	mmsp2_ts_release,
+};
+
+static struct miscdevice mmsp2_tpanel = {
+	TPANEL_MINOR, "ts", &mmsp2_ts_fops
+};
+
+static int __init mmsp2_ts_init(void)
+{
+	int retval;
+
+#if 0
+	TPC_CNTL = ~(1<<6);
+	TPC_INTR = 0;
+	TPC_INTR = (TPC_INTR & 0xFFE0) | 0x001F;
+	TPC_U1_VALUE = SwitchConvert(0) << 11;
+	TPC_CLK_CNTL = (TPC_CLK_CNTL & 0xFF00) | 0x00FF;
+	TPC_TIME_PARM1 = (0x5<<8) | 0x255;
+	TPC_TIME_PARM2 = (0x0<<8) | 0x255;
+	TPC_TIME_PARM3 = 0x04;
+
+	TPC_U1_VALUE = SwitchConvert(TPC_PU_SW | TPC_YM_SW) << 11;
+
+	TPC_CNTL |= ((1<<15) | (1<<14) | (1<<4));//Run
+
+	TPC_U1_VALUE = SwitchConvert(TPC_PU_SW) << 11;
+
+	set_gpio_ctrl(GPIO_C12, GPIOMD_OUT, GPIOPU_NOSET);
+	GPIOCOUT = (GPIOIOUT & ~(1<<12)) | (TPC_GPIO_XM_OFF<<12);
+	set_gpio_ctrl(GPIO_C15, GPIOMD_OUT, GPIOPU_NOSET);
+	GPIOCOUT = (GPIOIOUT & ~(1<<15)) | (TPC_GPIO_nYP_OFF<<15);
+	set_gpio_ctrl(GPIO_C14, GPIOMD_OUT, GPIOPU_NOSET);
+	GPIOCOUT = (GPIOIOUT & ~(1<<14)) | (TPC_GPIO_nXP_OFF<<14);
+	set_gpio_ctrl(GPIO_C13, GPIOMD_OUT, GPIOPU_NOSET);
+	GPIOCOUT = (GPIOCOUT & ~(1<<13)) | (TPC_GPIO_YM_ON<<13);
+
+	TPC_CLK_CNTL = (TPC_CLK_CNTL & 0x00FF) | (10<<8);
+
+	TPC_CH_SEL = (TPC_CH_SEL & ~(0x0007<<9)) | (TPC_ADC_CH_0<<9);
+	TPC_COMP_U1 = (1<<10) | 50;
+
+   	if((retval=request_irq(IRQ_ADC, ts_interrupt, SA_INTERRUPT, "mmsp2_ts", NULL))) {
+		printk(KERN_WARNING "mmsp2_ts: failed to get IRQ\n");
+		return retval;
+	}
+
+	misc_register(&mmsp2_tpanel);
+
+	pen_data = PEN_UP;
+
+	TPC_INTR = (TPC_INTR & 0xFFE0) | 0x001F;
+	TPC_INTR = TPC_PEN_DWN_INT_EN /*| TPC_PEN_DAT_INT_EN*/;
+
+#else
+	set_gpio_ctrl(GPIO_C12, GPIOMD_OUT, GPIOPU_NOSET);
+	set_gpio_ctrl(GPIO_C15, GPIOMD_OUT, GPIOPU_NOSET);
+	set_gpio_ctrl(GPIO_C14, GPIOMD_OUT, GPIOPU_NOSET);
+	set_gpio_ctrl(GPIO_C13, GPIOMD_OUT, GPIOPU_NOSET);
+
+	TPC_CNTL = ~(1<<6);
+	TPC_INTR = 0;
+	TPC_INTR = (TPC_INTR & 0xFFE0) | 0x001F;
+	TPC_U1_VALUE = SwitchConvert(0) << 11;
+	TPC_CLK_CNTL = (TPC_CLK_CNTL & 0xFF00) | 0x00FF;
+	TPC_TIME_PARM1 = (0x5<<8) | 255;
+	TPC_TIME_PARM2 = (0x0<<8) | 255;
+	TPC_TIME_PARM3 = 0x04;
+
+	TPC_CH_SEL = (TPC_CH_SEL & ~(0x0007<<9)) | (TPC_ADC_CH_0<<9);
+	TPC_COMP_U1 = (1<<10) | 50;
+
+	TPC_U1_VALUE = SwitchConvert(TPC_PU_SW | TPC_YM_SW) << 11;
+	TPC_CNTL |= ((1<<15) | (1<<14) | (1<<4));//Run
+
+   	if((retval=request_irq(IRQ_ADC, ts_interrupt, SA_INTERRUPT, "mmsp2_ts", NULL))) {
+		printk(KERN_WARNING "mmsp2_ts: failed to get IRQ\n");
+		return retval;
+	}
+
+	TPC_U1_VALUE = SwitchConvert(TPC_PU_SW) << 11;
+
+	GPIOCOUT = (GPIOIOUT & ~(1<<12)) | (TPC_GPIO_XM_OFF<<12);
+	GPIOCOUT = (GPIOIOUT & ~(1<<15)) | (TPC_GPIO_nYP_OFF<<15);
+	GPIOCOUT = (GPIOIOUT & ~(1<<14)) | (TPC_GPIO_nXP_OFF<<14);
+	GPIOCOUT = (GPIOCOUT & ~(1<<13)) | (TPC_GPIO_YM_ON<<13);
+
+	TPC_CLK_CNTL = (TPC_CLK_CNTL & 0x00FF) | (10<<8);
+
+	TPC_CH_SEL = (TPC_CH_SEL & ~(0x0007<<9)) | (TPC_ADC_CH_0<<9);
+	TPC_COMP_U1 = (1<<10) | 50;
+
+	pen_data = PEN_UP;
+	misc_register(&mmsp2_tpanel);
+
+	TPC_INTR = (TPC_INTR & 0xFFE0) | 0x001F;
+	TPC_INTR = TPC_PEN_DWN_INT_EN /*| TPC_PEN_DAT_INT_EN*/;
+
+	TPC_ADCCON = 0x3fc4; //a
+	TPC_CLK_CNTL = 0xFF; //a
+	TPC_CNTL =0xc000; //a
+	TPC_COMP_TP =0x0400; //a
+	TPC_CH_SEL =0x5098; //a
+	TPC_INTR = 0x0400; //a
+	TPC_X_VALUE = 0xB000; //a
+	TPC_Y_VALUE = 0xC800; //a
+#endif
+	printk("***.[%s:%d]-%s : TPC_INTR(%x),TPC_CNTL(%x),TPC_U1(%x)\n",__FUNCTION__,__LINE__,__FILE__,TPC_INTR,TPC_CNTL, TPC_U1_VALUE);
+	printk("0xc004600 : %04x, %04x, %04x, %04x\n", TPC_ADCCON, 0, TPC_ADCDAT,0);
+	printk("0xc004640 : %04x, %04x, %04x, %04x\n", TPC_CNTL, 0, TPC_INTR,0);
+	printk("0xc004648 : %04x, %04x, %04x, %04x\n", TPC_COMP_TP, 0, TPC_COMP_U1,0);
+	printk("0xc004650 : %04x, %04x, %04x, %04x\n", TPC_COMP_U2, 0, TPC_CLK_CNTL,0);
+	printk("0xc004658 : %04x, %04x, %04x, %04x\n", TPC_CH_SEL, 0, TPC_TIME_PARM1,0);
+	printk("0xc004660 : %04x, %04x, %04x, %04x\n", TPC_TIME_PARM2, 0, TPC_TIME_PARM3,0);
+	printk("0xc004668 : %04x, %04x, %04x, %04x\n", TPC_X_VALUE, 0, TPC_Y_VALUE,0);
+	printk("0xc004670 : %04x, %04x, %04x, %04x\n", TPC_AZ_VALUE, 0, TPC_U1_VALUE,0);
+	printk("0xc004678 : %04x, %04x, %04x, %04x\n", TPC_U2_VALUE, 0, 0,0,0);
+	printk("MMSP2 Touch Panel Controller Driver\n");
+	return 0;
+}
+
+static void __exit mmsp2_ts_exit(void)
+{
+	free_irq(IRQ_ADC,NULL);
+
+	TPC_INTR = 0;
+	TPC_CNTL = (1<<6);
+
+	misc_deregister(&mmsp2_tpanel);
+}
+
+module_init(mmsp2_ts_init);
+module_exit(mmsp2_ts_exit);
+
+MODULE_AUTHOR("Edward Kuo");
+MODULE_DESCRIPTION("MMSP2 touch panel controller driver");
