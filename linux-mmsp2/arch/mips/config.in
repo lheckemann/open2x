@@ -1,0 +1,10 @@
+#
+# For a description of the syntax of this configuration file,
+# see Documentation/kbuild/config-language.txt.
+#
+define_bool CONFIG_MIPS y
+define_bool CONFIG_MIPS32 y
+define_bool CONFIG_MIPS64 n
+define_bool CONFIG_GENERIC_ISA_DMA y
+
+source arch/mips/config-shared.in

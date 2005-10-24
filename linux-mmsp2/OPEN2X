@@ -1,0 +1,12 @@
+$Header$
+
+The source bundle is based on the Linux kernel 2.4.25 (http://www.kernel.org/) and ARM patches.
+
+It contains board support platform files needed for the MagicEyes MMSP2 ARM based reference board.
+This should enable a basic Linux kernel to be constructed for any MMSP2/MP2520F based system with some work.
+It is NOT a complete distribution of the Linux kernel.
+
+This code is released by the Open2x project (http://www.distant-earth.com/open2x/).
+It is exactly as provided by MagicEyes. No changes to this source have taken place.
+
+For more recent, community maintained, versions of the Linux kernel for the MMSP2 please refer to the linux-open2x module in the Open2x CVS repository or look at the projects releases.
