@@ -24,3 +24,11 @@
 # character to interpose another module into the current module.  This
 # can be useful for creating a module that consists of many directories
 # spread out over the entire source repository.
+
+mmsp2 -a u-boot-mmsp2 linux-mmsp2
+gp2x -a u-boot-gp2x linux-gp2x
+
+u-boot-mmsp2 u-boot-mmsp2
+linux-mmsp2 linux-mmsp2
+u-boot-gp2x u-boot-gp2x
+libs-gp2x libs-gp2x
