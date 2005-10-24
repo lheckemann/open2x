@@ -1,0 +1,68 @@
+skge.o: skge.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skaddr.o: skaddr.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skgehwt.o: skgehwt.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skgeinit.o: skgeinit.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skgepnmi.o: skgepnmi.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skgesirq.o: skgesirq.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+ski2c.o: ski2c.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+sklm80.o: sklm80.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skqueue.o: skqueue.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skrlmt.o: skrlmt.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+sktimer.o: sktimer.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skvpd.o: skvpd.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skxmac2.o: skxmac2.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+skcsum.o: skcsum.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+uboot_skb.o: uboot_skb.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+uboot_drv.o: uboot_drv.c /home/depss/DEPSS/u-boot/include/common.h \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h \
+ /home/depss/DEPSS/u-boot/include/linux/bitops.h \
+ /home/depss/DEPSS/u-boot/include/asm/bitops.h \
+ /home/depss/DEPSS/u-boot/include/linux/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/config.h \
+ /home/depss/DEPSS/u-boot/include/linux/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/linux/stddef.h \
+ /home/depss/DEPSS/u-boot/include/asm/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/asm/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/ptrace.h \
+ /home/depss/DEPSS/u-boot/include/asm/proc/ptrace.h \
+ /usr/local/arm-linux/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ /home/depss/DEPSS/u-boot/include/part.h \
+ /home/depss/DEPSS/u-boot/include/flash.h \
+ /home/depss/DEPSS/u-boot/include/image.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot.h \
+ /home/depss/DEPSS/u-boot/include/asm/global_data.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot-arm.h

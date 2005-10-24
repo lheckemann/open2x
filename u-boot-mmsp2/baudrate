@@ -1,0 +1,663 @@
+board/MAI/AmigaOneG3SE/articiaS.c:	uint32 busclock = gd->bus_clk;
+board/MAI/AmigaOneG3SE/articiaS.c:	uint32 busclock = gd->bus_clk;
+board/MAI/AmigaOneG3SE/articiaS.c:	if (100000000 == gd->bus_clk)
+board/MAI/AmigaOneG3SE/articiaS.c:	if (100000000 == gd->bus_clk)
+board/MAI/AmigaOneG3SE/articiaS_pci.c:    if (execute_bios(dev, gd->relocaddr))
+board/MAI/AmigaOneG3SE/cmd_boota.c:		boot (gd->bd, getenv ("amiga_bootargs"), boot_disk);
+board/MAI/AmigaOneG3SE/serial.c:	uint32 clock_divisor = 115200 / gd->baudrate;
+board/MAI/AmigaOneG3SE/serial.c:	uint32 clock_divisor = 115200 / gd->baudrate;
+board/MAI/AmigaOneG3SE/via686.c:	gd->bus_clk = 133333333;
+board/MAI/AmigaOneG3SE/via686.c:	gd->bus_clk = 100000000;
+board/MAI/AmigaOneG3SE/video.c:	printf("DRAM: %ld MB\n", gd->bd->bi_memsize/(1024*1024));
+board/MAI/AmigaOneG3SE/video.c:	printf("FSB: %ld MHz\n", gd->bd->bi_busfreq/1000000);
+board/at91rm9200dk/at91rm9200dk.c:	gd->bd->bi_arch_number = 251;
+board/at91rm9200dk/at91rm9200dk.c:	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
+board/at91rm9200dk/at91rm9200dk.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM;
+board/at91rm9200dk/at91rm9200dk.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_SIZE;
+board/bmw/serial.c:	int clock_divisor = gd->bus_clk / 16 / gd->baudrate;
+board/bmw/serial.c:	int clock_divisor = get_bus_freq (0) / 16 / gd->baudrate;
+board/cogent/serial.c:    if ((divisor = br_to_div(gd->baudrate)) == 0)
+board/cradle/cradle.c:	gd->bd->bi_arch_number = 174;
+board/cradle/cradle.c:	gd->bd->bi_boot_params = 0xa0000100;
+board/cradle/cradle.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/cradle/cradle.c:	gd->bd->bi_dram[0].size  = PHYS_SDRAM_1_SIZE;
+board/cradle/cradle.c:	gd->bd->bi_dram[1].start = PHYS_SDRAM_2;
+board/cradle/cradle.c:	gd->bd->bi_dram[1].size  = PHYS_SDRAM_2_SIZE;
+board/cradle/cradle.c:	gd->bd->bi_dram[2].start = PHYS_SDRAM_3;
+board/cradle/cradle.c:	gd->bd->bi_dram[2].size  = PHYS_SDRAM_3_SIZE;
+board/cradle/cradle.c:	gd->bd->bi_dram[3].start = PHYS_SDRAM_4;
+board/cradle/cradle.c:	gd->bd->bi_dram[3].size  = PHYS_SDRAM_4_SIZE;
+board/csb226/csb226.c:	gd->bd->bi_arch_number = 216;
+board/csb226/csb226.c:	gd->bd->bi_boot_params = 0xa0000100;
+board/csb226/csb226.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/csb226/csb226.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/cu824/cu824.c:	printf("Local Bus at %s MHz\n", strmhz(buf, gd->bus_clk));
+board/dave/PPChameleonEVB/PPChameleonEVB.c:	bd_t *bd = gd->bd;
+board/dnp1110/dnp1110.c:	gd->bd->bi_arch_number = 255;
+board/dnp1110/dnp1110.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/dnp1110/dnp1110.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/ebony/ebony.c:	out32r( PCIX0_PIM0SA, ~(gd->ram_size - 1) | 1 );
+board/ep7312/ep7312.c:	gd->bd->bi_arch_number = 131;
+board/ep7312/ep7312.c:	gd->bd->bi_boot_params = 0xc0020100;
+board/ep7312/ep7312.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/ep7312/ep7312.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/esd/ar405/ar405.c:	gd->baudrate = CONFIG_BAUDRATE;
+board/esd/ar405/ar405.c:		gd->baudrate = CONFIG_BAUDRATE;
+board/esd/canbt/canbt.c:	gd->baudrate = CONFIG_BAUDRATE;
+board/esd/canbt/canbt.c:		gd->baudrate = CONFIG_BAUDRATE;
+board/esd/cpci405/cpci405.c:	gd->baudrate = CONFIG_BAUDRATE;
+board/esd/cpci405/cpci405.c:			gd->baudrate = CONFIG_BAUDRATE;
+board/esd/cpci405/cpci405.c:	bd_t *bd = gd->bd;
+board/esd/cpciiser4/cpciiser4.c:	gd->baudrate = CONFIG_BAUDRATE;
+board/esd/cpciiser4/cpciiser4.c:		gd->baudrate = CONFIG_BAUDRATE;
+board/esd/du405/du405.c:	gd->baudrate = CONFIG_BAUDRATE;
+board/esd/du405/du405.c:		gd->baudrate = CONFIG_BAUDRATE;
+board/etin/debris/debris.c:			(char*)&gd->bd->bi_enetaddr[0], 6);
+board/etx094/etx094.c:	gd->board_type = 0; /* 0 = 2SDRAM-Device */
+board/etx094/etx094.c:	gd->board_type = 1; /* 1 = 1SDRAM-Device */
+board/evb64260/mpsc.c:#define MIRROR_HACK ((struct _tag_mirror_hack *)&(gd->mirror_hack))
+board/evb64260/sdram_init.c:	tmemclk = 1000000000 / (gd->bus_clk / 100);  /* in 10 ps units */
+board/evb64260/serial.c:	int clock_divisor = CFG_NS16550_CLK / 16 / gd->baudrate;
+board/evb64260/serial.c:	mpsc_init(gd->baudrate);
+board/evb64260/serial.c:	galbrg_set_baudrate(CONFIG_MPSC_PORT, gd->baudrate);
+board/evb64260/serial.c:	int clock_divisor = CFG_NS16550_CLK / 16 / gd->baudrate;
+board/evb64260/serial.c:	int clock_divisor = CFG_NS16550_CLK / 16 / gd->baudrate;
+board/gen860t/fpga.c:			__FUNCTION__, __LINE__, gd->reloc_off);
+board/gen860t/fpga.c:	fpga_init(gd->reloc_off);
+board/gen860t/gen860t.c:    printf("CPU at %s MHz, ",strmhz(buf, gd->cpu_clk));
+board/gen860t/gen860t.c:	printf("local bus at %s MHz\n", strmhz(buf, gd->bus_clk));
+board/hermes/hermes.c:	gd->board_type = board_init ();
+board/hermes/hermes.c:	printf ("  Rev. %ld.x\n", (gd->board_type >> 16));
+board/hymod/bsp.c:	hymod_conf_t *cp = &gd->bd->bi_hymod_conf;
+board/hymod/env.c:	hymod_conf_t *cp = &gd->bd->bi_hymod_conf;
+board/hymod/hymod.c:	hymod_conf_t *cp = &gd->bd->bi_hymod_conf;
+board/impa7/impa7.c:	gd->bd->bi_arch_number = 50;
+board/impa7/impa7.c:	gd->bd->bi_boot_params = 0xc0020100;
+board/impa7/impa7.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/impa7/impa7.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/impa7/impa7.c:	gd->bd->bi_dram[1].start = PHYS_SDRAM_2;
+board/impa7/impa7.c:	gd->bd->bi_dram[1].size = PHYS_SDRAM_2_SIZE;
+board/innokom/innokom.c:	gd->bd->bi_arch_number = MACH_TYPE_INNOKOM;
+board/innokom/innokom.c:	gd->bd->bi_boot_params = 0xa0000100;
+board/innokom/innokom.c:	gd->bd->bi_baudrate = CONFIG_BAUDRATE;
+board/innokom/innokom.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/innokom/innokom.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/ixdp425/ixdp425.c:	gd->bd->bi_arch_number = 245;
+board/ixdp425/ixdp425.c:	gd->bd->bi_boot_params = 0x00000100;
+board/ixdp425/ixdp425.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/ixdp425/ixdp425.c:	gd->bd->bi_dram[0].size  = PHYS_SDRAM_1_SIZE;
+board/kup4k/kup4k.c:	bd_t *bd = gd->bd;
+board/lart/lart.c:	gd->bd->bi_arch_number = 27;
+board/lart/lart.c:	gd->bd->bi_boot_params = 0xc0000100;
+board/lart/lart.c:	bd_t *bd = gd->bd;
+board/logodl/logodl.c:	gd->bd->bi_arch_number = MACH_TYPE_LOGODL;
+board/logodl/logodl.c:	gd->bd->bi_boot_params = 0x08000100;
+board/logodl/logodl.c:	gd->bd->bi_baudrate = CONFIG_BAUDRATE;
+board/logodl/logodl.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/logodl/logodl.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/lubbock/lubbock.c:	gd->bd->bi_arch_number = 89;
+board/lubbock/lubbock.c:	gd->bd->bi_boot_params = 0xa0000100;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[1].start = PHYS_SDRAM_2;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[1].size = PHYS_SDRAM_2_SIZE;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[2].start = PHYS_SDRAM_3;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[2].size = PHYS_SDRAM_3_SIZE;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[3].start = PHYS_SDRAM_4;
+board/lubbock/lubbock.c:	gd->bd->bi_dram[3].size = PHYS_SDRAM_4_SIZE;
+board/lwmon/lwmon.c:		gd->do_mdm_init = 1;
+board/lwmon/lwmon.c:	gd->kbd_status = 0;
+board/lwmon/lwmon.c:		gd->kbd_status |= errcd << 8;
+board/lwmon/lwmon.c:		gd->kbd_status |= val;
+board/lwmon/lwmon.c:	uchar kbd_init_status = gd->kbd_status >> 8;
+board/lwmon/lwmon.c:	uchar kbd_status = gd->kbd_status;
+board/ml2/serial.c:	    int clock_divisor = CFG_NS16550_CLK / 16 / gd->baudrate;
+board/ml2/serial.c:    int clock_divisor = CFG_NS16550_CLK / 16 / gd->baudrate;
+board/mpl/common/common_util.c:			strmhz (tmp, gd->cpu_clk), sys_info.freqPLB / 1000000,
+board/mpl/common/common_util.c:			gd->bd->bi_memsize / 0x100000,
+board/mpl/common/common_util.c:			gd->bd->bi_flashsize / 0x100000,
+board/mpl/common/memtst.c: 		addr = (ulong) (test_stage[i].test_write) + gd->reloc_off;
+board/mpl/common/memtst.c: 		addr = (ulong) (test_stage[i].test_write_desc) + gd->reloc_off;
+board/mpl/common/memtst.c:			addr = (ulong) (test_stage[i].test_check1) + gd->reloc_off;
+board/mpl/common/memtst.c:			addr = (ulong) (test_stage[i].test_check2) + gd->reloc_off;
+board/mpl/common/pci.c: 		addr = (ulong) (table->config_device) + gd->reloc_off;
+board/mpl/common/pci.c:		table->priv[0]+=gd->reloc_off;
+board/mpl/mip405/mip405.c:	gd->baudrate = 9600;
+board/mpl/mip405/mip405.c:	gd->baudrate = 9600;
+board/mpl/mip405/mip405.c:	gd->bd->bi_flashstart=0-flash_info[0].size;
+board/mpl/mip405/mip405.c:	gd->bd->bi_flashsize=flash_info[0].size-CFG_MONITOR_LEN;
+board/mpl/mip405/mip405.c:	gd->bd->bi_flashoffset=0;
+board/mpl/pip405/pip405.c:	gd->baudrate = 9600;
+board/mpl/pip405/pip405.c:	gd->baudrate = 9600;
+board/mpl/pip405/pip405.c:	if (gd->cpu_clk > 220000000)
+board/mpl/pip405/pip405.c:	gd->bd->bi_flashstart=0-flash_info[0].size;
+board/mpl/pip405/pip405.c:	gd->bd->bi_flashsize=flash_info[0].size-CFG_MONITOR_LEN;
+board/mpl/pip405/pip405.c:	gd->bd->bi_flashoffset=0;
+board/mpl/vcma9/cmd_vcma9.c:				if (gd->bd->bi_enetaddr[i] != 0)
+board/mpl/vcma9/cmd_vcma9.c:					data = gd->bd->bi_enetaddr[i+1] << 8 |
+board/mpl/vcma9/cmd_vcma9.c:					       gd->bd->bi_enetaddr[i];
+board/mpl/vcma9/vcma9.c:	gd->baudrate = CONFIG_BAUDRATE;
+board/mpl/vcma9/vcma9.c:	gd->have_console = 1;
+board/mpl/vcma9/vcma9.c:	gd->bd->bi_arch_number = 227;
+board/mpl/vcma9/vcma9.c:	gd->bd->bi_boot_params = 0x30000100;
+board/mpl/vcma9/vcma9.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/mpl/vcma9/vcma9.c:	gd->bd->bi_dram[0].size = Get_SDRAM_ChipSize() * Get_SDRAM_ChipNr();
+board/nx823/nx823.c:	u_char *e = gd->bd->bi_enetaddr;
+board/nx823/nx823.c:	memcpy(my_sernum,gd->bd->bi_sernum,8);
+board/nx823/nx823.c:	bd_t * bd = gd->bd;
+board/omap1510inn/omap1510innovator.c:	gd->bd->bi_arch_number = 234;
+board/omap1510inn/omap1510innovator.c:	gd->bd->bi_boot_params = 0x10000100;
+board/omap1510inn/omap1510innovator.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/omap1510inn/omap1510innovator.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/omap1610inn/omap1610innovator.c:	gd->bd->bi_arch_number = 234;
+board/omap1610inn/omap1610innovator.c:	gd->bd->bi_boot_params = 0x10000100;
+board/omap1610inn/omap1610innovator.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/omap1610inn/omap1610innovator.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/oxc/oxc.c:		bd_t *bd = gd->bd;
+board/pcippc2/fpga_serial.c:	int clock_divisor = 115200 / gd->baudrate;
+board/pcippc2/sconsole.c:	sb->baud = gd->baudrate;
+board/pcippc2/sconsole.c:		sb->baud = gd->baudrate;
+board/pn62/pn62.c:		memcpy (gd->bd->bi_enetaddr, mac, 6);
+board/pn62/pn62.c:		memcpy (gd->bd->bi_enet1addr, mac, 6);
+board/rbc823/kbd.c:		(((gd->cpu_clk / 16 / RBC823_KBD_BAUDRATE)-1) << 1) | CPM_BRG_EN;
+board/sacsng/clkinit.h:#define CPM_CLK      (gd->bd->bi_cpmfreq)
+board/sc520_cdp/sc520_cdp.c:	gd->bus_clk = 33333000;
+board/sc520_spunk/sc520_spunk.c:	gd->bus_clk = 33000000;
+board/shannon/shannon.c:	gd->bd->bi_arch_number = 97;
+board/shannon/shannon.c:	gd->bd->bi_boot_params = 0xc0000100;
+board/shannon/shannon.c:	bd_t *bd = gd->bd;
+board/siemens/SCM/scm.c:	return gd->reset_status & RSR_CSRS ? 0 : 1;
+board/sixnet/sixnet.c:	bd_t *bd = gd->bd;
+board/sixnet/sixnet.c:	bd_t *bd = gd->bd;
+board/smdk2400/smdk2400.c:	gd->bd->bi_arch_number = 145;
+board/smdk2400/smdk2400.c:	gd->bd->bi_boot_params = 0x0C000100;
+board/smdk2400/smdk2400.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/smdk2400/smdk2400.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/smdk2410/smdk2410.c:	gd->bd->bi_arch_number = 193;
+board/smdk2410/smdk2410.c:	gd->bd->bi_boot_params = 0x30000100;
+board/smdk2410/smdk2410.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/smdk2410/smdk2410.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/tqm8xx/tqm8xx.c:		gd->board_type = 'L';
+board/trab/memory.c:	bd_t *bd = gd->bd;
+board/trab/rs485.c:	/* reg = (33000000 / (16 * gd->baudrate)) - 1; */
+board/trab/trab.c:	for (i = 0; i < delay; i ++) gd->bd->bi_arch_number = 145;
+board/trab/trab.c:	gd->bd->bi_arch_number = 145;
+board/trab/trab.c:	gd->bd->bi_boot_params = 0x0c000100;
+board/trab/trab.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/trab/trab.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+board/trab/vfd.c:	memset ((void *)(gd->fb_base), 0, FRAME_BUF_SIZE);
+board/trab/vfd.c:	switch (gd->vfd_type) {
+board/trab/vfd.c:			adr = gd->fb_base + (bit/32) * 4 + (3 - (bit%32) / 8);
+board/trab/vfd.c:			adr = gd->fb_base+(bit/32)*4+(3-(bit%32)/8);
+board/trab/vfd.c:			adr = gd->fb_base + (bit/32) * 4 + (3 - (bit%32) / 8);
+board/trab/vfd.c:			adr = gd->fb_base+(bit/32)*4+(3-(bit%32)/8);
+board/trab/vfd.c:	switch (gd->vfd_type) {
+board/trab/vfd.c:			    unsigned long adr  = gd->fb_base;
+board/trab/vfd.c:				adr    = gd->fb_base+(pixel/32)*4+(3-(pixel%32)/8);
+board/trab/vfd.c:	if (! gd->vfd_type) {
+board/trab/vfd.c:			gd->vfd_type = VFD_TYPE_T119C;
+board/trab/vfd.c:			gd->vfd_type = VFD_TYPE_MN11236;
+board/trab/vfd.c:			gd->vfd_type = 0;	/* unknown */
+board/trab/vfd.c:		gd->vfd_type = VFD_TYPE_MN11236;
+board/trab/vfd.c:		(gd->vfd_type == VFD_TYPE_T119C)   ? "T119C" :
+board/trab/vfd.c:		(gd->vfd_type == VFD_TYPE_MN11236) ? "MN11236" :
+board/trab/vfd.c:	gd->fb_base = gd->fb_base;
+board/trab/vfd.c:	lcd->LCDSADDR1 = gd->fb_base >> 1;
+board/trab/vfd.c:	lcd->LCDSADDR2 = (gd->fb_base + FRAME_BUF_SIZE) >> 1;
+board/trab/vfd.c:	if(gd->vfd_type == VFD_TYPE_MN11236)
+board/trab/vfd.c:	if (gd->vfd_type && vfd_inv_data)
+board/trab/vfd.c:	if(gd->vfd_type)
+board/wepep250/wepep250.c:  gd->bd->bi_arch_number = 288;
+board/wepep250/wepep250.c:  gd->bd->bi_boot_params = 0xa0000000;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[0].start = WEP_SDRAM_1;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[0].size  = WEP_SDRAM_1_SIZE;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[1].start = WEP_SDRAM_2;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[1].size  = WEP_SDRAM_2_SIZE;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[2].start = WEP_SDRAM_3;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[2].size  = WEP_SDRAM_3_SIZE;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[3].start = WEP_SDRAM_4;
+board/wepep250/wepep250.c:  gd->bd->bi_dram[3].size  = WEP_SDRAM_4_SIZE;
+board/eplay/eplay.c:	gd->bd->bi_arch_number = 345;
+board/eplay/eplay.c:	gd->bd->bi_boot_params = 0x00100100;
+board/eplay/eplay.c:	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+board/eplay/eplay.c:	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+Binary file board/eplay/.smdk2410.c.swp matches
+Binary file board/eplay/.eplay.c.swp matches
+common/cmd_bdinfo.c:	bd_t *bd = gd->bd;
+common/cmd_bdinfo.c:	bd_t *bd = gd->bd;
+common/cmd_bdinfo.c:	bd_t *bd = gd->bd;
+common/cmd_bdinfo.c:	bd_t *bd = gd->bd;
+common/cmd_bedbug.c:  top = gd->bd->bi_memstart + gd->bd->bi_memsize;
+common/cmd_bootm.c:	if (!(gd->flags & GD_FLG_SILENT))
+common/cmd_bootm.c:	kbd=gd->bd;
+common/cmd_bootm.c:	*kbd = *(gd->bd);
+common/cmd_bootm.c:	(*loader) (gd->bd, img_addr, consdev, cmdline);
+common/cmd_bootm.c:	memcpy(kbd, gd->bd, sizeof(bd_t));
+common/cmd_bootm.c:	(*entry_point ) ( gd->bd );
+common/cmd_date.c:#define RELOC(a)	((typeof(a))((unsigned long)(a) + gd->reloc_off))
+common/cmd_elf.c:	memcpy ((char *) tmp, (char *) &gd->bd->bi_enetaddr[3], 3);
+common/cmd_elf.c:	memcpy ((char *) tmp, (char *) &gd->bd->bi_enetaddr[0], 6);
+common/cmd_elf.c:	memcpy ((char *) tmp, (char *) &gd->bd->bi_enetaddr[0], 6);
+common/cmd_ide.c:							    gd->bus_clk);
+common/cmd_ide.c:							    gd->bus_clk);
+common/cmd_ide.c:							    gd->bus_clk);
+common/cmd_immap.c:	ulong clock = gd->cpu_clk;
+common/cmd_immap.c:	ulong clock = gd->brg_clk;
+common/cmd_load.c:	load_baudrate = current_baudrate = gd->baudrate;
+common/cmd_load.c:		gd->baudrate = load_baudrate;
+common/cmd_load.c:		gd->baudrate = current_baudrate;
+common/cmd_load.c:	    if (gd->jt[XF_getc] != serial_getc) {
+common/cmd_load.c:	save_baudrate = current_baudrate = gd->baudrate;
+common/cmd_load.c:		gd->baudrate = save_baudrate;
+common/cmd_load.c:		gd->baudrate = current_baudrate;
+common/cmd_load.c:	load_baudrate = current_baudrate = gd->baudrate;
+common/cmd_load.c:		gd->baudrate = load_baudrate;
+common/cmd_load.c:		gd->baudrate = current_baudrate;
+common/cmd_log.c:	log_buf = (unsigned char *)(gd->bd->bi_memsize-LOGBUFF_LEN);
+common/cmd_log.c:	gd->post_log_word |= LOGBUFF_INITIALIZED;
+common/cmd_log.c:	if ((gd->post_log_word & LOGBUFF_INITIALIZED)) {
+common/cmd_nvedit.c:	bd_t *bd = gd->bd;
+common/cmd_nvedit.c:			gd->baudrate = baudrate;
+common/cmd_nvedit.c:			gd->bd->bi_baudrate = baudrate;
+common/console.c:			gd->jt[XF_getc] = dev->getc;
+common/console.c:			gd->jt[XF_tstc] = dev->tstc;
+common/console.c:			gd->jt[XF_putc] = dev->putc;
+common/console.c:			gd->jt[XF_puts] = dev->puts;
+common/console.c:			gd->jt[XF_printf] = printf;
+common/console.c:	if (gd->flags & GD_FLG_DEVINIT) {
+common/console.c:	if (gd->flags & GD_FLG_DEVINIT) {
+common/console.c:	if (gd->flags & GD_FLG_DEVINIT) {
+common/console.c:	if (gd->flags & GD_FLG_DEVINIT) {
+common/console.c:	if (!ctrlc_disabled && gd->have_console) {
+common/console.c:	gd->have_console = 1;
+common/console.c:		gd->flags |= GD_FLG_SILENT;
+common/console.c:	gd->jt[XF_getc] = serial_getc;
+common/console.c:	gd->jt[XF_tstc] = serial_tstc;
+common/console.c:	gd->jt[XF_putc] = serial_putc;
+common/console.c:	gd->jt[XF_puts] = serial_puts;
+common/console.c:	gd->jt[XF_printf] = serial_printf;
+common/console.c:	gd->flags |= GD_FLG_DEVINIT;	/* device initialization completed */
+common/console.c:	if (gd->flags & GD_FLG_SILENT)
+common/console.c:	gd->flags |= GD_FLG_DEVINIT;	/* device initialization completed */
+common/devices.c:	ulong relocation_offset = gd->reloc_off;
+common/dlmalloc.c:		*p++ += gd->reloc_off;
+common/env_common.c:	if (gd->env_valid)
+common/env_common.c:	if (gd->env_valid) {
+common/env_common.c:		retval = ( *((uchar *)(gd->env_addr + index)) );
+common/env_common.c:	if (gd->env_valid) {
+common/env_common.c:		return ( *((uchar *)(gd->env_addr + index)) );
+common/env_common.c:	if (gd->env_valid) {
+common/env_common.c:		return ( ((uchar *)(gd->env_addr + index)) );
+common/env_common.c:		gd->reloc_off);
+common/env_common.c:	env_ptr = (env_t *)((ulong)env_ptr + gd->reloc_off);
+common/env_common.c:	if (gd->env_valid == 0) {
+common/env_common.c:		gd->env_valid = 1;
+common/env_common.c:	gd->env_addr = (ulong)&(env_ptr->data);
+common/env_eeprom.c:		gd->env_addr  = offsetof(env_t,data);
+common/env_eeprom.c:		gd->env_valid = 1;
+common/env_eeprom.c:		gd->env_addr  = 0;
+common/env_eeprom.c:		gd->env_valid = 0;
+common/env_flash.c:	return ( *((uchar *)(gd->env_addr + index)) );
+common/env_flash.c:		gd->env_addr  = addr1;
+common/env_flash.c:		gd->env_valid = 1;
+common/env_flash.c:		gd->env_addr  = addr2;
+common/env_flash.c:		gd->env_valid = 1;
+common/env_flash.c:		gd->env_addr  = addr_default;
+common/env_flash.c:		gd->env_valid = 0;
+common/env_flash.c:		gd->env_addr  = addr1;
+common/env_flash.c:		gd->env_valid = 1;
+common/env_flash.c:		gd->env_addr  = addr2;
+common/env_flash.c:		gd->env_valid = 1;
+common/env_flash.c:		gd->env_addr  = addr1;
+common/env_flash.c:		gd->env_valid = 2;
+common/env_flash.c:		gd->env_addr  = addr1;
+common/env_flash.c:		gd->env_valid = 2;
+common/env_flash.c:		gd->env_addr  = addr2;
+common/env_flash.c:		gd->env_valid = 2;
+common/env_flash.c:		gd->env_addr  = (ulong)&(env_ptr->data);
+common/env_flash.c:		gd->env_valid = 1;
+common/env_flash.c:		gd->env_addr  = (ulong)&default_environment[0];
+common/env_flash.c:		gd->env_valid = 0;
+common/env_flash.c:	if (gd->env_addr != (ulong)&(flash_addr->data))
+common/env_flash.c:		gd->env_valid = 2;
+common/env_flash.c:		gd->env_valid = 2;
+common/env_flash.c:	if (gd->env_valid == 2)
+common/env_nowhere.c:	return ( *((uchar *)(gd->env_addr + index)) );
+common/env_nowhere.c:	gd->env_addr  = (ulong)&default_environment[0];
+common/env_nowhere.c:	gd->env_valid = 0;
+common/env_nvram.c:	retval = *((uchar *)(gd->env_addr + index));
+common/env_nvram.c:	return *((uchar *)(gd->env_addr + index));
+common/env_nvram.c:		gd->env_addr  = (ulong)CFG_ENV_ADDR + sizeof(long);
+common/env_nvram.c:		gd->env_addr  = (ulong)&(env_ptr->data);
+common/env_nvram.c:		gd->env_valid = 1;
+common/env_nvram.c:		gd->env_addr  = (ulong)&default_environment[0];
+common/env_nvram.c:		gd->env_valid = 0;
+common/exports.c:	gd->jt = (void **) malloc (XF_MAX * sizeof (void *));
+common/exports.c:		gd->jt[i] = (void *) dummy;
+common/exports.c:	gd->jt[XF_get_version] = (void *) get_version;
+common/exports.c:	gd->jt[XF_malloc] = (void *) malloc;
+common/exports.c:	gd->jt[XF_free] = (void *) free;
+common/exports.c:	gd->jt[XF_get_timer] = (void *)get_timer;
+common/exports.c:	gd->jt[XF_udelay] = (void *)udelay;
+common/exports.c:	gd->jt[XF_install_hdlr] = (void *) irq_install_handler;
+common/exports.c:	gd->jt[XF_free_hdlr] = (void *) irq_free_handler;
+common/exports.c:	gd->jt[XF_i2c_write] = (void *) i2c_write;
+common/exports.c:	gd->jt[XF_i2c_read] = (void *) i2c_read;
+common/hush.c:		addr = (ulong) (r->literal) + gd->reloc_off;
+common/lynxkdi.c:	kbd = gd->bd;
+common/main.c:		if (gd->flags & GD_FLG_SILENT) {
+common/main.c:			gd->flags &= ~(GD_FLG_SILENT);
+common/main.c:		} else if (gd->flags & GD_FLG_SILENT) {
+common/main.c:		if (gd->flags & GD_FLG_SILENT) {
+common/main.c:			gd->flags &= ~(GD_FLG_SILENT);
+common/main.c:		} else if (gd->flags & GD_FLG_SILENT) {
+common/soft_i2c.c:	if (gd->have_console)		\
+cpu/74xx_7xx/cpu.c:	ulong clock = gd->cpu_clk;
+cpu/74xx_7xx/cpu.c:	return (gd->bus_clk / 4);
+cpu/74xx_7xx/speed.c:	gd->cpu_clk = clock;
+cpu/74xx_7xx/speed.c:	gd->bus_clk = CFG_BUS_CLK;
+cpu/74xx_7xx/traps.c:#define END_OF_MEM (gd->bd->bi_memstart + gd->bd->bi_memsize)
+cpu/arm720t/serial.c:	if (gd->baudrate == 1200)
+cpu/arm720t/serial.c:	else if (gd->baudrate == 9600)
+cpu/arm720t/serial.c:	else if (gd->baudrate == 19200)
+cpu/arm720t/serial.c:	else if (gd->baudrate == 38400)
+cpu/arm720t/serial.c:	else if (gd->baudrate == 57600)
+cpu/arm720t/serial.c:	else if (gd->baudrate == 115200)
+cpu/arm920t/serial.c:	reg = get_UART1_CLK() / (16 * gd->baudrate) - 1;
+cpu/arm920t/serial.c:	reg = get_PCLK() / (16 * gd->baudrate) - 1;
+cpu/at91rm9200/serial.c:  if ((baudrate = gd->bd->bi_baudrate) <= 0)
+cpu/i386/sc520.c:		gd->cpu_clk = 133000000;
+cpu/i386/sc520.c:		gd->cpu_clk = 100000000;
+cpu/i386/sc520.c:	bd_t *bd = gd->bd;
+cpu/i386/sc520.c:	gd->ram_size = dram_present;
+cpu/i386/serial.c:	int bdiv = serial_div(gd->baudrate);
+cpu/i386/serial.c:	bdiv = serial_div(gd->baudrate);
+cpu/ixp/serial.c:	if (gd->baudrate == 1200)
+cpu/ixp/serial.c:	else if (gd->baudrate == 9600)
+cpu/ixp/serial.c:	else if (gd->baudrate == 19200)
+cpu/ixp/serial.c:	else if (gd->baudrate == 38400)
+cpu/ixp/serial.c:	else if (gd->baudrate == 57600)
+cpu/ixp/serial.c:	else if (gd->baudrate == 115200)
+cpu/mpc5xx/cpu.c:	ulong clock = gd->cpu_clk;
+cpu/mpc5xx/cpu.c:		return (gd->cpu_clk / 16);
+cpu/mpc5xx/cpu.c:	oscclk = gd->cpu_clk / factor;
+cpu/mpc5xx/serial.c:	scxbr = (gd->cpu_clk / (32 * gd->baudrate));
+cpu/mpc5xx/speed.c:		gd->cpu_clk = vcoout / (2^(((immr->im_clkrst.car_sccr & SCCR_DFNL_MSK) >> SCCR_DFNL_SHIFT) + 1));
+cpu/mpc5xx/speed.c:    		gd->cpu_clk = vcoout / (2^(immr->im_clkrst.car_sccr & SCCR_DFNH_MSK));
+cpu/mpc5xx/speed.c:	gd->bus_clk = CONFIG_5xx_GCLK_FREQ;
+cpu/mpc5xx/speed.c:		gd->bus_clk = gd->cpu_clk;
+cpu/mpc5xx/speed.c:		gd->bus_clk = gd->cpu_clk / 2;
+cpu/mpc5xxx/cpu.c:	ulong clock = gd->cpu_clk;
+cpu/mpc5xxx/cpu.c:	tbclk = (gd->bus_clk + 3L) / 4L;
+cpu/mpc5xxx/fec.c:		fec->eth->mii_speed = (((gd->ipb_clk >> 20) / 5) << 1);	/* No MII for 7-wire mode */
+cpu/mpc5xxx/i2c.c:		ipb = gd->ipb_clk;
+cpu/mpc5xxx/serial.c:	baseclk = gd->ipb_clk / 32;
+cpu/mpc5xxx/serial.c:	div = baseclk / gd->baudrate;
+cpu/mpc5xxx/serial.c:	baseclk = gd->ipb_clk / 32;
+cpu/mpc5xxx/serial.c:	div = baseclk / gd->baudrate;
+cpu/mpc5xxx/speed.c:		gd->bus_clk = vco / 8;
+cpu/mpc5xxx/speed.c:		gd->bus_clk = vco / 4;
+cpu/mpc5xxx/speed.c:	gd->cpu_clk = gd->bus_clk * bus2core[val & 0x1f] / 10;
+cpu/mpc5xxx/speed.c:		gd->ipb_clk = gd->bus_clk / 2;
+cpu/mpc5xxx/speed.c:		gd->ipb_clk = gd->bus_clk;
+cpu/mpc5xxx/speed.c:		case 0: gd->pci_clk = gd->ipb_clk; break;
+cpu/mpc5xxx/speed.c:		case 1: gd->pci_clk = gd->ipb_clk / 2; break;
+cpu/mpc5xxx/speed.c:		default: gd->pci_clk = gd->bus_clk / 4; break;
+cpu/mpc5xxx/speed.c:			gd->bus_clk / 1000000, gd->ipb_clk / 1000000,
+cpu/mpc5xxx/speed.c:			gd->pci_clk / 1000000);
+cpu/mpc824x/cpu.c:	ulong clock = gd->cpu_clk;
+cpu/mpc824x/speed.c:	gd->cpu_clk = (pllratio_to_factor[hid1] * get_bus_freq(0) + 5)
+cpu/mpc824x/speed.c:	gd->bus_clk = get_bus_freq(0);
+cpu/mpc8260/commproc.c:	gd->dp_alloc_base = CPM_DATAONLY_BASE;
+cpu/mpc8260/commproc.c:	gd->dp_alloc_top = gd->dp_alloc_base + CPM_DATAONLY_SIZE;
+cpu/mpc8260/commproc.c:	savebase = gd->dp_alloc_base;
+cpu/mpc8260/commproc.c:	if ((off = (gd->dp_alloc_base & align_mask)) != 0)
+cpu/mpc8260/commproc.c:		gd->dp_alloc_base += (align - off);
+cpu/mpc8260/commproc.c:	if ((gd->dp_alloc_base + size) >= gd->dp_alloc_top) {
+cpu/mpc8260/commproc.c:		gd->dp_alloc_base = savebase;
+cpu/mpc8260/commproc.c:	retloc = gd->dp_alloc_base;
+cpu/mpc8260/commproc.c:	gd->dp_alloc_base += size;
+cpu/mpc8260/commproc.c:#define BRG_INT_CLK	gd->brg_clk
+cpu/mpc8260/cpu.c:	ulong clock = gd->cpu_clk;
+cpu/mpc8260/cpu.c:	tbclk = (gd->bus_clk + 3L) / 4L;
+cpu/mpc8260/cpu_init.c:	gd->reset_status = immr->im_clkrst.car_rsr;
+cpu/mpc8260/cpu_init.c:	volatile immap_t *immr = (immap_t *) gd->bd->bi_immr_base;
+cpu/mpc8260/cpu_init.c:	ulong rsr = gd->reset_status;
+cpu/mpc8260/ether_fcc.c:	memcpy (NetOurEther, gd->bd->bi_enetaddr, 6);
+cpu/mpc8260/ether_fcc.c:#define ea gd->bd->bi_enetaddr
+cpu/mpc8260/i2c.c:	i2c_setrate (gd->brg_clk, CFG_I2C_SPEED) ;
+cpu/mpc8260/interrupts.c:	decrementer_count = (gd->bus_clk / 4) / CFG_HZ;
+cpu/mpc8260/pci.c:		       gd->ram_size,
+cpu/mpc8260/serial_scc.c:	m8260_cpm_extcbrg(SCC_INDEX, gd->baudrate,
+cpu/mpc8260/serial_scc.c:	m8260_cpm_setbrg(SCC_INDEX, gd->baudrate);
+cpu/mpc8260/serial_smc.c:	m8260_cpm_extcbrg(brg_map[SMC_INDEX], gd->baudrate,
+cpu/mpc8260/serial_smc.c:	m8260_cpm_setbrg(brg_map[SMC_INDEX], gd->baudrate);
+cpu/mpc8260/speed.c:		gd->vco_out = clkin * (pllmf + 1);
+cpu/mpc8260/speed.c:		gd->vco_out = (clkin * 2 * (pllmf + 1)) / (plldf + 1);
+cpu/mpc8260/speed.c:	if (gd->vco_out / (busdf + 1) != clkin) {
+cpu/mpc8260/speed.c:	gd->cpm_clk = gd->vco_out / 2;
+cpu/mpc8260/speed.c:	gd->bus_clk = clkin;
+cpu/mpc8260/speed.c:	gd->scc_clk = gd->vco_out / 4;
+cpu/mpc8260/speed.c:	gd->brg_clk = gd->vco_out / (1 << (2 * (dfbrg + 1)));
+cpu/mpc8260/speed.c:		gd->cpu_clk = (clkin * cp->b2c_mult) / 2;
+cpu/mpc8260/speed.c:		gd->cpu_clk = clkin;
+cpu/mpc8260/speed.c:			gd->vco_out, gd->scc_clk, gd->brg_clk);
+cpu/mpc8260/speed.c:			gd->cpu_clk, gd->cpm_clk, gd->bus_clk);
+cpu/mpc85xx/commproc.c:	gd->dp_alloc_base = CPM_DATAONLY_BASE;
+cpu/mpc85xx/commproc.c:	gd->dp_alloc_top = gd->dp_alloc_base + CPM_DATAONLY_SIZE;
+cpu/mpc85xx/commproc.c:	savebase = gd->dp_alloc_base;
+cpu/mpc85xx/commproc.c:	if ((off = (gd->dp_alloc_base & align_mask)) != 0)
+cpu/mpc85xx/commproc.c:		gd->dp_alloc_base += (align - off);
+cpu/mpc85xx/commproc.c:	if ((gd->dp_alloc_base + size) >= gd->dp_alloc_top) {
+cpu/mpc85xx/commproc.c:		gd->dp_alloc_base = savebase;
+cpu/mpc85xx/commproc.c:	retloc = gd->dp_alloc_base;
+cpu/mpc85xx/commproc.c:	gd->dp_alloc_base += size;
+cpu/mpc85xx/commproc.c:#define BRG_INT_CLK	gd->brg_clk
+cpu/mpc85xx/serial_scc.c:	m8560_cpm_extcbrg(SCC_INDEX, gd->baudrate,
+cpu/mpc85xx/serial_scc.c:	m8560_cpm_setbrg(SCC_INDEX, gd->baudrate);
+cpu/mpc85xx/speed.c:	gd->cpu_clk = sys_info.freqProcessor;
+cpu/mpc85xx/speed.c:	gd->bus_clk = sys_info.freqSystemBus;
+cpu/mpc85xx/speed.c:	gd->vco_out = 2*sys_info.freqSystemBus;
+cpu/mpc85xx/speed.c:	gd->cpm_clk = gd->vco_out / 2;
+cpu/mpc85xx/speed.c:	gd->scc_clk = gd->vco_out / 4;
+cpu/mpc85xx/speed.c:	gd->brg_clk = gd->vco_out / (1 << (2 * (dfbrg + 1)));
+cpu/mpc85xx/speed.c:	if(gd->cpu_clk != 0) return (0);
+cpu/mpc8xx/commproc.c:	gd->dp_alloc_base = CPM_DATAONLY_BASE;
+cpu/mpc8xx/commproc.c:	gd->dp_alloc_top  = CPM_DATAONLY_BASE + CPM_DATAONLY_SIZE;
+cpu/mpc8xx/commproc.c:	uint addr = gd->dp_alloc_base;
+cpu/mpc8xx/commproc.c:	if ((gd->dp_alloc_base + size) >= gd->dp_alloc_top)
+cpu/mpc8xx/commproc.c:	gd->dp_alloc_base += size;
+cpu/mpc8xx/commproc.c:	return gd->dp_alloc_base;
+cpu/mpc8xx/commproc.c:	addr = (gd->dp_alloc_base + mask) & ~mask;
+cpu/mpc8xx/commproc.c:	if ((addr + size) >= gd->dp_alloc_top)
+cpu/mpc8xx/commproc.c:	gd->dp_alloc_base = addr + size;
+cpu/mpc8xx/commproc.c:	return (gd->dp_alloc_base + mask) & ~mask;
+cpu/mpc8xx/cpu.c:	ulong clock = gd->cpu_clk;
+cpu/mpc8xx/cpu.c:		return (gd->cpu_clk / 16);
+cpu/mpc8xx/cpu.c:	oscclk = gd->cpu_clk / factor;
+cpu/mpc8xx/cpu_init.c:	bd_t *bd = gd->bd;
+cpu/mpc8xx/fec.c:	bd_t *bd = gd->bd;
+cpu/mpc8xx/i2c.c:	i2c_setrate (gd->cpu_clk, CFG_I2C_SPEED) ;
+cpu/mpc8xx/i2c.c:		if (gd->have_console)
+cpu/mpc8xx/i2c.c:		if (gd->have_console)
+cpu/mpc8xx/i2c.c:		if (gd->have_console)
+cpu/mpc8xx/i2c.c:		if (gd->have_console)
+cpu/mpc8xx/i2c.c:		if (gd->have_console)
+cpu/mpc8xx/i2c.c:		if (gd->have_console)
+cpu/mpc8xx/lcd.c:	lcd_base = (void *)(gd->fb_base);
+cpu/mpc8xx/lcd.c:		strmhz(temp, gd->cpu_clk));
+cpu/mpc8xx/lcd.c:		gd->ram_size >> 20,
+cpu/mpc8xx/lcd.c:		gd->bd->bi_flashsize >> 20 );
+cpu/mpc8xx/lcd.c:		strmhz(temp, gd->cpu_clk),
+cpu/mpc8xx/lcd.c:		gd->ram_size >> 20,
+cpu/mpc8xx/lcd.c:		gd->bd->bi_flashsize >> 20 );
+cpu/mpc8xx/serial.c:	int divisor=gd->cpu_clk/16/gd->baudrate;
+cpu/mpc8xx/serial.c:	gd->be_quiet = 1;
+cpu/mpc8xx/serial.c:	gd->be_quiet = 0;
+cpu/mpc8xx/serial.c:	if (gd->be_quiet)
+cpu/mpc8xx/speed.c: * get_clocks() fills in gd->cpu_clock depending on CONFIG_8xx_GCLK_FREQ
+cpu/mpc8xx/speed.c:	gd->cpu_clk = measure_gclk();
+cpu/mpc8xx/speed.c:	gd->cpu_clk = CONFIG_8xx_GCLK_FREQ;
+cpu/mpc8xx/speed.c:		gd->bus_clk = gd->cpu_clk;
+cpu/mpc8xx/speed.c:		gd->bus_clk = gd->cpu_clk / 2;
+cpu/mpc8xx/spi.c:	eth_init(gd->bd);
+cpu/mpc8xx/video.c:		strmhz(temp, gd->cpu_clk),
+cpu/mpc8xx/video.c:		gd->ram_size >> 20,
+cpu/mpc8xx/video.c:		gd->bd->bi_flashsize >> 20 );
+cpu/mpc8xx/video.c:	video_init ((void *)(gd->fb_base));	/* Video initialization */
+cpu/nios/serial.c:	div = (CONFIG_SYS_CLK_FREQ/gd->baudrate)-1;
+cpu/ppc4xx/405gp_pci.c:	bd_t *bd = gd->bd;
+cpu/ppc4xx/cpu.c:	ulong clock = gd->cpu_clk;
+cpu/ppc4xx/cpu_init.c:	bd_t *bd = gd->bd;
+cpu/ppc4xx/interrupts.c:	val = gd->bd->bi_intfreq/100;	/* 10 msec */
+cpu/ppc4xx/interrupts.c:	set_pit(gd->bd->bi_intfreq / 1000);
+cpu/ppc4xx/serial.c:	br_reg = ((((CONFIG_CPUCLOCK * 1000000) / 16) / gd->baudrate) - 1);
+cpu/ppc4xx/serial.c:	br_reg = ((((CONFIG_CPUCLOCK * 1000000) / 16) / gd->baudrate) - 1);
+cpu/ppc4xx/serial.c:	tmp  = gd->baudrate * 16;
+cpu/ppc4xx/serial.c:	serial_divs (gd->baudrate, &udiv, &bdiv);
+cpu/ppc4xx/serial.c:	clk = gd->cpu_clk;
+cpu/ppc4xx/serial.c:	clk = gd->cpu_clk;
+cpu/ppc4xx/serial.c:	tmp = gd->baudrate * udiv * 16;
+cpu/ppc4xx/serial.c:	clk = gd->cpu_clk;
+cpu/ppc4xx/serial.c:	tmp = gd->baudrate * udiv * 16;
+cpu/ppc4xx/serial.c:	br_reg = (((((gd->cpu_clk / 16) / 18) * 10) / CONFIG_KGDB_BAUDRATE) +
+cpu/ppc4xx/speed.c:	gd->cpu_clk = sys_info.freqProcessor;
+cpu/ppc4xx/speed.c:	gd->bus_clk = sys_info.freqPLB;
+cpu/ppc4xx/speed.c:	gd->cpu_clk = 66000000;
+cpu/ppc4xx/speed.c:	gd->bus_clk = 66000000;
+cpu/pxa/pxafb.c:	lcd_base = (void *)(gd->fb_base);
+cpu/pxa/serial.c:	if (gd->baudrate == 1200)
+cpu/pxa/serial.c:	else if (gd->baudrate == 9600)
+cpu/pxa/serial.c:	else if (gd->baudrate == 19200)
+cpu/pxa/serial.c:	else if (gd->baudrate == 38400)
+cpu/pxa/serial.c:	else if (gd->baudrate == 57600)
+cpu/pxa/serial.c:	else if (gd->baudrate == 115200)
+cpu/sa1100/serial.c:	if (gd->baudrate == 1200)
+cpu/sa1100/serial.c:	else if (gd->baudrate == 9600)
+cpu/sa1100/serial.c:	else if (gd->baudrate == 19200)
+cpu/sa1100/serial.c:	else if (gd->baudrate == 38400)
+cpu/sa1100/serial.c:	else if (gd->baudrate == 57600)
+cpu/sa1100/serial.c:	else if (gd->baudrate == 115200)
+doc/README.silent:   suppressed by testing for the flag "GD_FLG_SILENT" in "gd->flags".
+doc/README.standalone:	gd->jt[XF_malloc]	= my_malloc;
+doc/README.standalone:	gd->jt[XF_free]		= my_free;
+doc/README.standalone:	printf("U-Boot relocation offset: %x\n", gd->reloc_off);
+doc/README.standalone:	gd->jt[XF_foobar] = foobar;
+drivers/serial.c:	if ((CFG_NS16550_CLK == 12000000) && (gd->baudrate == 115200)) {
+drivers/serial.c:	if ((CFG_NS16550_CLK == 48000000) && (gd->baudrate == 115200)) {
+drivers/serial.c:	return (CFG_NS16550_CLK / 16 / gd->baudrate);
+drivers/serial_max3100.c:	switch (gd->baudrate) {
+examples/mem_to_mem_idma2intr.c:		dpbase = gd->dp_alloc_base;
+examples/mem_to_mem_idma2intr.c:	if ((dpbase + size) >= gd->dp_alloc_top) {
+examples/timer.c:	cpmtimerp = &((immap_t *) gd->bd->bi_immr_base)->im_cpmtimer;
+examples/timer.c:		cpic8xx_t *cpm_icp = &((immap_t *) gd->bd->bi_immr_base)->im_cpic;
+examples/timer.c:		sysconf8xx_t *siup = &((immap_t *) gd->bd->bi_immr_base)->im_siu_conf;
+include/configs/FADS823.h:/* #define CONFIG_VIDEO_ADDR (gd->bd->bi_memsize - CONFIG_VIDEO_SIZE) Frame buffer address */
+lib_arm/armlinux.c:    bd_t *bd = gd->bd;
+lib_arm/armlinux.c:    params->u.videolfb.lfb_base = (u32)gd->fb_base;
+lib_arm/board.c:	gd->bd->bi_baudrate = gd->baudrate = (i > 0)
+lib_arm/board.c:	if (gd->flags & GD_FLG_SILENT)
+lib_arm/board.c:	if (gd->flags & GD_FLG_SILENT)
+lib_arm/board.c:		printf ("Bank #%d: %08lx ", i, gd->bd->bi_dram[i].start);
+lib_arm/board.c:		print_size (gd->bd->bi_dram[i].size, "\n");
+lib_arm/board.c:	if (gd->flags & GD_FLG_SILENT)
+lib_arm/board.c:	gd->bd = &bd_data;
+lib_arm/board.c:	memset (gd->bd, 0, sizeof (bd_t));
+lib_arm/board.c:	gd->fb_base = addr;
+lib_arm/board.c:	cs8900_get_enetaddr (gd->bd->bi_enetaddr);
+lib_arm/board.c:		smc_set_mac_addr(gd->bd->bi_enetaddr);
+lib_i386/bios_setup.c:	RELOC_16_WORD(0xf000, ram_in_64kb_chunks) = gd->ram_size >> 16;
+lib_i386/board.c:	mem_malloc_end = gd->ram_size;
+lib_i386/board.c:	gd->baudrate = (i != 0)
+lib_i386/board.c:		printf ("Bank #%d: %08lx ", i, gd->bd->bi_dram[i].start);
+lib_i386/board.c:		print_size (gd->bd->bi_dram[i].size, "\n");
+lib_i386/board.c:	gd->bd = &bd_data;
+lib_i386/board.c:	memset (gd->bd, 0, sizeof (bd_t));
+lib_i386/board.c:	gd->baudrate =  CONFIG_BAUDRATE;
+lib_i386/board.c:	eth_initialize(gd->bd);
+lib_mips/board.c:	ulong dest_addr = CFG_MONITOR_BASE + gd->reloc_off;
+lib_mips/board.c:	int board_type = gd->board_type;
+lib_mips/board.c:	if ((gd->ram_size = initdram (board_type)) > 0) {
+lib_mips/board.c:		print_size (gd->ram_size, "\n");
+lib_mips/board.c:	gd->baudrate = (i > 0)
+lib_mips/board.c:	addr = CFG_SDRAM_BASE + gd->ram_size;
+lib_mips/board.c:	gd->bd = bd;
+lib_mips/board.c:	bd->bi_memsize	= gd->ram_size;		/* size  of  DRAM memory in bytes */
+lib_mips/board.c:	bd->bi_baudrate	= gd->baudrate;		/* Console Baudrate */
+lib_mips/board.c:	gd->flags |= GD_FLG_RELOC;	/* tell others: relocation done */
+lib_mips/board.c:	gd->reloc_off = dest_addr - CFG_MONITOR_BASE;
+lib_mips/board.c:		addr = (ulong) (cmdtp->cmd) + gd->reloc_off;
+lib_mips/board.c:		addr = (ulong)(cmdtp->name) + gd->reloc_off;
+lib_mips/board.c:			addr = (ulong)(cmdtp->usage) + gd->reloc_off;
+lib_mips/board.c:			addr = (ulong)(cmdtp->help) + gd->reloc_off;
+lib_mips/board.c:	env_name_spec += gd->reloc_off;
+lib_mips/board.c:	bd = gd->bd;
+lib_mips/board.c:	eth_initialize(gd->bd);
+lib_mips/mips_linux.c:	linux_params_init (PHYSADDR (gd->bd->bi_boot_params), commandline);
+lib_mips/mips_linux.c:	sprintf (env_buf, "%lu", gd->ram_size);
+lib_mips/mips_linux.c:	printf ("## Giving linux memsize in bytes, %lu\n", gd->ram_size);
+lib_mips/mips_linux.c:	sprintf (env_buf, "%lu", gd->ram_size >> 20);
+lib_mips/mips_linux.c:	printf ("## Giving linux memsize in MB, %lu\n", gd->ram_size >> 20);
+lib_mips/mips_linux.c:	sprintf (env_buf, "0x%08X", (uint) (gd->bd->bi_flashstart));
+lib_mips/mips_linux.c:	sprintf (env_buf, "0x%X", (uint) (gd->bd->bi_flashsize));
+lib_nios/board.c:	gd->bd = (bd_t *)(gd+1);	/* At end of global data */
+lib_nios/board.c:	gd->baudrate = CONFIG_BAUDRATE;
+lib_nios/board.c:	gd->cpu_clk = CONFIG_SYS_CLK_FREQ;
+lib_nios/board.c:	bd = gd->bd;
+lib_ppc/board.c:	ulong dest_addr = CFG_MONITOR_BASE + gd->reloc_off;
+lib_ppc/board.c:	gd->baudrate = (i > 0)
+lib_ppc/board.c:	int board_type = gd->board_type;
+lib_ppc/board.c:	if ((gd->ram_size = initdram (board_type)) > 0) {
+lib_ppc/board.c:		print_size (gd->ram_size, "\n");
+lib_ppc/board.c:	addr = CFG_SDRAM_BASE + gd->ram_size;
+lib_ppc/board.c:	       (gd->ram_size > 256 << 20) ? 256 << 20 : gd->ram_size;
+lib_ppc/board.c:	gd->fb_base = addr;
+lib_ppc/board.c:	gd->fb_base = addr;
+lib_ppc/board.c:	gd->relocaddr = addr;
+lib_ppc/board.c:	gd->bd = bd;
+lib_ppc/board.c:	bd->bi_memsize   = gd->ram_size;	/* size  of  DRAM memory in bytes */
+lib_ppc/board.c:	bd->bi_intfreq = gd->cpu_clk;	/* Internal Freq, in Hz */
+lib_ppc/board.c:	bd->bi_busfreq = gd->bus_clk;	/* Bus Freq,      in Hz */
+lib_ppc/board.c:	bd->bi_cpmfreq = gd->cpm_clk;
+lib_ppc/board.c:	bd->bi_brgfreq = gd->brg_clk;
+lib_ppc/board.c:	bd->bi_sccfreq = gd->scc_clk;
+lib_ppc/board.c:	bd->bi_vco     = gd->vco_out;
+lib_ppc/board.c:	bd->bi_ipbfreq = gd->ipb_clk;
+lib_ppc/board.c:	bd->bi_pcifreq = gd->pci_clk;
+lib_ppc/board.c:	bd->bi_baudrate = gd->baudrate;	/* Console Baudrate     */
+lib_ppc/board.c:	bd->bi_procfreq = gd->cpu_clk;	/* Processor Speed, In Hz */
+lib_ppc/board.c:	bd->bi_plb_busfreq = gd->bus_clk;
+lib_ppc/board.c:	bd = gd->bd;
+lib_ppc/board.c:	gd->flags |= GD_FLG_RELOC;	/* tell others: relocation done */
+lib_ppc/board.c:	gd->reloc_off = dest_addr - CFG_MONITOR_BASE;
+lib_ppc/board.c:		addr = (ulong) (cmdtp->cmd) + gd->reloc_off;
+lib_ppc/board.c:		addr = (ulong)(cmdtp->name) + gd->reloc_off;
+lib_ppc/board.c:			addr = (ulong)(cmdtp->usage) + gd->reloc_off;
+lib_ppc/board.c:			addr = (ulong)(cmdtp->help) + gd->reloc_off;
+lib_ppc/board.c:	env_name_spec += gd->reloc_off;
+lib_ppc/board.c:	if ((gd->board_type >> 16) == 2)
+lib_ppc/board.c:		bd->bi_ethspeed = gd->board_type & 0xFFFF;
+lib_ppc/board.c:	 do_mdm_init = gd->do_mdm_init;
+net/net.c:	bd_t *bd = gd->bd;
+net/net.c:	eth_init(gd->bd);
+post/ether.c:	bd_t *bd = gd->bd;
+post/ether.c:		eth_init (gd->bd);
+post/memory.c:	bd_t *bd = gd->bd;
+post/post.c:	gd->post_init_f_time = post_time_ms(0);
+post/post.c:	if (!gd->post_init_f_time)
+post/post.c:	gd->post_log_word = 0;
+post/post.c:	gd->post_log_word |= (testid)<<16;
+post/post.c:	gd->post_log_word |= testid;
+post/post.c:		if (gd->post_log_word & (post_list[j].testid<<16)) {
+post/post.c:			if (gd->post_log_word & post_list[j].testid)
+post/post.c:			addr = (ulong) (test->name) + gd->reloc_off;
+post/post.c:			addr = (ulong) (test->cmd) + gd->reloc_off;
+post/post.c:			addr = (ulong) (test->desc) + gd->reloc_off;
+post/post.c:			addr = (ulong) (test->test) + gd->reloc_off;
+post/post.c:			addr = (ulong) (test->init_f) + gd->reloc_off;
+post/post.c:			addr = (ulong) (test->reloc) + gd->reloc_off;
+post/sysmon.c:#define	RELOC(x) if (x != NULL) x = (void *) ((ulong) (x) + gd->reloc_off)
+post/sysmon.c:		while (post_time_ms(gd->post_init_f_time) < 300) WATCHDOG_RESET ();
+post/uart.c:			(((gd->cpu_clk / 16 / gd->baudrate) -
+post/uart.c:			(((gd->cpu_clk / 16 / gd->baudrate) -
+post/uart.c:		eth_init (gd->bd);

@@ -1,0 +1,12 @@
+$Header$
+
+The source bundle is based on U-Boot 1.0.0 (http://u-boot.sourceforge.net/).
+
+It contains board support platform files needed for the MagicEyes MMSP2 ARM based reference board.
+This should enable a boot-loader to be constructed for any MMSP2/MP2520F based system.
+It is NOT a complete distribution of U-Boot.
+
+This code is released by the Open2x project (http://www.distant-earth.com/open2x/).
+It is exactly as provided by MagicEyes. No changes to this source have taken place.
+
+For more recent, community maintained, versions of the boot-loader please refer to the u-boot-open2x module in the Open2x CVS repository or look at the projects releases.

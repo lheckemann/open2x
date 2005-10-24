@@ -1,0 +1,114 @@
+bzlib.o: bzlib.c /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+bzlib_crctable.o: bzlib_crctable.c \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+bzlib_decompress.o: bzlib_decompress.c \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+bzlib_randtable.o: bzlib_randtable.c \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+bzlib_huffman.o: bzlib_huffman.c \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h
+crc32.o: crc32.c /home/depss/DEPSS/u-boot/include/common.h \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h \
+ /home/depss/DEPSS/u-boot/include/linux/bitops.h \
+ /home/depss/DEPSS/u-boot/include/asm/bitops.h \
+ /home/depss/DEPSS/u-boot/include/linux/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/config.h \
+ /home/depss/DEPSS/u-boot/include/linux/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/linux/stddef.h \
+ /home/depss/DEPSS/u-boot/include/asm/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/asm/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/ptrace.h \
+ /home/depss/DEPSS/u-boot/include/asm/proc/ptrace.h \
+ /usr/local/arm-linux/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ /home/depss/DEPSS/u-boot/include/part.h \
+ /home/depss/DEPSS/u-boot/include/flash.h \
+ /home/depss/DEPSS/u-boot/include/image.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot.h \
+ /home/depss/DEPSS/u-boot/include/asm/global_data.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot-arm.h \
+ /home/depss/DEPSS/u-boot/include/zlib.h
+ctype.o: ctype.c /home/depss/DEPSS/u-boot/include/linux/ctype.h
+display_options.o: display_options.c \
+ /home/depss/DEPSS/u-boot/include/common.h \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h \
+ /home/depss/DEPSS/u-boot/include/linux/bitops.h \
+ /home/depss/DEPSS/u-boot/include/asm/bitops.h \
+ /home/depss/DEPSS/u-boot/include/linux/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/config.h \
+ /home/depss/DEPSS/u-boot/include/linux/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/linux/stddef.h \
+ /home/depss/DEPSS/u-boot/include/asm/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/asm/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/ptrace.h \
+ /home/depss/DEPSS/u-boot/include/asm/proc/ptrace.h \
+ /usr/local/arm-linux/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ /home/depss/DEPSS/u-boot/include/part.h \
+ /home/depss/DEPSS/u-boot/include/flash.h \
+ /home/depss/DEPSS/u-boot/include/image.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot.h \
+ /home/depss/DEPSS/u-boot/include/asm/global_data.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot-arm.h
+ldiv.o: ldiv.c
+string.o: string.c /home/depss/DEPSS/u-boot/include/linux/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/config.h \
+ /home/depss/DEPSS/u-boot/include/linux/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/linux/stddef.h \
+ /home/depss/DEPSS/u-boot/include/asm/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/asm/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/string.h \
+ /home/depss/DEPSS/u-boot/include/linux/ctype.h \
+ /home/depss/DEPSS/u-boot/include/malloc.h
+vsprintf.o: vsprintf.c \
+ /usr/local/arm-linux/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ /home/depss/DEPSS/u-boot/include/linux/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/config.h \
+ /home/depss/DEPSS/u-boot/include/linux/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/linux/stddef.h \
+ /home/depss/DEPSS/u-boot/include/asm/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/asm/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/string.h \
+ /home/depss/DEPSS/u-boot/include/asm/string.h \
+ /home/depss/DEPSS/u-boot/include/linux/ctype.h \
+ /home/depss/DEPSS/u-boot/include/common.h \
+ /home/depss/DEPSS/u-boot/include/config.h \
+ /home/depss/DEPSS/u-boot/include/configs/eplay.h \
+ /home/depss/DEPSS/u-boot/include/cmd_confdefs.h \
+ /home/depss/DEPSS/u-boot/include/linux/bitops.h \
+ /home/depss/DEPSS/u-boot/include/asm/bitops.h \
+ /home/depss/DEPSS/u-boot/include/asm/ptrace.h \
+ /home/depss/DEPSS/u-boot/include/asm/proc/ptrace.h \
+ /home/depss/DEPSS/u-boot/include/part.h \
+ /home/depss/DEPSS/u-boot/include/flash.h \
+ /home/depss/DEPSS/u-boot/include/image.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot.h \
+ /home/depss/DEPSS/u-boot/include/asm/global_data.h \
+ /home/depss/DEPSS/u-boot/include/asm/u-boot-arm.h \
+ /home/depss/DEPSS/u-boot/include/command.h
+zlib.o: zlib.c /home/depss/DEPSS/u-boot/include/zlib.h \
+ /home/depss/DEPSS/u-boot/include/linux/string.h \
+ /home/depss/DEPSS/u-boot/include/linux/types.h \
+ /home/depss/DEPSS/u-boot/include/linux/config.h \
+ /home/depss/DEPSS/u-boot/include/linux/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/linux/stddef.h \
+ /home/depss/DEPSS/u-boot/include/asm/posix_types.h \
+ /home/depss/DEPSS/u-boot/include/asm/types.h \
+ /home/depss/DEPSS/u-boot/include/asm/string.h
