@@ -1,0 +1,4 @@
+KERNELCONFIG=`pwd`/arm.config
+TARGET=arm-mmsp2-linux
+GCC_EXTRA_CONFIG="--with-cpu=arm920t --enable-cxx-flags=-mcpu=arm920t"
+TARGET_CFLAGS="-O"
