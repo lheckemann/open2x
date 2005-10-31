@@ -34,3 +34,5 @@ u-boot-mmsp2 u-boot-mmsp2
 linux-mmsp2 linux-mmsp2
 u-boot-open2x u-boot-open2x
 libs-gp2x libs-gp2x
+tool-chain tool-chain
+buildscripts tool-chain\buildscripts
