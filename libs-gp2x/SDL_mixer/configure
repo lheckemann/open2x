@@ -20117,7 +20117,7 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-     #include <vorbis/vorbisfile.h>
+     #include <tremor/ivorbisfile.h>
 
 int
 main ()
@@ -20163,7 +20163,7 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 echo "${ECHO_T}$have_vorbis" >&6
     if test x$have_vorbis = xyes; then
         CFLAGS="$CFLAGS -DOGG_MUSIC"
-        SYSTEM_LIBS="$SYSTEM_LIBS -lvorbisfile -lvorbis -logg"
+        SYSTEM_LIBS="$SYSTEM_LIBS -lvorbisidec"
     fi
 fi
 # Check whether --enable-music-mp3 or --disable-music-mp3 was given.

@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <vorbis/vorbisfile.h>
+#include <tremor/ivorbisfile.h>
 
 #include "SDL_mutex.h"
 #include "SDL_endian.h"
@@ -114,9 +114,9 @@ SDL_AudioSpec *Mix_LoadOGG_RW (SDL_RWops *src, int freesrc,
 
     buf = *audio_buf;
     to_read = *audio_len;
-    for (read = ov_read(&vf, buf, to_read, 0/*LE*/, 2/*16bit*/, 1/*signed*/, &bitstream);
+    for (read = ov_read(&vf, buf, to_read, &bitstream);
          read > 0;
-         read = ov_read(&vf, buf, to_read, 0, 2, 1, &bitstream))
+         read = ov_read(&vf, buf, to_read, &bitstream))
     {
         if (read == OV_HOLE || read == OV_EBADLINK)
             break; /* error */

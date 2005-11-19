@@ -155,7 +155,7 @@ static void OGG_getsome(OGG_music *music)
 	char data[4096];
 	SDL_AudioCVT *cvt;
 
-	len = ov_read(&music->vf, data, sizeof(data), 0, 2, 1, &section);
+	len = ov_read(&music->vf, data, sizeof(data), &section);
 	if ( len <= 0 ) {
 		if ( len == 0 ) {
 			music->playing = 0;

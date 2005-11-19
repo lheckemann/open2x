@@ -26,7 +26,7 @@
 
 /* This file supports Ogg Vorbis music streams */
 
-#include <vorbis/vorbisfile.h>
+#include <tremor/ivorbisfile.h>
 
 typedef struct {
 	int playing;
