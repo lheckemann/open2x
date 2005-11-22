@@ -1,19 +1,32 @@
-#!/bin/bash
-#Borrowed from Snaff's quick SDL build script.
+#!/bin/sh
 
-export PATH=/tools/open2x_gcc/gcc-4.0.2-glibc-2.3.5/arm-open2x-linux/arm-open2x-linux/bin:$PATH
-export CFLAGS=-msoft-float
+# TODO: Add in all the lib build scripts and clean up the dependency logic a little. 
+# (i.e. you can't even try and make SDL_image without SDL etc. etc.)
 
-cp -r /gp2x/library/SDL-1.2.7/ .
-cd SDL-1.2.7/
+# $header$
 
-./configure --prefix=/opt/local/gp2x --build=i386 --host=arm-open2x-linux --target=arm-open2x-linux --enable-video-fbcon --disable-video-qtopia --disable-video-photon --disable-video-direct --disable-video-ggi --disable-video-svga --disable-video-aalib --disable-video-dummy --disable-video-dga --disable-arts --disable-esd --disable-alsa --disable-video-x11 --disable-nas --disable-nasm --disable-debug --disable-joystick-amigaos --disable-joystick-beos --disable-joystick-bsd --disable-joystick-darwin --disable-joystick-dc --disable-joystick-linux --disable-joystick-macos --disable-joystick-mint --disable-joystick-win32 --disable-shared || exit
-make || exit
-make install || exit
+# This is a script to build and install the GP2X patched SDL libs found in the Open2x libs_gp2x CVS module.
 
-cp /opt/local/gp2x/bin/arm-open2x-linux-sdl-config /opt/local/gp2x/bin/sdl-config
+echo " "
+echo "*  Building SDL 1.2.9 for the GP2X"
+echo " "
 
-cd ..
-rm -rf SDL-1.2.7/
+if [ $BUILD_SDL = 1 ]
+then
 
-echo Build and installation complete
+  echo "-   Using tools from $TOOLS_ROOT"
+  echo "-   Installing libraries to $LIB_ROOT"
+  #./configure --prefix=$LIB_ROOT --build=i386 --host=$HOST --target=$HOST --enable-video-fbcon --disable-video-qtopia --disable-video-photon --disable-video-direct --disable-video-ggi --disable-video-svga --disable-video-aalib --disable-video-dummy --disable-video-dga --disable-arts --disable-esd --disable-alsa --disable-video-x11 --disable-nas --disable-nasm --disable-debug --disable-joystick-amigaos --disable-joystick-beos --disable-joystick-bsd --disable-joystick-darwin --disable-joystick-dc --disable-joystick-linux --disable-joystick-macos --disable-joystick-mint --disable-joystick-win32 --disable-shared || exit
+  #make || exit
+  #make install || exit
+  #cp /opt/local/gp2x/bin/arm-open2x-linux-sdl-config /opt/local/gp2x/bin/sdl-config
+  echo "-   Build complete - returning to main script"
+
+else
+
+  echo "-   This library is not being built. BUILD_SDL = $BUILD_SDL"
+  exit
+
+fi
+
+exit
