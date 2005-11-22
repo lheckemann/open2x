@@ -36,7 +36,7 @@
 #include "SDL_ttf.h"
 
 #define DEFAULT_PTSIZE	18
-#define DEFAULT_TEXT	"The quick brown fox jumped over the lazy dog"
+#define DEFAULT_TEXT	"The GP2X jumped over the lazy TTF font"
 #define NUM_COLORS      256
 
 static char *Usage =
@@ -184,9 +184,11 @@ int main(int argc, char *argv[])
 	}
 
 	/* Set a 640x480x8 video mode */
-	screen = SDL_SetVideoMode(640, 480, 8, SDL_SWSURFACE);
+	/* Note: This is set to 320x240x8 for the GP2X */
+	/*       This ensures the test app will still run */
+	screen = SDL_SetVideoMode(320, 240, 8, SDL_SWSURFACE);
 	if ( screen == NULL ) {
-		fprintf(stderr, "Couldn't set 640x480x8 video mode: %s\n",
+		fprintf(stderr, "Couldn't set 320x240x8 video mode: %s\n",
 							SDL_GetError());
 		return(2);
 	}
@@ -222,7 +224,7 @@ int main(int argc, char *argv[])
 		SDL_BlitSurface(text, NULL, screen, &dstrect);
 		SDL_FreeSurface(text);
 	}
-	
+
 	/* Render and center the message */
 	if ( argc > 2 ) {
 		message = argv[2];
@@ -311,7 +313,7 @@ int main(int argc, char *argv[])
 
 	/* Blit the text surface */
 	if ( SDL_BlitSurface(text, NULL, screen, &dstrect) < 0 ) {
-		fprintf(stderr, "Couldn't blit text to display: %s\n", 
+		fprintf(stderr, "Couldn't blit text to display: %s\n",
 								SDL_GetError());
 		TTF_CloseFont(font);
 		return(2);
@@ -349,11 +351,11 @@ int main(int argc, char *argv[])
 					SDL_UpdateRects(screen, 1, &dstrect);
 				} else {
 					fprintf(stderr,
-					"Couldn't blit text to display: %s\n", 
+					"Couldn't blit text to display: %s\n",
 								SDL_GetError());
 				}
 				break;
-				
+
 			case SDL_KEYDOWN:
 			case SDL_QUIT:
 				done = 1;
