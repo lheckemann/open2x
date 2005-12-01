@@ -27,12 +27,19 @@
 
 mmsp2 -a u-boot-mmsp2 linux-mmsp2
 open2x -a u-boot-open2x linux-open2x
+gph -a u-boot-gp2x linux-gp2x
 libs -a libs-gp2x
 SDL -a libs-gp2x/SDL
 
 u-boot-mmsp2 u-boot-mmsp2
 linux-mmsp2 linux-mmsp2
+
 u-boot-open2x u-boot-open2x
+linux-open2x linux-open2x
+
+u-boot-gp2x u-boot-gp2x
+linux-gp2x linux-gp2x
+
 libs-gp2x libs-gp2x
 tool-chain tool-chain
 buildscripts tool-chain/buildscripts
