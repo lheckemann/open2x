@@ -547,26 +547,27 @@ do
     datadir=$ac_optarg ;;
 
   -disable-* | --disable-*)
-    ac_feature=`expr "x$ac_option" : 'x-*disable-\(.*\)'`
+    ac_feature=`echo $ac_option|sed -e 's/-*disable-//'`
     # Reject names that are not valid shell variable names.
-    expr "x$ac_feature" : ".*[^-_$as_cr_alnum]" >/dev/null &&
-      { echo "$as_me: error: invalid feature name: $ac_feature" >&2
-   { (exit 1); exit 1; }; }
-    ac_feature=`echo $ac_feature | sed 's/-/_/g'`
-    eval "enable_$ac_feature=no" ;;
+    if test -n "`echo $ac_feature| sed 's/[-a-zA-Z0-9_]//g'`"; then
+      { echo "configure: error: $ac_feature: invalid feature name" 1>&2; exit 1; }
+    fi
+    ac_feature=`echo $ac_feature| sed 's/-/_/g'`
+    eval "enable_${ac_feature}=no" ;;
 
   -enable-* | --enable-*)
-    ac_feature=`expr "x$ac_option" : 'x-*enable-\([^=]*\)'`
+    ac_feature=`echo $ac_option|sed -e 's/-*enable-//' -e 's/=.*//'`
     # Reject names that are not valid shell variable names.
-    expr "x$ac_feature" : ".*[^-_$as_cr_alnum]" >/dev/null &&
-      { echo "$as_me: error: invalid feature name: $ac_feature" >&2
-   { (exit 1); exit 1; }; }
-    ac_feature=`echo $ac_feature | sed 's/-/_/g'`
-    case $ac_option in
-      *=*) ac_optarg=`echo "$ac_optarg" | sed "s/'/'\\\\\\\\''/g"`;;
+    if test -n "`echo $ac_feature| sed 's/[-_a-zA-Z0-9]//g'`"; then
+      { echo "configure: error: $ac_feature: invalid feature name" 1>&2; exit 1; }
+    fi
+    ac_feature=`echo $ac_feature| sed 's/-/_/g'`
+    case "$ac_option" in
+      *=*) ;;
       *) ac_optarg=yes ;;
     esac
-    eval "enable_$ac_feature='$ac_optarg'" ;;
+    eval "enable_${ac_feature}='$ac_optarg'" ;;
+
 
   -exec-prefix | --exec_prefix | --exec-prefix | --exec-prefi \
   | --exec-pref | --exec-pre | --exec-pr | --exec-p | --exec- \
