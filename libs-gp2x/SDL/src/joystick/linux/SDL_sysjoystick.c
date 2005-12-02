@@ -41,7 +41,7 @@ static char rcsid =
 //[*]------------------------------------------------------------------------------------------[*]
 #define MAX_JOYSTICKS	18		/* only 2 are supported in the multimedia API */
 #define MAX_AXES		0		/* each joystick can have up to 2 axes */
-#define MAX_BUTTONS		18		/* and 6 buttons                      */
+#define MAX_BUTTONS		19		/* and 6 buttons                      */
 #define	MAX_HATS		0
 
 #define	JOYNAMELEN		7
@@ -66,6 +66,7 @@ typedef enum {
 	PEPC_VK_START,			// 15
 	PEPC_VK_VOL_UP,			// 16
 	PEPC_VK_VOL_DOWN		// 17	
+	PEPC_VK_STICK_PUSH // 18
 }MAP_KEY;	
 #endif	
 
@@ -88,6 +89,7 @@ typedef enum {
 #define	PEPC_VK_START			(1<<15)	
 #define	PEPC_VK_VOL_UP			(1<<16)	
 #define	PEPC_VK_VOL_DOWN		(1<<17)	
+#define	PEPC_VK_STICK_PUSH		(1<<18)	
 #endif
 
 static char *dev_name = "/dev/GPIO";
@@ -201,7 +203,9 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 	if(changed & PEPC_VK_VOL_UP		) SDL_PrivateJoystickButton(joystick, 16, 
 												(buff & PEPC_VK_VOL_UP		) ? SDL_PRESSED : SDL_RELEASED);
 	if(changed & PEPC_VK_VOL_DOWN	) SDL_PrivateJoystickButton(joystick, 17, 
-												(buff & PEPC_VK_DOWN		) ? SDL_PRESSED : SDL_RELEASED);
+												(buff & PEPC_VK_VOL_DOWN		) ? SDL_PRESSED : SDL_RELEASED);
+	if(changed & PEPC_VK_STICK_PUSH	) SDL_PrivateJoystickButton(joystick, 18, 
+												(buff & PEPC_VK_STICK_PUSH		) ? SDL_PRESSED : SDL_RELEASED);
 	
 
 #if 0
