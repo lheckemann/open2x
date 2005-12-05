@@ -79,7 +79,7 @@ typedef enum {
 #define	PEPC_VK_DOWN_RIGHT		(1<<5)	
 #define	PEPC_VK_LEFT			(1<<6)	
 #define	PEPC_VK_RIGHT			(1<<7)	
-#define	PEPC_VK_FA				(1<<8)	
+#define	PEPC_VK_FA				(1<<12)	
 #define	PEPC_VK_FB				(1<<9)	
 #define	PEPC_VK_FX				(1<<10)	
 #define	PEPC_VK_FY				(1<<11)	
@@ -161,52 +161,19 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 {
 	int ret=0;
 	unsigned long buff=0,prev_buttons=0, changed=0,buttons=0;
-	
+	int i;
+
 	ret = read(joystick->hwdata->fd, &buff, 4); 
 
 	prev_buttons 	= joystick->hwdata->prev_buttons;
 	changed 		= buff^prev_buttons; 
-		
-	if(changed & PEPC_VK_UP			) SDL_PrivateJoystickButton(joystick, 0, 
-												(buff & PEPC_VK_UP			) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_UP_LEFT	) SDL_PrivateJoystickButton(joystick, 1, 
-												(buff & PEPC_VK_UP_LEFT		) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_UP_RIGHT	) SDL_PrivateJoystickButton(joystick, 2, 
-												(buff & PEPC_VK_UP_RIGHT	) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_DOWN		) SDL_PrivateJoystickButton(joystick, 3, 
-												(buff & PEPC_VK_DOWN		) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_DOWN_LEFT	) SDL_PrivateJoystickButton(joystick, 4, 
-												(buff & PEPC_VK_DOWN_LEFT	) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_DOWN_RIGHT	) SDL_PrivateJoystickButton(joystick, 5, 
-												(buff & PEPC_VK_DOWN_RIGHT	) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_LEFT		) SDL_PrivateJoystickButton(joystick, 6, 
-												(buff & PEPC_VK_LEFT		) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_RIGHT		) SDL_PrivateJoystickButton(joystick, 7, 
-												(buff & PEPC_VK_RIGHT		) ? SDL_PRESSED : SDL_RELEASED);
-	
-	if(changed & PEPC_VK_FA			) SDL_PrivateJoystickButton(joystick, 8, 
-												(buff & PEPC_VK_FA			) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_FB			) SDL_PrivateJoystickButton(joystick, 9, 
-												(buff & PEPC_VK_FB			) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_FX			) SDL_PrivateJoystickButton(joystick, 10, 
-												(buff & PEPC_VK_FX			) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_FY			) SDL_PrivateJoystickButton(joystick, 11, 
-												(buff & PEPC_VK_FY			) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_FL			) SDL_PrivateJoystickButton(joystick, 12, 
-												(buff & PEPC_VK_FL			) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_FR			) SDL_PrivateJoystickButton(joystick, 13, 
-												(buff & PEPC_VK_FR			) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_START		) SDL_PrivateJoystickButton(joystick, 14, 
-												(buff & PEPC_VK_START		) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_SELECT		) SDL_PrivateJoystickButton(joystick, 15, 
-												(buff & PEPC_VK_SELECT		) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_VOL_UP		) SDL_PrivateJoystickButton(joystick, 16, 
-												(buff & PEPC_VK_VOL_UP		) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_VOL_DOWN	) SDL_PrivateJoystickButton(joystick, 17, 
-												(buff & PEPC_VK_VOL_DOWN		) ? SDL_PRESSED : SDL_RELEASED);
-	if(changed & PEPC_VK_STICK_PUSH	) SDL_PrivateJoystickButton(joystick, 18, 
-												(buff & PEPC_VK_STICK_PUSH		) ? SDL_PRESSED : SDL_RELEASED);
-	
+
+	for (i=0; i<19; i++)
+	{
+		unsigned long mask = 1<<i;
+		if (changed & mask)
+			SDL_PrivateJoystickButton(joystick, i, (buff & mask) ? SDL_PRESSED : SDL_RELEASED);
+	}		
 
 #if 0
 	if(changed == PEPC_VK_UP			) SDL_PrivateJoystickButton(joystick, 0,  SDL_PRESSED);
