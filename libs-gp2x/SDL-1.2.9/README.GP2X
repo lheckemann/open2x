@@ -1,0 +1,34 @@
+$Header$
+
+SDL for the GP2X (1.2.9)
+________________________
+
+Using the official http://www.libsdl.org/ 1.2.9 release as a basis this release aims to
+add advanced support for the GP2X handheld console/computer.
+
+Taken from The Open2x libs-gp2x project.
+(Software development libraries patched and optimised for the GP2X development)
+
+TODO: 
+
+Clean GPH changes to source (Please: Modularise it)
+Review controller configuration (Missing Buttons?) << Done!
+Look into using the hardware scaling engine 
+(see: http://cvs.sourceforge.net/viewcvs.py/open2x/linux-gp2x/arch/arm/mach-mmsp2/proto_scale.c?rev=1.1&view=markup)
+Add hardware blitting support and document in this file.
+More (anybody) ;-)
+
+BUILDING:
+
+Build using a configure flag something like what is shown below.
+
+./configure --prefix=$LIB_ROOT --build=i386 --host=$HOST --target=$HOST --enable-video-fbcon --disable-video-qtopia --disable-video-photon --disable-video-direct --disable-video-ggi --disable-video-svga --disable-video-aalib --disable-video-dummy --disable-video-dga --disable-arts --disable-esd --disable-alsa --disable-video-x11 --disable-nas --disable-nasm --disable-debug --disable-joystick-amigaos --disable-joystick-beos --disable-joystick-bsd --disable-joystick-darwin --disable-joystick-dc --disable-joystick-linux --disable-joystick-macos --disable-joystick-mint --disable-joystick-win32 --disable-shared || exit
+
+USING:
+
+This is SDL and can be used just like any other SDL build.
+
+Note: This version currently works using 16bit surfaces in hardware (i.e. 8bit mode is slow as a slow thing).
+
+
+The Open2x Project
