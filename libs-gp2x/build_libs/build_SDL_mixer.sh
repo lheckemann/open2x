@@ -8,7 +8,7 @@
 # This is a script to build and install the GP2X patched SDL_mixer lib found in the Open2x libs_gp2x CVS module.
 
 echo " "
-echo "*  Building SDL_mixer 1.2.6 for the GP2X using OGG Vorbis"
+echo "*  Building SDL_mixer 1.2.6 for the GP2X using OGG Vorbis (No MIDI/MP3 Support)"
 echo " "
 
 if [ $BUILD_SDL_MIXER = 1 ]
