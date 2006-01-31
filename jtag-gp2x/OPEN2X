@@ -1,0 +1,21 @@
+$Header$
+
+The source code provides jTAG flashing support for the GP2X.
+
+NOTE: It is currently in a VERY unstable state and is not much use.
+
+The aim is to produce a loosely integrated suite of apps that will:
+
+Allow loading and execution of ARM-ELF binaries via jTAG.
+Support reloading of the U-Boot bootloader via jTAG.
+Provide a small flash loader that can be loaded via jTAG 
+  and then reflash U-Boot, Kernel, ROOTFS from SD.
+
+When that is going the whole unbricking process should be a LOT quicker.
+
+Credits:
+
+Large portions of the code are based of the jTAG-ARM9 project (http://jtag-arm9.sourceforge.net/).
+  All credits for that go to Simon Wood.
+
+This code is released by the Open2x project (http://www.distant-earth.com/open2x/).
