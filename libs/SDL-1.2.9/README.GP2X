@@ -1,0 +1,98 @@
+$Header: $
+
+SDL for the GP2X (1.2.9)
+________________________
+
+Using the official http://www.libsdl.org/ 1.2.9 release as a basis this
+release aims to add advanced support for the GP2X handheld console/computer.
+
+Taken from The Open2x libs-gp2x project.
+(Software development libraries patched and optimised for the GP2X development)
+
+** Update by paeryn
+Added hardware support, made as a seperate video driver rather than
+extending fbcon driver.
+
+TODO: 
+
+Clean GPH changes to source (Please: Modularise it)
+Review controller configuration (Missing Buttons?) << Done!
+More (anybody) ;-)
+
+BUILDING:
+
+Build using a configure flag something like what is shown below.
+
+./configure --prefix=$LIB_ROOT --host=$HOST --disable-shared
+
+USING:
+
+This is SDL and can be used just like any other SDL build.
+
+****
+** Limitations of GP2X video driver
+****
+
+The primary surface (as set by SDL_SetVideoMode) is limited to 8 or 16 bit.
+24 and 32 bit modes are NOT supported, driver will use 16bit instead.
+SetVideoMode also forces SDL_HWSURFACE
+
+Screen sizes can be between 64x64 and 1024x768 inclusive, but the width must
+be a multiple of 8 (legacy), width will be rounded up if need be.
+The primary surface will be visually expanded or shrunk to fill either the
+LCD or TV. The scaler is coarse only, no nice bilinear filtering.
+
+HWSURFACE to HWSURFACE blits are accelerated and ASYNCHRONOUS, SDL_BlitSurface
+will return as soon as it has set the blit up, you MUST lock the surface if
+you want to be sure the blit has taken place.
+SWSURFACE to HWSURFACE blits have moderate acceleration and SDL_BlitSurface
+will return when the blit is finished, although locking the surface is still
+required to ensure the blitter flushes its cache.
+
+****
+** Additional non-standard SDL functions, GP2X specific
+****
+
+////
+int SDL_GP2X_GetPhysicalScreenSize(SDL_Rect *size);
+
+  Fills size->w and size->h with dimensions of the current screen,
+    LCD  : 320x240
+    NTSC : 720x480
+    PAL  : 720x576
+  Returns
+    0 for progressive (LCD)
+    1 for interlaced (NTSC & PAL)
+   -1 if SDL_Init hasn't been called yet
+
+////
+void SDL_GP2X_Display(SDL_Rect *area);
+
+  Sets the hardware scaler to show requested area of primary surface as
+  fullscreen. The scaler does not physically alter the surface, it just
+  affects how the surface will appear on-screen. This allows you to pan
+  around a surface larger than the screen, and/or zoom in/out.
+  You cannot zoom out further than having the full surface on-screen.
+
+  area->x and area->y set which pixel of the primary surface will appear at
+  the top-left corner of the display,
+  area->w and area->h set the width and height of the area to fill the display.
+
+
+*************************************************************
+** The following functions are implemented, but not tested **
+*************************************************************
+
+////
+void SDL_GP2X_SetMonoColours(int background, int foreground);
+  ****
+  ** untested function
+  ****
+  When blitting a 1bpp surface, this sets what colour the 0s and 1s will
+  be translated into. Useful for drawing fonts. 
+  This is a global setting, not per-surface.
+
+
+Paeryn, and
+The Open2x Project
+
