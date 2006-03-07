@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE xsa PUBLIC "-//LM Garshol//DTD XML Software Autoupdate 1.0//EN//XML" "http://www.garshol.priv.no/download/xsa/xsa.dtd">
+<xsa>
+  <vendor>
+    <name>Daniel Veillard</name>
+    <email>daniel@veillard.com</email>
+    <url>http://veillard.com/</url>
+  </vendor>
+  <product id="libxml2">
+    <name>libxml2</name>
+    <version>2.6.22</version>
+    <last-release> Sep 12 2005</last-release>
+    <info-url>http://xmlsoft.org/</info-url>
+    <changes>   - build fixes: compile without schematron (Stéphane Bidoul)
+   - bug fixes: xmlDebugDumpNode on namespace node (Oleg Paraschenko)i,
+    CDATA push parser bug, xmlElemDump problem with XHTML1 doc,
+    XML_FEATURE_xxx clash with expat headers renamed XML_WITH_xxx, fix some
+    output formatting for meta element (Rob Richards), script and style
+    XHTML1 serialization (David Madore), Attribute derivation fixups in XSD
+    (Kasimier Buchcik), better IDC error reports (Kasimier Buchcik)
+   - improvements: add XML_SAVE_NO_EMPTY xmlSaveOption (Rob Richards), add
+    XML_SAVE_NO_XHTML xmlSaveOption, XML Schemas improvements preparing for
+    derive (Kasimier Buchcik).
+   - documentation: generation of gtk-doc like docs, integration with
+    devhelp.
+
+</changes>
+  </product>
+</xsa>
