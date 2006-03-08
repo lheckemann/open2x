@@ -13,16 +13,21 @@
  LIBS += $(PREFIX)/lib/libSDL_svg.a
  LIBS += $(PREFIX)/lib/libSDL_ttf.a
  LIBS += $(PREFIX)/lib/libfreetype.a
+ LIBS += $(PREFIX)/lib/libid3tag.a
  LIBS += $(PREFIX)/lib/libjpeg.a
+ LIBS += $(PREFIX)/lib/libmad.a
  LIBS += $(PREFIX)/lib/libmikmod.a
  LIBS += $(PREFIX)/lib/libogg.a
  LIBS += $(PREFIX)/lib/libpng.a
  LIBS += $(PREFIX)/lib/libvorbis.a
  LIBS += $(PREFIX)/lib/libxml2.a
- LIBS += $(PREFIX)/lib/libtremor.a
+ LIBS += $(PREFIX)/lib/libvorbisidec.a
  LIBS += $(PREFIX)/lib/libz.a
 
  all: $(LIBS)
+
+ clean:
+	rm -f $(LIBS)
 
  $(PREFIX)/lib/libSDL.a:
 	cd SDL-1.2.9 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && make && make install && make clean
@@ -33,7 +38,7 @@
  $(PREFIX)/lib/libSDL_image.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libjpeg.a $(PREFIX)/lib/libpng.a
 	cd SDL_image-1.2.4 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && make && make install && make clean
 
- $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a  $(PREFIX)/lib/libmikmod.a $(PREFIX)/lib/libtremor.a
+ $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a  $(PREFIX)/lib/libmikmod.a $(PREFIX)/lib/libvorbisidec.a
 	cd SDL_mixer-1.2.6 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && make && make install && make clean
 
  $(PREFIX)/lib/libSDL_svg.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libxml2.a
@@ -45,8 +50,14 @@
  $(PREFIX)/lib/libfreetype.a:
 	cd freetype-2.1.10 && GNUMAKE=make ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
 
+ $(PREFIX)/lib/libid3tag.a:
+	cd libid3tag-0.15.1b && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+
  $(PREFIX)/lib/libjpeg.a:
 	cd libjpeg-0.6b && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install-lib && make install-headers && make clean
+
+ $(PREFIX)/lib/libmad.a:
+	cd libmad-0.15.1b && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-speed && make && make install && make clean
 
  $(PREFIX)/lib/libmikmod.a:
 	cd libmikmod-3.1.11 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --disable-esd && make && make install && make clean
@@ -63,7 +74,7 @@
  $(PREFIX)/lib/libxml2.a:
 	cd libxml2-2.6.23 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
 
- $(PREFIX)/lib/libtremor.a:
+ $(PREFIX)/lib/libvorbisidec.a:
 	cd tremor-0.0.0 && ./autogen.sh && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-low-accuracy && make && make install && make clean
 
  $(PREFIX)/lib/libz.a:
