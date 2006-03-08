@@ -1,10 +1,9 @@
 
  BUILD	= $(shell uname -m)
  HOST	= gp2x
- PREFIX = /usr/local/gp2xdev
  GCC	= gp2x-gcc
  GXX	= gp2x-g++
-
+ PREFIX = /usr/local/gp2xdev
  FLAGS	= CC='$(GCC)' CXX='$(GXX)' CFLAGS='-I$(PREFIX)/include -I$(PREFIX)/include/libxml2' LDFLAGS='-L$(PREFIX)/lib'
 
  LIBS += $(PREFIX)/lib/libSDL.a
@@ -24,8 +23,6 @@
  LIBS += $(PREFIX)/lib/libz.a
 
  all: $(LIBS)
-
- ######
 
  $(PREFIX)/lib/libSDL.a:
 	cd SDL-1.2.9 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && make && make install && make clean
