@@ -1,0 +1,3 @@
+#ifndef __ASM_SH_CACHEFLUSH_H
+#define __ASM_SH_CACHEFLUSH_H
+#endif /* __ASM_SH_CACHEFLUSH_H */
