@@ -38,7 +38,7 @@
 	cd SDL_image-1.2.4 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && make && make install && make clean
 
  $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a  $(PREFIX)/lib/libmikmod.a $(PREFIX)/lib/libvorbisidec.a
-	cd SDL_mixer-1.2.6 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && make && make install && make clean
+	cd SDL_mixer-1.2.6 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=no && make && make install && make clean
 
  $(PREFIX)/lib/libSDL_svg.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libxml2.a
 	cd SDL_svg-1.1.9 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && make && make install && make clean
