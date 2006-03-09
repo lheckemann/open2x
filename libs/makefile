@@ -1,33 +1,32 @@
 
- BUILD	= $(shell uname -m)
- HOST	= gp2x
- GCC	= gp2x-gcc
- GXX	= gp2x-g++
+ BUILD  = $(shell uname -m)
+ HOST   = gp2x
+ TARGET = gp2x
  PREFIX = /usr/local/gp2xdev
- FLAGS	= CC='$(GCC)' CXX='$(GXX)' CFLAGS='-I$(PREFIX)/include -I$(PREFIX)/include/libxml2' LDFLAGS='-L$(PREFIX)/lib'
+ FLAGS  = CC='gp2x-gcc' CXX='gp2x-g++' CFLAGS='-I$(PREFIX)/include -I$(PREFIX)/include/libxml2' LDFLAGS='-L$(PREFIX)/lib'
 
- LIBS += $(PREFIX)/lib/libSDL.a
- LIBS += $(PREFIX)/lib/libSDL_gfx.a
- LIBS += $(PREFIX)/lib/libSDL_image.a
- LIBS += $(PREFIX)/lib/libSDL_mixer.a
- LIBS += $(PREFIX)/lib/libSDL_svg.a
- LIBS += $(PREFIX)/lib/libSDL_ttf.a
- LIBS += $(PREFIX)/lib/libfreetype.a
- LIBS += $(PREFIX)/lib/libid3tag.a
- LIBS += $(PREFIX)/lib/libjpeg.a
- LIBS += $(PREFIX)/lib/libmad.a
- LIBS += $(PREFIX)/lib/libmikmod.a
- LIBS += $(PREFIX)/lib/libogg.a
- LIBS += $(PREFIX)/lib/libpng.a
- LIBS += $(PREFIX)/lib/libvorbis.a
- LIBS += $(PREFIX)/lib/libxml2.a
- LIBS += $(PREFIX)/lib/libvorbisidec.a
- LIBS += $(PREFIX)/lib/libz.a
+ TARGETS += $(PREFIX)/lib/libSDL.a
+ TARGETS += $(PREFIX)/lib/libSDL_gfx.a
+ TARGETS += $(PREFIX)/lib/libSDL_image.a
+ TARGETS += $(PREFIX)/lib/libSDL_mixer.a
+ TARGETS += $(PREFIX)/lib/libSDL_svg.a
+ TARGETS += $(PREFIX)/lib/libSDL_ttf.a
+ TARGETS += $(PREFIX)/lib/libfreetype.a
+ TARGETS += $(PREFIX)/lib/libid3tag.a
+ TARGETS += $(PREFIX)/lib/libjpeg.a
+ TARGETS += $(PREFIX)/lib/libmad.a
+ TARGETS += $(PREFIX)/lib/libmikmod.a
+ TARGETS += $(PREFIX)/lib/libogg.a
+ TARGETS += $(PREFIX)/lib/libpng.a
+ TARGETS += $(PREFIX)/lib/libvorbis.a
+ TARGETS += $(PREFIX)/lib/libxml2.a
+ TARGETS += $(PREFIX)/lib/libvorbisidec.a
+ TARGETS += $(PREFIX)/lib/libz.a
 
- all: $(LIBS)
+ all: $(TARGETS)
 
  clean:
-	rm -f $(LIBS)
+	rm -f $(TARGETS)
 
  $(PREFIX)/lib/libSDL.a:
 	cd SDL-1.2.9 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && make && make install && make clean
