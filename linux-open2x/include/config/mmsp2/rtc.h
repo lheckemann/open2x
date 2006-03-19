@@ -1,0 +1,1 @@
+#define CONFIG_MMSP2_RTC 1

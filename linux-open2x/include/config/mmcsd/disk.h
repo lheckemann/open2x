@@ -1,0 +1,1 @@
+#define CONFIG_MMCSD_DISK 1

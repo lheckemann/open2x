@@ -1,0 +1,1 @@
+#undef  CONFIG_AMD7XX_TCO

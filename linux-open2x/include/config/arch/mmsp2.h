@@ -1,0 +1,1 @@
+#define CONFIG_ARCH_MMSP2 1

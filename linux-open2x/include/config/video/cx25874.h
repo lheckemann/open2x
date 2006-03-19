@@ -1,0 +1,1 @@
+#define CONFIG_VIDEO_CX25874 1

@@ -1,0 +1,1 @@
+#define CONFIG_MACH_MMSP2_DTK4 1

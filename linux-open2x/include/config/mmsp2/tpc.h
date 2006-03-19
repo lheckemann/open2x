@@ -1,0 +1,1 @@
+#undef  CONFIG_MMSP2_TPC

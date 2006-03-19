@@ -1,0 +1,1 @@
+#undef  CONFIG_USB_NET2272

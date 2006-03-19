@@ -1,0 +1,47 @@
+# drivers/mtd/nand/Config.in
+
+# $Id: Config.in,v 1.16 2004/04/15 14:24:09 thayne Exp $
+
+mainmenu_option next_comment
+
+comment 'NAND Flash Device Drivers'
+
+dep_tristate '  NAND Device Support' CONFIG_MTD_NAND $CONFIG_MTD
+if [ "$CONFIG_MTD_NAND" = "y" -o "$CONFIG_MTD_NAND" = "m" ]; then
+   bool '    Verify NAND page writes' CONFIG_MTD_NAND_VERIFY_WRITE
+   bool '    Simple Block Device for Nand Flash(BON FS)' CONFIG_MTD_NAND_BONFS
+fi
+
+if [ "$CONFIG_ARM" = "y" ]; then
+   dep_tristate '  NAND Flash device on SPIA board' CONFIG_MTD_NAND_SPIA $CONFIG_MTD_NAND $CONFIG_ARCH_P720T
+   dep_tristate '  NAND Flash device on TOTO board' CONFIG_MTD_NAND_TOTO $CONFIG_MTD_NAND $CONFIG_ARCH_OMAP
+   dep_tristate ' SmartMedia Card on AUTCPU12 board' CONFIG_MTD_NAND_AUTCPU12 $CONFIG_MTD_NAND $CONFIG_ARCH_AUTCPU12
+   dep_tristate '  NAND Flash device on EDP7312 board' CONFIG_MTD_NAND_EDB7312 $CONFIG_MTD_NAND $CONFIG_ARCH_EDB7312
+   dep_tristate '  NAND Flash device by MP2520F CPU' CONFIG_MTD_NAND_MP2520F $CONFIG_MTD_NAND
+fi
+
+if [ "$CONFIG_MTD_NAND_MP2520F" != "n" ]; then
+   bool '    use hardware ECC (Experimental)' CONFIG_MTD_NAND_MP2520F_HWECC
+   dep_bool '    heavy payload debug hardware ECC' CONFIG_MTD_NAND_MP2520F_HWECC_DEBUG $CONFIG_MTD_NAND_MP2520F_HWECC
+fi
+
+if [ "$CONFIG_MTD_DOC2001PLUS" = "y" -o "$CONFIG_MTD_DOC2001" = "y" -o "$CONFIG_MTD_DOC2000" = "y" -o "$CONFIG_MTD_NAND" = "y" ]; then
+   define_bool CONFIG_MTD_NAND_IDS y
+else
+  if [ "$CONFIG_MTD_DOC2001PLUS" = "m" -o "$CONFIG_MTD_DOC2001" = "m" -o "$CONFIG_MTD_DOC2000" = "m" -o "$CONFIG_MTD_NAND" = "m" ]; then
+     define_bool CONFIG_MTD_NAND_IDS m
+  fi
+fi
+
+if [ "$CONFIG_TOSHIBA_RBTX4925" = "y" ]; then
+   dep_tristate '  SmartMedia Card on Toshiba RBTX4925 reference board' CONFIG_MTD_NAND_TX4925NDFMC $CONFIG_MTD_NAND $CONFIG_TOSHIBA_RBTX4925_MPLEX_NAND
+fi
+
+if [ "$CONFIG_TOSHIBA_RBTX4938" = "y" ]; then
+   dep_tristate '  NAND Flash device on Toshiba RBTX4938 reference board' CONFIG_MTD_NAND_TX4938NDFMC $CONFIG_MTD_NAND $CONFIG_TOSHIBA_RBTX4938_MPLEX_NAND
+fi
+
+if [ "$CONFIG_PPCHAMELEONEVB" = "y" ]; then
+    dep_tristate '  NAND Flash device on PPChameleonEVB board' CONFIG_MTD_NAND_PPCHAMELEONEVB $CONFIG_MTD_NAND
+fi
+endmenu

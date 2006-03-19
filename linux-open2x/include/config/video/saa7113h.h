@@ -1,0 +1,1 @@
+#undef  CONFIG_VIDEO_SAA7113H

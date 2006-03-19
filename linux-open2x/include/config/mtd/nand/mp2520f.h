@@ -1,0 +1,1 @@
+#define CONFIG_MTD_NAND_MP2520F 1
