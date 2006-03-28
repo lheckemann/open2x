@@ -1,7 +1,7 @@
 
  BUILD  = $(shell uname -m)
- HOST   = gp2x
- TARGET = gp2x
+ HOST   = arm-linux
+ TARGET = arm-linux
  PREFIX = /usr/local/gp2xdev
  FLAGS  = CC='$(HOST)-gcc' CXX='$(HOST)-g++' CFLAGS='-I$(PREFIX)/include -I$(PREFIX)/include/libxml2' LDFLAGS='-L$(PREFIX)/lib'
 
