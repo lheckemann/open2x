@@ -8,7 +8,7 @@ PNGMAJ = 0
 PNGMIN = 1.2.8
 PNGVER = $(PNGMAJ).$(PNGMIN)
 
-CC=gp2x-gcc
+# CC=gp2x-gcc
 
 # where "make install" puts libpng12.a, libpng12.so*,
 # libpng12/png.h and libpng12/pngconf.h
