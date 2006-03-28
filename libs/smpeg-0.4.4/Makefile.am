@@ -53,11 +53,11 @@ EXTRA_DIST =		\
 	autogen.sh
 
 # Sample MPEG players
-if HAVE_GTK
-GTK_PLAYER = gtv
-else
-GTK_PLAYER =
-endif
+#if HAVE_GTK
+#GTK_PLAYER = gtv
+#else
+#GTK_PLAYER =
+#endif
 if HAVE_OPENGL
 OPENGL_PLAYER = glmovie
 else
@@ -71,8 +71,8 @@ plaympeg_SOURCES = plaympeg.c
 plaympeg_LDADD = libsmpeg.la
 
 # Sources for gtv
-gtv_SOURCES = gtv.c gtv.h
-gtv_LDADD = @GTK_LIBS@ libsmpeg.la
+#gtv_SOURCES = gtv.c gtv.h
+#gtv_LDADD = @GTK_LIBS@ libsmpeg.la
 
 # Sources for glmovie
 glmovie_SOURCES = glmovie-tile.c glmovie.c glmovie.h
