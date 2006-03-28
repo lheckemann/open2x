@@ -43,7 +43,7 @@
 
  SDL_mixer: $(PREFIX)/lib/libSDL_mixer.a
  $(PREFIX)/lib/libSDL_mixer.a: SDL libmikmod smpeg tremor
-	cd SDL_mixer-1.2.6 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes && make && make install && make clean
+	cd SDL_mixer-1.2.6 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes --enable-music-libmikmod=no && make && make install && make clean
 
  SDL_svg: $(PREFIX)/lib/libSDL_svg.a
  $(PREFIX)/lib/libSDL_svg.a: SDL libxml2
