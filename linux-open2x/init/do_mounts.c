@@ -256,6 +256,7 @@ static struct dev_name_struct {
 	{ "mtdblock", 0x1f00 },
 	{ "nb", 0x2b00 },
 	{ "bon", 0x6100 },
+    { "mmcsd", 0x3C00 },
 	{ NULL, 0 }
 };
 

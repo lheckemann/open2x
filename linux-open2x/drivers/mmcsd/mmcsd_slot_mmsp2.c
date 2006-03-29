@@ -829,7 +829,7 @@ struct timer_list cd_timer;
 static void cd_timer_handler(unsigned long data)
 {
 	card_detect_interrupt(0, (void *)&slot, NULL);	
-	mod_timer(&cd_timer, jiffies + 10);
+	mod_timer(&cd_timer, jiffies + 100);
 }
 #endif
 
@@ -906,7 +906,8 @@ static int __init init_mmcsd_slot(void)
 	printk("MMC/SD Slot initialized\n");
 
 #ifdef NO_CD_IRQ
-	mod_timer(&cd_timer, jiffies + 10);
+	card_detect_interrupt(0, (void *)&slot, NULL);
+	mod_timer(&cd_timer, jiffies + 100);
 #else
 	card_detect_interrupt(IRQ_CD, (void *)&slot, NULL);
 #endif
