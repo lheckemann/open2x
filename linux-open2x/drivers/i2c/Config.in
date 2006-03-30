@@ -54,10 +54,10 @@ if [ "$CONFIG_I2C" != "n" ]; then
       fi
    fi
 
-  # if [ "$CONFIG_ARCH_MMSP2" = "y" ]; then
-  #   dep_tristate 'MMSP2 I2C Algorithm' CONFIG_I2C_MMSP2_ALGO $CONFIG_I2C
-  #   dep_tristate 'MMSP2 I2C Adapter'   CONFIG_I2C_MMSP2_ADAP $CONFIG_I2C_MMSP2_ALGO
-  # fi
+   if [ "$CONFIG_ARCH_MMSP2" = "y" ]; then
+     dep_tristate 'MMSP2 I2C Algorithm' CONFIG_I2C_MMSP2_ALGO $CONFIG_I2C
+     dep_tristate 'MMSP2 I2C Adapter'   CONFIG_I2C_MMSP2_ADAP $CONFIG_I2C_MMSP2_ALGO
+   fi
 
    if [ "$CONFIG_ALL_PPC" = "y" ] ; then
       dep_tristate 'Keywest I2C interface in Apple Core99 machines' CONFIG_I2C_KEYWEST $CONFIG_I2C

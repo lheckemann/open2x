@@ -6,7 +6,7 @@ O_TARGET := i2c.o
 
 export-objs	:= i2c-core.o i2c-algo-bit.o i2c-algo-pcf.o \
 		   i2c-algo-ite.o i2c-algo-sibyte.o i2c-algo-sgi.o \
-		   i2c-proc.o 
+		   i2c-proc.o i2c-algo-mmsp2.o 
 
 # Init order: core, chardev, bit adapters, pcf adapters
 
@@ -35,6 +35,8 @@ obj-$(CONFIG_I2C_ALGO_SIBYTE)	+= i2c-algo-sibyte.o i2c-sibyte.o
 obj-$(CONFIG_I2C_MAX1617)	+= i2c-max1617.o
 obj-$(CONFIG_I2C_ALGO_SGI)	+= i2c-algo-sgi.o
 # MMSP2 adapters
+obj-$(CONFIG_I2C_MMSP2_ALGO)	+= i2c-algo-mmsp2.o
+obj-$(CONFIG_I2C_MMSP2_ADAP)	+= i2c-adap-mmsp2.o
 
 # This is needed for automatic patch generation: sensors code starts here
 # This is needed for automatic patch generation: sensors code ends here
