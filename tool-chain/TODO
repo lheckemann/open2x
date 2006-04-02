@@ -1,6 +1,0 @@
-$Header$
-
-For Open2x tool-chain buildscripts:
-
-Fix compilation issues when trying to build a MinGW hosted tool-chain.
-Complete testing and patching of GDB to allow debugging on real hardware via serial.
