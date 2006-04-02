@@ -20,7 +20,7 @@
 
  1) Make sure you have the open2x toolchain installed:
 
-  gp2x-gcc -v
+  open2x-gcc -v
 
  2) Execute the makefile to build the libraries:
 
