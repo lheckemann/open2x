@@ -425,10 +425,6 @@ case $basic_machine in
 		basic_machine=tron-gmicro
 		os=-sysv
 		;;
-	gp2x)
-		basic_machine=arm-gp2x
-		os=-linux-gnu
-		;;
 	h3050r* | hiux*)
 		basic_machine=hppa1.1-hitachi
 		os=-hiuxwe2
