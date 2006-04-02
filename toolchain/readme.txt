@@ -20,9 +20,9 @@
 
  1) Add this to your startup configuration:
 
-  ## GP2XDEV SETTINGS
-  export GP2XDEV="/usr/local/gp2xdev"
-  export PATH="$PATH:$GP2XDEV/bin"
+  ## OPEN2X SETTINGS
+  export OPEN2X="/usr/local/open2x"
+  export PATH="$PATH:$OPEN2X/bin"
 
  2) Execute the makefile to build the toolchain:
 
@@ -30,6 +30,6 @@
 
  3) Verify the installation:
 
-  gp2x-gcc -v
+  open2x-gcc -v
 
  4) Enjoy!
