@@ -673,6 +673,10 @@ case $basic_machine in
 		basic_machine=hppa1.1-oki
 		os=-proelf
 		;;
+	open2x)
+		basic_machine=arm-gp2x
+		os=-linux-gnu
+		;;
 	OSE68000 | ose68000)
 		basic_machine=m68000-ericsson
 		os=-ose

@@ -8,16 +8,16 @@ PNGMAJ = 0
 PNGMIN = 1.2.8
 PNGVER = $(PNGMAJ).$(PNGMIN)
 
-# CC=gp2x-gcc
+# CC=open2x-gcc
 
 # where "make install" puts libpng12.a, libpng12.so*,
 # libpng12/png.h and libpng12/pngconf.h
 # Prefix must be a full pathname.
-prefix=$(GP2XDEV)
+prefix=$(OPEN2X)
 
 # Where the zlib library and include files are located.
-ZLIBLIB=$(GP2XDEV)/lib
-ZLIBINC=$(GP2XDEV)/include
+ZLIBLIB=$(OPEN2X)/lib
+ZLIBINC=$(OPEN2X)/include
 #ZLIBLIB=../zlib
 #ZLIBINC=../zlib
 
@@ -37,7 +37,7 @@ CFLAGS=-I$(ZLIBINC) -Wall -O3 -funroll-loops \
 LDFLAGS=-L. -Wl,-rpath,. -L$(ZLIBLIB) -Wl,-rpath,$(ZLIBLIB) -lpng12 -lz -lm
 LDFLAGS_A=-L$(ZLIBLIB) -Wl,-rpath,$(ZLIBLIB) libpng.a -lz -lm
 
-RANLIB=gp2x-ranlib
+RANLIB=open2x-ranlib
 #RANLIB=echo
 
 INCPATH=$(prefix)/include

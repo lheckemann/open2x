@@ -1,8 +1,8 @@
 
  BUILD  = $(shell uname -m)
- HOST   = gp2x
- TARGET = gp2x
- PREFIX = /usr/local/gp2xdev
+ HOST   = open2x
+ TARGET = open2x
+ PREFIX = $(OPEN2X)
  FLAGS  = CC='$(HOST)-gcc' CXX='$(HOST)-g++' CFLAGS='-I$(PREFIX)/include -I$(PREFIX)/include/libxml2' LDFLAGS='-L$(PREFIX)/lib'
 
  TARGETS += $(PREFIX)/lib/libSDL.a

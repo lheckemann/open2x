@@ -1,5 +1,5 @@
 #! /bin/sh
-echo "gp2x"
+echo "open2x"
 exit 0
 # Attempt to guess a canonical system name.
 #   Copyright (C) 1992, 93, 94, 95, 96, 1997 Free Software Foundation, Inc.
