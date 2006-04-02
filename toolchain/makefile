@@ -1,8 +1,8 @@
 
  BUILD  = $(shell uname -m)
- HOST   = gp2x
- TARGET = gp2x
- PREFIX = /usr/local/gp2xdev
+ HOST   = open2x
+ TARGET = open2x
+ PREFIX = $(OPEN2X)
  FLAGS  = 
 
  TARGETS += $(PREFIX)/$(TARGET)/include/linux/version.h
