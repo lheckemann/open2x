@@ -35,6 +35,7 @@ comment 'User Modules And Translation Layers'
       bool '    Write support for NFTL (BETA)' CONFIG_NFTL_RW
    fi
    dep_tristate '  INFTL (Inverse NAND Flash Translation Layer) support' CONFIG_INFTL $CONFIG_MTD
+   dep_tristate '  ROFTL (Read-Only Flash Translation Layer) support' CONFIG_ROFTL $CONFIG_MTD
 
    source drivers/mtd/chips/Config.in
 
