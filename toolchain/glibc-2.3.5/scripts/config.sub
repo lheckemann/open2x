@@ -748,6 +748,10 @@ case $basic_machine in
 		basic_machine=or32-unknown
 		os=-coff
 		;;
+	open2x)
+		basic_machine=arm-gp2x
+		os=-linux-gnu
+		;;
 	os400)
 		basic_machine=powerpc-ibm
 		os=-os400
