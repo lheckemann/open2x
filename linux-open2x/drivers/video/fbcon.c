@@ -2213,9 +2213,9 @@ static int __init fbcon_show_logo( void )
 		for( y1 = 0; y1 < LOGO_H; y1++ ) {
 		    dst = fb + y1*line + x*bdepth;
 		    for( x1 = 0; x1 < LOGO_W; x1++, src++ ) {
-			val = (*src << redshift) |
+			val = (*src << blueshift) |
 			      (*src << greenshift) |
-			      (*src << blueshift);
+			      (*src << redshift);
 			if (bdepth == 4 && !((long)dst & 3)) {
 			    /* Some cards require 32bit access */
 			    fb_writel (val, dst);
@@ -2299,9 +2299,9 @@ static int __init fbcon_show_logo( void )
 //		          	safe_shift((linux_logo_green[*src-32] & greenmask), greenshift) |
 //		          	safe_shift((linux_logo_blue[*src-32]  & bluemask), blueshift);
 
-		    	val = safe_shift((*src++ & redmask	), redshift		) |
-		          	  safe_shift((*src++ & greenmask), greenshift	) |
-		          	  safe_shift((*src++ & bluemask	), blueshift	);
+		    	val = safe_shift((*src++ & bluemask	), blueshift  ) |
+		          	  safe_shift((*src++ & greenmask), greenshift ) |
+		          	  safe_shift((*src++ & redmask	), redshift	  );
 				/////////////////////////////////////////////////////////////////////////////////////
 		    if (bdepth == 4 && !((long)dst & 3)) {
 			/* Some cards require 32bit access */
