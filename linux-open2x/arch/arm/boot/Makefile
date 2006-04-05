@@ -144,6 +144,7 @@ bzImage: zImage
 
 zImage:	compressed/vmlinux
 	$(OBJCOPY) $(OBJCOPYFLAGS) $< $@
+	$(TOPDIR)/scripts/mkimage -A arm -O linux -T kernel -C none -a 00008000 -e 00008000 -n "Open2x Kernel" -d zImage kernel.img
 
 bootpImage: bootp/bootp
 	$(OBJCOPY) $(OBJCOPYFLAGS) $< $@
