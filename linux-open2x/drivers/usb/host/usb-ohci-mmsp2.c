@@ -7,7 +7,7 @@
 #include <linux/usb.h>
 
 #include <asm/hardware.h>
-#include <asm/arch/mmsp20.h>
+#include <asm/arch/mmsp20.h>	// oyh
 #include <asm/irq.h>
 #include <asm/io.h>
 #include <asm/pci.h>
@@ -47,17 +47,34 @@ static void __init mmsp2_ohci_configure(void)
 			a_fact, a_clk, a_clk > DESIRED_CLOCK ? '+':'-', a_err);
 	printk("u_fact = %ld, u_clk = %ld, u_err = %c%ld\n",
 			u_fact, u_clk, u_clk > DESIRED_CLOCK ? '+':'-', u_err);
+	
+	/* Enable the USB Host Controller Clocks */
+	COMCLKEN |= 0x01;
 
+#if 0
+	UIRMCSET &= 0xff00;
+	UIRMCSET |= ((0x3) << 6) | (a_fact - 1); // A_CLK
+#else
 	/* from EBOOT */
 	UIRMCSET &= 0xff00;
 	UIRMCSET |= ((0x02) << 6) | 1;
+#endif
 
-	gpio_pad_select(USB_PAD_3T, 0);		// PAD3 --> USB device
+//	GPIOPADSEL &= 0xfffc; 		
+	gpio_pad_select(USB_PAD_3T, 0);		// oyh, PAD3 --> USB device
 	gpio_pad_select(USB_PAD_1T, 0);		// PAD1 --> USB host
 #ifdef CONFIG_MMSP2_UPAD3_TO_DEVICE
-	gpio_pad_select(USB_PAD_3T, 1);		// PAD3 --> USB device
+//	GPIOPADSEL |= 0x2;			
+	gpio_pad_select(USB_PAD_3T, 1);		// oyh, PAD3 --> USB device
 	gpio_pad_select(USB_PAD_1T, 0);		// PAD1 --> USB host
+
 #endif
+
+#ifdef CONFIG_MACH_MMSP2_MDK
+//	write_gpio_bit(GPIO_UH2_nPWR_EN, 0);
+//	set_gpio_ctrl(GPIO_UH2_nPWR_EN, GPIOMD_OUT, GPIOPU_DIS);
+//	write_gpio_bit(GPIO_UH2_nPWR_EN, 0);
+#endif /* CONFIG_MACH_MMSP2_MDK */
 
 	udelay(11);
 }
@@ -68,6 +85,9 @@ static int __init mmsp2_ohci_init(void)
 
 	mmsp2_ohci_configure();
 
+	/*
+	 * 주소는 0xc0004300 가 맞다
+	 */
 	ret = hc_add_ohci((void*)(1), IRQ_USBH,
 			  (void *)(io_p2v(0xc0004300)), 0, "usb-ohci", "mmsp2_ohci");
 	if((ret & 0xF0000000)==0xC0000000) {
@@ -84,5 +104,3 @@ static void __exit mmsp2_ohci_exit(void)
 
 module_init(mmsp2_ohci_init);
 module_exit(mmsp2_ohci_exit);
-
-MODULE_AUTHOR("DIGNSYS Inc.(www.dignsys.com)");
