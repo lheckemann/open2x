@@ -5,5 +5,3 @@
  - imlib2 compiles as a static library only
  - python interpreter executable is compiled as dynamic
  - lua interpreter executable is compiled as static
- - SDL_gfx tries to build regardless of libSDL_gfx.a being found
- - libpng tries to build regardless of libpng.a being found
