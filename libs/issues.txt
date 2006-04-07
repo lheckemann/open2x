@@ -1,0 +1,7 @@
+
+ KNOWN ISSUES
+
+ - bzip2 compiles as a static library only
+ - imlib2 compiles as a static library only
+ - python interpreter executable is compiled as dynamic
+ - lua interpreter executable is compiled as static
