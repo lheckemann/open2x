@@ -77,14 +77,14 @@ install: bzip2 bzip2recover
 	cp -f libbz2.a $(PREFIX)/lib
 	chmod a+r $(PREFIX)/lib/libbz2.a
 	cp -f bzgrep $(PREFIX)/bin/bzgrep
-	ln $(PREFIX)/bin/bzgrep $(PREFIX)/bin/bzegrep
-	ln $(PREFIX)/bin/bzgrep $(PREFIX)/bin/bzfgrep
+	ln -f $(PREFIX)/bin/bzgrep $(PREFIX)/bin/bzegrep
+	ln -f $(PREFIX)/bin/bzgrep $(PREFIX)/bin/bzfgrep
 	chmod a+x $(PREFIX)/bin/bzgrep
 	cp -f bzmore $(PREFIX)/bin/bzmore
-	ln $(PREFIX)/bin/bzmore $(PREFIX)/bin/bzless
+	ln -f $(PREFIX)/bin/bzmore $(PREFIX)/bin/bzless
 	chmod a+x $(PREFIX)/bin/bzmore
 	cp -f bzdiff $(PREFIX)/bin/bzdiff
-	ln $(PREFIX)/bin/bzdiff $(PREFIX)/bin/bzcmp
+	ln -f $(PREFIX)/bin/bzdiff $(PREFIX)/bin/bzcmp
 	chmod a+x $(PREFIX)/bin/bzdiff
 	cp -f bzgrep.1 bzmore.1 bzdiff.1 $(PREFIX)/man/man1
 	chmod a+r $(PREFIX)/man/man1/bzgrep.1
