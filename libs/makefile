@@ -1,9 +1,14 @@
 
- BUILD  = $(shell uname -m)
- HOST   = open2x
- TARGET = open2x
- PREFIX = $(OPEN2X)
- FLAGS  = CC='$(HOST)-gcc' CXX='$(HOST)-g++' CFLAGS='-I$(PREFIX)/include -I$(PREFIX)/include/libxml2' LDFLAGS='-L$(PREFIX)/lib'
+ BUILD   = $(shell uname -m)
+ HOST    = open2x
+ TARGET  = open2x
+ PREFIX  = $(OPEN2X)
+
+ CFLAGS  = -I$(PREFIX)/include -I$(PREFIX)/include/libxml2
+ LDFLAGS = -L$(PREFIX)/lib -R$(PREFIX)/lib
+ CC      = $(HOST)-gcc $(CFLAGS)
+ CXX     = $(HOST)-g++ $(CFLAGS)
+ FLAGS   = CC='$(CC)' CXX='$(CXX)' CFLAGS='$(CFLAGS)' LDFLAGS='$(LDFLAGS)'
 
  TARGETS += $(PREFIX)/bin/python
  TARGETS += $(PREFIX)/lib/libSDL.a
@@ -12,8 +17,10 @@
  TARGETS += $(PREFIX)/lib/libSDL_mixer.a
  TARGETS += $(PREFIX)/lib/libSDL_svg.a
  TARGETS += $(PREFIX)/lib/libSDL_ttf.a
+ TARGETS += $(PREFIX)/lib/libbz2.a
  TARGETS += $(PREFIX)/lib/libfreetype.a
  TARGETS += $(PREFIX)/lib/libid3tag.a
+ TARGETS += $(PREFIX)/lib/libimlib2.a
  TARGETS += $(PREFIX)/lib/libjpeg.a
  TARGETS += $(PREFIX)/lib/liblua.a
  TARGETS += $(PREFIX)/lib/libmad.a
@@ -23,6 +30,8 @@
  TARGETS += $(PREFIX)/lib/libpng.a
  TARGETS += $(PREFIX)/lib/libreadline.a
  TARGETS += $(PREFIX)/lib/libsmpeg.a
+ TARGETS += $(PREFIX)/lib/libtiff.a
+ TARGETS += $(PREFIX)/lib/libungif.a
  TARGETS += $(PREFIX)/lib/libvorbis.a
  TARGETS += $(PREFIX)/lib/libvorbisidec.a
  TARGETS += $(PREFIX)/lib/libxml2.a
@@ -57,9 +66,17 @@
  $(PREFIX)/lib/libSDL_ttf.a: SDL freetype
 	cd SDL_ttf-2.0.7 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-freetype-prefix=$(PREFIX) --with-sdl-prefix=$(PREFIX) && make && make install && make clean
 
+ bzip2: $(PREFIX)/lib/libbz2.a
+ $(PREFIX)/lib/libbz2.a:
+	cd bzip2-1.0.3 && make && make install && make clean
+
  freetype: $(PREFIX)/lib/libfreetype.a
  $(PREFIX)/lib/libfreetype.a:
 	cd freetype-2.1.10 && GNUMAKE=make ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+
+ imlib2: $(PREFIX)/lib/libimlib2.a
+ $(PREFIX)/lib/libimlib2.a: libjpeg libpng libtiff zlib bzip2 libid3tag
+	cd imlib2-1.2.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --disable-shared --enable-static --with-freetype-config=$(PREFIX)/bin/freetype-config --without-x && make && make install && make clean
 
  libid3tag: $(PREFIX)/lib/libid3tag.a
  $(PREFIX)/lib/libid3tag.a:
@@ -84,6 +101,14 @@
  libpng: $(PREFIX)/lib/libpng.a
  $(PREFIX)/lib/libpng.a: zlib
 	cd libpng-1.2.8 && $(FLAGS) make -f scripts/makefile.linux && $(FLAGS) make -f scripts/makefile.linux install && $(FLAGS) make -f scripts/makefile.linux clean
+
+ libtiff: $(PREFIX)/lib/libtiff.a
+ $(PREFIX)/lib/libtiff.a:
+	cd libtiff-3.8.2 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+
+ libungif: $(PREFIX)/lib/libungif.a
+ $(PREFIX)/lib/libungif.a:
+	cd libungif-4.1.4 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
 
  libvorbis: $(PREFIX)/lib/libvorbis.a
  $(PREFIX)/lib/libvorbis.a: libogg
