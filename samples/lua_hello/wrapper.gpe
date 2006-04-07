@@ -1,0 +1,9 @@
+#!/bin/sh
+
+ ## Run the sample lua script.
+ ./lua.gpe ./hello.lua 1> output.txt 2> errors.txt
+ sync
+
+ ## Return to the main menu.
+ cd /usr/gp2x
+ exec /usr/gp2x/gp2xmenu
