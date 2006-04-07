@@ -14,14 +14,17 @@
  TARGETS += $(PREFIX)/lib/libfreetype.a
  TARGETS += $(PREFIX)/lib/libid3tag.a
  TARGETS += $(PREFIX)/lib/libjpeg.a
+ TARGETS += $(PREFIX)/lib/liblua.a
  TARGETS += $(PREFIX)/lib/libmad.a
  TARGETS += $(PREFIX)/lib/libmikmod.a
+ TARGETS += $(PREFIX)/lib/libncurses.a
  TARGETS += $(PREFIX)/lib/libogg.a
  TARGETS += $(PREFIX)/lib/libpng.a
- TARGETS += $(PREFIX)/lib/libvorbis.a
- TARGETS += $(PREFIX)/lib/libxml2.a
+ TARGETS += $(PREFIX)/lib/libreadline.a
  TARGETS += $(PREFIX)/lib/libsmpeg.a
+ TARGETS += $(PREFIX)/lib/libvorbis.a
  TARGETS += $(PREFIX)/lib/libvorbisidec.a
+ TARGETS += $(PREFIX)/lib/libxml2.a
  TARGETS += $(PREFIX)/lib/libz.a
 
  all: $(TARGETS)
@@ -88,6 +91,18 @@
  libxml2: $(PREFIX)/lib/libxml2.a
  $(PREFIX)/lib/libxml2.a:
 	cd libxml2-2.6.23 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+
+ lua: $(PREFIX)/lib/liblua.a
+ $(PREFIX)/lib/liblua.a: ncurses readline
+	cd lua-5.1 && make && make install && make clean
+
+ ncurses: $(PREFIX)/lib/libncurses.a
+ $(PREFIX)/lib/libncurses.a:
+	cd ncurses-5.5 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+
+ readline: $(PREFIX)/lib/libreadline.a
+ $(PREFIX)/lib/libreadline.a:
+	cd readline-5.1 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
 
  smpeg: $(PREFIX)/lib/libsmpeg.a
  $(PREFIX)/lib/libsmpeg.a:
