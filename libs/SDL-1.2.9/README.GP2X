@@ -1,0 +1,165 @@
+$Header: $
+
+SDL for the GP2X (1.2.9)
+________________________
+
+Using the official http://www.libsdl.org/ 1.2.9 release as a basis this
+release aims to add advanced support for the GP2X handheld console/computer.
+
+Taken from The Open2x libs-gp2x project.
+(Software development libraries patched and optimised for the GP2X development)
+
+Added hardware support, made as a seperate video driver rather than
+extending fbcon driver.
+Added ability to scale display surface to full-screen.
+Fixed X & Y buttons.
+Added Hardware cursor support
+Added regions - user-definable areas of the physical display to show.
+Added support for non-scaled displays that are smaller than native resolution.
+Disabled cursor support initially - details below.
+
+TODO: 
+
+Clean GPH changes to source (Please: Modularise it)
+More (anybody) ;-)
+
+BUILDING:
+
+Build using a configure flag something like what is shown below.
+
+./configure --prefix=$LIB_ROOT --host=$HOST --disable-shared
+
+USING:
+
+This is SDL and can be used just like any other SDL build.
+
+****
+** Limitations of GP2X video driver
+****
+
+The primary surface (as set by SDL_SetVideoMode) is limited to 8 or 16 bit.
+24 and 32 bit modes are NOT supported, driver will use 16bit instead.
+SetVideoMode also forces SDL_HWSURFACE
+
+Screen sizes can be between 64x64 and 1024x768 inclusive, but the width must
+be a multiple of 8 (legacy), width will be rounded up if need be.
+The primary surface will be visually expanded or shrunk to fill either the
+LCD or TV. The scaler is coarse only, no nice bilinear filtering.
+
+HWSURFACE to HWSURFACE blits are accelerated and ASYNCHRONOUS, SDL_BlitSurface
+will return as soon as it has set the blit up, you MUST lock the surface if
+you want to be sure the blit has taken place.
+
+====
+== SWSURFACE to HWSURFACE blits have moderate acceleration and SDL_BlitSurface
+== will return when the blit is finished, although locking the surface is still
+== required to ensure the blitter flushes its cache.
+===
+== NOTE: My driver supports it, but SDL seems to not call my blit routine if
+== the source surface is SWSURFACE. Will look into it later.
+====
+
+The harware cursor is capable of colour (although only 2), but is 24bit
+regardless of the display surface. It can also alpha-blend it's fore- and
+background colours at different levels, each ranging from 0=transparent to
+15=opaque.
+
+The cursor isn't enabled by default on HWSURFACE. If you want it you MUST call
+SDL_GP2X_InitializeCursor() AFTER you've called SDL_SetVideoMode().
+
+
+****
+** Additional non-standard SDL functions, GP2X specific.
+**
+** These are defined in the non-standard SDL_gp2x.h
+****
+
+////
+int SDL_GP2X_GetPhysicalScreenSize(SDL_Rect *size);
+
+  Fills size->w and size->h with dimensions of the current screen,
+    LCD  : 320x240
+    NTSC : 720x480
+    PAL  : 720x576
+  Returns
+    0 for progressive (LCD)
+    1 for interlaced (NTSC & PAL)
+   -1 if SDL_Init hasn't been called yet
+
+////
+void SDL_GP2X_Display(SDL_Rect *area);
+
+  Sets the hardware scaler to show requested area of primary surface as
+  fullscreen. The scaler does not physically alter the surface, it just
+  affects how the surface will appear on-screen. This allows you to pan
+  around a surface larger than the screen, and/or zoom in/out.
+  You cannot zoom out further than having the full surface on-screen.
+
+  area->x and area->y set which pixel of the primary surface will appear at
+  the top-left corner of the display,
+  area->w and area->h set the width and height of the area to fill the display.
+
+////
+void SDL_GP2X_MiniDisplay(int x, int y);
+
+  Similar to the above function, but does not scale and blanks the borders.
+  Only really useful if your videomode is less than 320x240. Gives rise to
+  possible small speed increase as the display hardware doesn't access
+  memory in the borders. Region 1 (see SDL_GP2X_DefineRegion below) area is
+  set to {x, y, x+videomode_width-1, y+videomodeheight-1}.
+  The x & y values are where the top-left corner of you screen will placed
+  on the display. e.g. for a 200x200 videomode centred in the middle of the
+  display you'd use x=60 y=20
+  NO checking is done to make sure your screen fits!
+
+////
+void SDL_GP2X_SetCursorColour(SDL_Cursor *cursor
+                              int b_red, b_green, b_blue, b_alpha,
+                              int f_red, f_green, f_blue, f_alpha);
+
+  Sets the background and foreground colours of the hardware cursor.
+  SDL assumes black and white for all cursors, this lets you choose
+  your own colours for each cursor. Cursor colours are full 24bit, each
+  component wraps instead of clamping (so if you try setting red to 257
+  you'll actually get 1 etc.)
+  Also, the background and foreground colours have seperate levels of
+  alpha-blending (0=transparent -> 15=opaque). Again, the values wrap.
+
+////
+void SDL_GP2X_DefineRegion(int region, SDL_Rect *area);
+
+  Allows you to define regions (1-4) that will be visible.
+  By default region 1 is set to fullscreen (apart from when using MiniDisplay).
+  Regions work by defining rectangles of the display that the video hardware
+  will show. Think of it like painting your LCD black and for each region
+  you use, scrape the paint off for that rectangle.
+  Region areas are in hardware coordinates, 0x0 is the top-left,
+  319x239 is bottom-right regardless of size and position of your surface.
+
+////
+void SDL_GP2X_ActivateRegion(int region, int activate);
+
+  After defining regions above, use this to switch individual regions
+  on (activate = 1) or off (activate=0).
+  By default only region 1 is active.
+  There is a fifth region, region 5, but this is fullscreen only and hence
+  not available to SDL_GP2X_DefineRegion().
+
+
+*************************************************************
+** The following functions are implemented, but not tested **
+*************************************************************
+
+////
+void SDL_GP2X_SetMonoColours(int background, int foreground);
+  ****
+  ** untested function
+  ****
+  When blitting a 1bpp surface, this sets what colour the 0s and 1s will
+  be translated into. Useful for drawing fonts. 
+  This is a global setting, not per-surface.
+
+-------------------------------------
+
+The Open2x Project
+
