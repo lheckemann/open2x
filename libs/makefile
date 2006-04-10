@@ -10,7 +10,6 @@
  CXX     = $(HOST)-g++ $(CFLAGS)
  FLAGS   = CC='$(CC)' CXX='$(CXX)' CFLAGS='$(CFLAGS)' LDFLAGS='$(LDFLAGS)'
 
- TARGETS += $(PREFIX)/bin/python
  TARGETS += $(PREFIX)/lib/libImlib2.a
  TARGETS += $(PREFIX)/lib/libSDL.a
  TARGETS += $(PREFIX)/lib/libSDL_gfx.a
@@ -22,7 +21,6 @@
  TARGETS += $(PREFIX)/lib/libfreetype.a
  TARGETS += $(PREFIX)/lib/libid3tag.a
  TARGETS += $(PREFIX)/lib/libjpeg.a
- TARGETS += $(PREFIX)/lib/liblua.a
  TARGETS += $(PREFIX)/lib/libmad.a
  TARGETS += $(PREFIX)/lib/libmikmod.a
  TARGETS += $(PREFIX)/lib/libncurses.a
@@ -118,17 +116,9 @@
  $(PREFIX)/lib/libxml2.a:
 	cd libxml2-2.6.23 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
 
- lua: $(PREFIX)/lib/liblua.a
- $(PREFIX)/lib/liblua.a: $(PREFIX)/lib/libreadline.a $(PREFIX)/lib/libncurses.a
-	cd lua-5.1 && make && make install && make clean
-
  ncurses: $(PREFIX)/lib/libncurses.a
  $(PREFIX)/lib/libncurses.a:
 	cd ncurses-5.5 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
-
- python: $(PREFIX)/bin/python
- $(PREFIX)/bin/python:
-	mkdir -p python-2.4.3/build && cd python-2.4.3/build && $(FLAGS) ../configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --with-shared --with-static && make && make install && make clean
 
  readline: $(PREFIX)/lib/libreadline.a
  $(PREFIX)/lib/libreadline.a:
