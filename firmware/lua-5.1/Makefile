@@ -11,7 +11,7 @@ PLAT= linux
 # if INSTALL_TOP is not an absolute path. (Man pages are installed from the
 # doc directory.)
 #
-INSTALL_TOP= $(OPEN2X)
+INSTALL_TOP= $(OPEN2X)/firmware/usr
 INSTALL_BIN= $(INSTALL_TOP)/bin
 INSTALL_INC= $(INSTALL_TOP)/include
 INSTALL_LIB= $(INSTALL_TOP)/lib
