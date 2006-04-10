@@ -64,8 +64,9 @@ regardless of the display surface. It can also alpha-blend it's fore- and
 background colours at different levels, each ranging from 0=transparent to
 15=opaque.
 
-The cursor isn't enabled by default on HWSURFACE. If you want it you MUST call
-SDL_GP2X_InitializeCursor() AFTER you've called SDL_SetVideoMode().
+The cursor isn't shown by default on HWSURFACE. If you want to use it you
+need to call SDL_ShowCursor(SDL_ENABLE); This is contary to the standard SDL
+behaviour which defaults to showing it.
 
 
 ****
