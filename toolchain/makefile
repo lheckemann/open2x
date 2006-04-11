@@ -1,9 +1,13 @@
 
- BUILD  = $(shell uname -m)
- HOST   = open2x
- TARGET = open2x
- PREFIX = $(OPEN2X)
- FLAGS  = 
+ BUILD   = $(shell uname -m)
+ HOST    = open2x
+ TARGET  = open2x
+ PREFIX  = $(OPEN2X)
+
+ FLAGS += CC='$(HOST)-gcc'
+ FLAGS += CXX='$(HOST)-g++'
+ FLAGS += CFLAGS='-I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2'
+ FLAGS += LDFLAGS='-L$(OPEN2X)/lib -R$(OPEN2X)/lib'
 
  TARGETS += $(PREFIX)/$(TARGET)/include/linux/version.h
  TARGETS += $(PREFIX)/bin/$(TARGET)-ar
