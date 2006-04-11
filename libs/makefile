@@ -4,11 +4,10 @@
  TARGET  = open2x
  PREFIX  = $(OPEN2X)
 
- CFLAGS  = -I$(PREFIX)/include -I$(PREFIX)/include/libxml2
- LDFLAGS = -L$(PREFIX)/lib -R$(PREFIX)/lib
- CC      = $(HOST)-gcc $(CFLAGS)
- CXX     = $(HOST)-g++ $(CFLAGS)
- FLAGS   = CC='$(CC)' CXX='$(CXX)' CFLAGS='$(CFLAGS)' LDFLAGS='$(LDFLAGS)'
+ FLAGS += CC='$(HOST)-gcc'
+ FLAGS += CXX='$(HOST)-g++'
+ FLAGS += CFLAGS='-I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2'
+ FLAGS += LDFLAGS='-L$(OPEN2X)/lib -R$(OPEN2X)/lib'
 
  TARGETS += $(PREFIX)/lib/libImlib2.a
  TARGETS += $(PREFIX)/lib/libSDL.a
