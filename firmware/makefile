@@ -1,8 +1,8 @@
 
- BUILD  = '$(shell uname -m)'
- HOST   = 'open2x'
- TARGET = 'open2x'
- PREFIX = '$(shell pwd)/temp'
+ BUILD  = $(shell uname -m)
+ HOST   = open2x
+ TARGET = open2x
+ PREFIX = $(shell pwd)/temp
 
  FLAGS += CC='open2x-gcc'
  FLAGS += CXX='open2x-g++'
