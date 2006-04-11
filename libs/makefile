@@ -4,8 +4,8 @@
  TARGET  = open2x
  PREFIX  = $(OPEN2X)
 
- FLAGS += CC='$(HOST)-gcc'
- FLAGS += CXX='$(HOST)-g++'
+ FLAGS += CC='open2x-gcc -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t'
+ FLAGS += CXX='open2x-g++ -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t'
  FLAGS += CFLAGS='-I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2'
  FLAGS += LDFLAGS='-L$(OPEN2X)/lib -R$(OPEN2X)/lib'
 
