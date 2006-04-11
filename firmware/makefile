@@ -74,4 +74,4 @@
 	cd lua-5.1 && make && make PREFIX=$(PREFIX) install && make clean
 
  python:
-	mkdir -p python-2.4.3/build && cd python-2.4.3/build && $(FLAGS) ../configure --prefix=$(PWD)/$(PREFIX)/usr --build=$(BUILD) --host=$(HOST) --with-shared --with-static && make && make install && make clean
+	mkdir -p python-2.4.3/build && cd python-2.4.3/build && $(FLAGS) ../configure --prefix=$(PREFIX)/usr --build=$(BUILD) --host=$(HOST) --with-shared --with-static && make && make install && make clean
