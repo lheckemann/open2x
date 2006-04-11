@@ -7,7 +7,7 @@
 # Your platform. See PLATS for possible values.
 PLAT= none
 
-CC= open2x-gcc -static
+CC= open2x-gcc
 CFLAGS= -I$(OPEN2X)/include -O2 -Wall $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib
