@@ -4,12 +4,18 @@
  TARGET = open2x
  PREFIX = $(shell pwd)/temp
 
- FLAGS += CC='open2x-gcc -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t'
- FLAGS += CXX='open2x-g++ -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t'
- FLAGS += CFLAGS='-I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2'
- FLAGS += LDFLAGS='-L$(OPEN2X)/lib -R$(OPEN2X)/lib'
+ FLAGS += CC='open2x-gcc'
+ FLAGS += CXX='open2x-g++'
+ FLAGS += CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2'
+ FLAGS += LDFLAGS='-L$(OPEN2X)/lib'
 
- all: busybox libs lua user-libs # python
+ TARGETS += busybox
+ TARGETS += libs
+ TARGETS += lua
+ TARGETS += usr-libs
+ # TARGETS += python
+
+ all: $(TARGETS)
 
  clean:
 	rm -Rf $(PREFIX)
@@ -40,7 +46,7 @@
 	cp $(OPEN2X)/open2x/lib/libutil.so.1 $(PREFIX)/lib
 	chmod a-x $(PREFIX)/lib/*.so*
 
- user-libs:
+ usr-libs:
 	mkdir -p $(PREFIX)/usr/lib
 	cp $(OPEN2X)/lib/libfreetype.so.6 $(PREFIX)/usr/lib
 	cp $(OPEN2X)/lib/libhistory.so.5 $(PREFIX)/usr/lib
