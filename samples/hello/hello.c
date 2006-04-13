@@ -14,6 +14,8 @@
 
  int draw_text(char *filename, int size, char *text);
 
+ int play_music(char *filename);
+
  //////////////////
  // MAIN PROGRAM //
  //////////////////
@@ -36,6 +38,10 @@
   // Draw the sample text.
   result = draw_text("media/font.ttf", 40, "Hello, World!");
   if (result < 0) { fprintf(stderr, "ERROR: Could not draw the sample text.\n"); return -1; }
+
+  // Play the sample music.
+  result = play_music("media/music.ogg");
+  if (result < 0) { fprintf(stderr, "ERROR: Could not play the sample music.\n"); return -1; }
 
   // Flip the video surface.
   result = SDL_Flip(video_surface);
@@ -95,6 +101,29 @@
 
   // Shut down the ttg library.
   // if (TTF_Quit() < 0) { return -1; }
+
+  // End function.
+  return 0;
+
+ }
+
+ int play_music(char *filename) {
+  Mix_Music *music = NULL;
+
+  // Initialize the mixer library.
+  if (Mix_OpenAudio(22050, AUDIO_S16, 2, 512) < 0) { return -1; }
+
+  // Load the music.
+  if ((music = Mix_LoadMUS(filename)) == NULL) { return -1; }
+
+  // Play the music.
+  if (Mix_PlayMusic(music, 0) < 0) { return -1; }
+
+  // Unload the music.
+  // if (Mix_FreeMusic(music) < 0) { return -1; }
+
+  // Shut down the mixer library.
+  // if (Mix_CloseAudio() < 0) { return -1; }
 
   // End function.
   return 0;
