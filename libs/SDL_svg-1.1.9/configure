@@ -6291,7 +6291,7 @@ if test "${ac_cv_lib_xml2_xmlCreatePushParserCtxt+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-lxml2  $LIBS"
+LIBS="-lxml2 -lz $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -6354,7 +6354,7 @@ if test $ac_cv_lib_xml2_xmlCreatePushParserCtxt = yes; then
 #define HAVE_LIBXML2 1
 _ACEOF
 
-  LIBS="-lxml2 $LIBS"
+  LIBS="-lxml2 -lz $LIBS"
 
 else
   { { echo "$as_me:$LINENO: error:
