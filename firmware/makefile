@@ -21,7 +21,7 @@
 	rm -Rf $(PREFIX)
 
  busybox:
-	cd busybox-1.1.1 && make CROSS=$(HOST)- && make PREFIX=$(PREFIX) install && make clean
+	cd busybox-1.1.1 && $(FLAGS) make CROSS=$(HOST)- && $(FLAGS) make PREFIX=$(PREFIX) install && $(FLAGS) make clean
 
  libs:
 	mkdir -p $(PREFIX)/lib
@@ -77,7 +77,7 @@
 	chmod a-x $(PREFIX)/usr/lib/*.so.*
 
  lua:
-	cd lua-5.1 && make && make PREFIX=$(PREFIX) install && make clean
+	cd lua-5.1 && $(FLAGS) make && $(FLAGS) make PREFIX=$(PREFIX) install && $(FLAGS) make clean
 
  python:
-	mkdir -p python-2.4.3/build && cd python-2.4.3/build && $(FLAGS) ../configure --prefix=$(PREFIX)/usr --build=$(BUILD) --host=$(HOST) --with-shared --with-static && make && make install && make clean
+	mkdir -p python-2.4.3/build && cd python-2.4.3/build && $(FLAGS) ../configure --prefix=$(PREFIX)/usr --build=$(BUILD) --host=$(HOST) --with-shared --with-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
