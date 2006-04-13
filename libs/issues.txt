@@ -3,3 +3,4 @@
 
  - bzip2 compiles as a static library only
  - imlib2 compiles as a static library only
+ - sdl_mixer uses smpeg for mp3s, which is very very slow
