@@ -1,13 +1,13 @@
 
- BUILD   = $(shell uname -m)
- HOST    = open2x
- TARGET  = open2x
- PREFIX  = $(OPEN2X)
+ BUILD  = $(shell uname -m)
+ HOST   = open2x
+ TARGET = open2x
+ PREFIX = $(OPEN2X)
 
- FLAGS += CC='open2x-gcc -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t'
- FLAGS += CXX='open2x-g++ -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t'
- FLAGS += CFLAGS='-I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2'
- FLAGS += LDFLAGS='-L$(OPEN2X)/lib -R$(OPEN2X)/lib'
+ FLAGS += CC='open2x-gcc'
+ FLAGS += CXX='open2x-g++'
+ FLAGS += CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2'
+ FLAGS += LDFLAGS='-L$(OPEN2X)/lib'
 
  TARGETS += $(PREFIX)/lib/libImlib2.a
  TARGETS += $(PREFIX)/lib/libSDL.a
@@ -41,59 +41,59 @@
 
  SDL: $(PREFIX)/lib/libSDL.a
  $(PREFIX)/lib/libSDL.a:
-	cd SDL-1.2.9 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && make && make install && make clean
+	cd SDL-1.2.9 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  SDL_gfx: $(PREFIX)/lib/libSDL_gfx.a
  $(PREFIX)/lib/libSDL_gfx.a: $(PREFIX)/lib/libSDL.a
-	cd SDL_gfx-2.0.13 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --disable-mmx && make && make install && make clean
+	cd SDL_gfx-2.0.13 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --disable-mmx && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  SDL_image: $(PREFIX)/lib/libSDL_image.a
  $(PREFIX)/lib/libSDL_image.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libjpeg.a $(PREFIX)/lib/libpng.a
-	cd SDL_image-1.2.4 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && make && make install && make clean
+	cd SDL_image-1.2.4 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  SDL_mixer: $(PREFIX)/lib/libSDL_mixer.a
  $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libsmpeg.a $(PREFIX)/lib/libvorbisidec.a
-	cd SDL_mixer-1.2.6 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes --enable-music-libmikmod=no && make && make install && make clean
+	cd SDL_mixer-1.2.6 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes --enable-music-libmikmod=no && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  SDL_svg: $(PREFIX)/lib/libSDL_svg.a
- $(PREFIX)/lib/libSDL_svg.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libxml2.a
-	cd SDL_svg-1.1.9 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && make && make install && make clean
+ $(PREFIX)/lib/libSDL_svg.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libxml2.a $(PREFIX)/lib/libz.a
+	cd SDL_svg-1.1.9 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  SDL_ttf: $(PREFIX)/lib/libSDL_ttf.a
  $(PREFIX)/lib/libSDL_ttf.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libfreetype.a
-	cd SDL_ttf-2.0.7 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-freetype-prefix=$(PREFIX) --with-sdl-prefix=$(PREFIX) && make && make install && make clean
+	cd SDL_ttf-2.0.7 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-freetype-prefix=$(PREFIX) --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  bzip2: $(PREFIX)/lib/libbz2.a
  $(PREFIX)/lib/libbz2.a:
-	cd bzip2-1.0.3 && make && make install && make clean
+	cd bzip2-1.0.3 && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  freetype: $(PREFIX)/lib/libfreetype.a
  $(PREFIX)/lib/libfreetype.a:
-	cd freetype-2.1.10 && GNUMAKE=make ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd freetype-2.1.10 && GNUMAKE=make ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  imlib2: $(PREFIX)/lib/libImlib2.a
  $(PREFIX)/lib/libImlib2.a: $(PREFIX)/lib/libjpeg.a $(PREFIX)/lib/libpng.a $(PREFIX)/lib/libtiff.a $(PREFIX)/lib/libungif.a $(PREFIX)/lib/libz.a $(PREFIX)/lib/libbz2.a $(PREFIX)/lib/libid3tag.a $(PREFIX)/lib/libfreetype.a
-	cd imlib2-1.2.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --disable-shared --enable-static --with-freetype-config=$(PREFIX)/bin/freetype-config --without-x && make && make install && make clean
+	cd imlib2-1.2.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --disable-shared --enable-static --with-freetype-config=$(PREFIX)/bin/freetype-config --without-x && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libid3tag: $(PREFIX)/lib/libid3tag.a
  $(PREFIX)/lib/libid3tag.a:
-	cd libid3tag-0.15.1b && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd libid3tag-0.15.1b && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libjpeg: $(PREFIX)/lib/libjpeg.a
  $(PREFIX)/lib/libjpeg.a:
-	cd libjpeg-0.6b && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install-lib && make install-headers && make clean
+	cd libjpeg-0.6b && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install-lib && $(FLAGS) make install-headers && $(FLAGS) make clean
 
  libmad: $(PREFIX)/lib/libmad.a
  $(PREFIX)/lib/libmad.a:
-	cd libmad-0.15.1b && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-speed && make && make install && make clean
+	cd libmad-0.15.1b && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-speed && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libmikmod: $(PREFIX)/lib/libmikmod.a
  $(PREFIX)/lib/libmikmod.a:
-	cd libmikmod-3.1.11 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --disable-esd && make && make install && make clean
+	cd libmikmod-3.1.11 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --disable-esd && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libogg: $(PREFIX)/lib/libogg.a
  $(PREFIX)/lib/libogg.a:
-	cd libogg-1.1.3 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd libogg-1.1.3 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libpng: $(PREFIX)/lib/libpng.a
  $(PREFIX)/lib/libpng.a: $(PREFIX)/lib/libz.a
@@ -101,37 +101,37 @@
 
  libtiff: $(PREFIX)/lib/libtiff.a
  $(PREFIX)/lib/libtiff.a:
-	cd libtiff-3.8.2 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd libtiff-3.8.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libungif: $(PREFIX)/lib/libungif.a
  $(PREFIX)/lib/libungif.a:
-	cd libungif-4.1.4 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd libungif-4.1.4 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libvorbis: $(PREFIX)/lib/libvorbis.a
  $(PREFIX)/lib/libvorbis.a: $(PREFIX)/lib/libogg.a
-	cd libvorbis-1.1.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-ogg=$(PREFIX) && make && make install && make clean
+	cd libvorbis-1.1.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-ogg=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libxml2: $(PREFIX)/lib/libxml2.a
  $(PREFIX)/lib/libxml2.a:
-	cd libxml2-2.6.23 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd libxml2-2.6.23 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  ncurses: $(PREFIX)/lib/libncurses.a
  $(PREFIX)/lib/libncurses.a:
-	cd ncurses-5.5 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd ncurses-5.5 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  readline: $(PREFIX)/lib/libreadline.a
  $(PREFIX)/lib/libreadline.a:
-	cd readline-5.1 && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && make && make install && make clean
+	cd readline-5.1 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  smpeg: $(PREFIX)/lib/libsmpeg.a
  $(PREFIX)/lib/libsmpeg.a:
-	cd smpeg-0.4.4 && ./autogen.sh && $(LIBS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --disable-gtk-player --disable-opengl-player --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --without-x && make && make install && make clean
+	cd smpeg-0.4.4 && ./autogen.sh && $(LIBS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --disable-gtk-player --disable-opengl-player --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --without-x && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  tremor: $(PREFIX)/lib/libvorbisidec.a
  $(PREFIX)/lib/libvorbisidec.a:
-	cd tremor-0.0.0 && ./autogen.sh && ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-low-accuracy && make && make install && make clean
+	cd tremor-0.0.0 && ./autogen.sh && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-low-accuracy && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  zlib: $(PREFIX)/lib/libz.a
  $(PREFIX)/lib/libz.a:
-	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) && make && make install && make clean
-	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) --shared && make && make install && make clean
+	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) --shared && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
