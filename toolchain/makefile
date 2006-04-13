@@ -1,8 +1,8 @@
 
- BUILD   = $(shell uname -m)
- HOST    = open2x
- TARGET  = open2x
- PREFIX  = $(OPEN2X)
+ BUILD  = $(shell uname -m)
+ HOST   = open2x
+ TARGET = open2x
+ PREFIX = $(OPEN2X)
 
  TARGETS += $(PREFIX)/$(TARGET)/include/linux/version.h
  TARGETS += $(PREFIX)/bin/$(TARGET)-ar
