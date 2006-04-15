@@ -1,10 +1,6 @@
 /*
  * NAND controller on MagicEyes MP2520F
  *
- * Copyright (C) 2004,2005 DIGNSYS Inc. (www.dignsys.com)
- * Kane Ahn < hbahn@dignsys.com >
- * hhsong < hhsong@dignsys.com >
- *
  * This file is subject to the terms and conditions of the GNU General Public
  * License. See the file COPYING in the main directory of this archive
  * for more details.
@@ -82,12 +78,20 @@ static struct mtd_partition partition_info[] = {
 		size:		0x1800000,
 		offset:		MTDPART_OFS_APPEND,
 	}, {
+		name:		"Open2x",
+		size:		0x1000000,
+		offset:		MTDPART_OFS_APPEND,
+	}, {
+		name:		"Spare",
+		size:		0x1000000,
+		offset:		MTDPART_OFS_APPEND,
+	}, {
 		name:		"Extend",
 		size:		MTDPART_SIZ_FULL,
 		offset:		MTDPART_OFS_APPEND,
 	}
 };
-#define NUM_PARTITIONS 5
+#define NUM_PARTITIONS 7
 #endif /* CONFIG_MTD_NAND_BONFS */
 
 #if USE_CPU_FCE == 0
@@ -569,4 +573,5 @@ static void __exit mp2520f_nand_cleanup (void)
 module_exit(mp2520f_nand_cleanup);
 #endif
 
-MODULE_AUTHOR("DIGNSYS Inc.(www.dignsys.com)");
+MODULE_AUTHOR("");
+MODULE_LICENSE("GPL");
