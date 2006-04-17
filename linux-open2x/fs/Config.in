@@ -52,6 +52,14 @@ if [ "$CONFIG_JFFS2_FS" = "y" -o "$CONFIG_JFFS2_FS" = "m" ] ; then
    bool 'JFFS2 support for NAND chips' CONFIG_JFFS2_FS_NAND
 fi
 tristate 'Compressed ROM file system support' CONFIG_CRAMFS
+tristate 'Squashed file system support' CONFIG_SQUASHFS
+if [ "$CONFIG_SQUASHFS" = "y" -o "$CONFIG_SQUASHFS" = "m" ] ; then
+bool 'Additional options for memory constrained systems ' CONFIG_SQUASHFS_EMBEDDED
+fi
+if [ "$CONFIG_SQUASHFS_EMBEDDED" = "y" ] ; then
+int 'Number of fragments cached' CONFIG_SQUASHFS_FRAGMENT_CACHE_SIZE 3
+bool 'Use Vmalloc rather than Kmalloc'  CONFIG_SQUASHFS_VMALLOC
+fi
 bool 'Virtual memory file system support (former shm fs)' CONFIG_TMPFS
 define_bool CONFIG_RAMFS y
 

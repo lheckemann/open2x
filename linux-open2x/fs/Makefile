@@ -65,6 +65,7 @@ subdir-$(CONFIG_REISERFS_FS)	+= reiserfs
 subdir-$(CONFIG_DEVPTS_FS)	+= devpts
 subdir-$(CONFIG_SUN_OPENPROMFS)	+= openpromfs
 subdir-$(CONFIG_BEFS_FS)	+= befs
+subdir-$(CONFIG_SQUASHFS)	+= squashfs
 subdir-$(CONFIG_JFS_FS)		+= jfs
 subdir-$(CONFIG_XFS_FS)		+= xfs
 subdir-$(CONFIG_YAFFS)	+= yaffs
