@@ -45,7 +45,7 @@
 #include "mikmod_internals.h"
 
 #define BUFFERSIZE 32768
-#define FILENAME "music.raw"
+#define FILENAME "/tmp/music.raw"
 
 #ifndef O_BINARY
 #define O_BINARY 0
