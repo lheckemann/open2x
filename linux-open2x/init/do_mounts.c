@@ -257,6 +257,10 @@ static struct dev_name_struct {
 	{ "mtdblock", 0x1f00 },
 	{ "nb", 0x2b00 },
 	{ "bon", 0x6100 },
+    { "roftla", 0x3700 },
+    { "roftlb", 0x3708 },
+    { "roftlc", 0x3710 },
+    { "roftld", 0x3718 },
     { "mmcsd", 0x3C00 },
 	{ NULL, 0 }
 };
