@@ -66,7 +66,10 @@ typedef struct SDL_WMcursor {
 // Private display data
 
 typedef struct SDL_PrivateVideoData {
-  int memory_fd, fbcon_fd;
+  int memory_fd, fbcon_fd, mouse_fd, keyboard_fd;
+  int saved_keybd_mode;
+  //  struct termios saved_kbd_termios;
+
   int x_offset, y_offset, ptr_offset;
   int w, h, pitch;
   int phys_width, phys_height, phys_pitch, phys_ilace;

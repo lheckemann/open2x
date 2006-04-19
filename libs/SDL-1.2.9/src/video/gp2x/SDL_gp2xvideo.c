@@ -178,6 +178,9 @@ static SDL_VideoDevice *GP2X_CreateDevice(int devindex)
     return 0;
   }
   memset(device->hidden, 0, (sizeof *device->hidden));
+
+  device->hidden->mouse_fd = -1;
+  device->hidden->keyboard_fd = -1;
   
   // Set the function pointers
   device->VideoInit = GP2X_VideoInit;
@@ -341,6 +344,10 @@ static int GP2X_VideoInit(_THIS, SDL_PixelFormat *vformat)
   this->FillHWRect = GP2X_FillHWRect;
   this->info.blit_hw = 1;
   this->info.blit_hw_CC = 1;
+
+  // Enable mouse and keyboard support
+  //  GP2X_OpenKeyboard(this);
+  GP2X_OpenMouse(this);
   return 0;
 }
 
@@ -447,6 +454,7 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
   }
   data->io[MLC_STL_EADRL] = GP2X_PhysL(this, pixelbuffer);
   data->io[MLC_STL_EADRH] = GP2X_PhysH(this, pixelbuffer);
+
   return current;
 }
 
@@ -490,6 +498,8 @@ static int GP2X_InitHWSurfaces(_THIS, SDL_Surface *screen, char *base, int size)
   screen->hwdata = (struct private_hwdata *)&this->hidden->video_mem;
 
   SDL_CursorQuit();
+  SDL_CursorInit(1);
+  //  SDL_{ShowCursor(0);
 
   return 0;
 }
@@ -1035,16 +1045,6 @@ static int GP2X_HWAccelBlit(SDL_Surface *src, SDL_Rect *src_rect,
 ////
 // HW cursor support
 
-// Re-initialize cursor
-void SDL_GP2X_InitializeCursor()
-{
-#ifdef GP2X_DEBUG
-  fputs("SDL_GP2X: Initializing cursor support\n", stderr);
-#endif
-  SDL_CursorQuit();
-  SDL_CursorInit(1);
-}
-
 // Create cursor in HW format
 static WMcursor *GP2X_CreateWMCursor(SDL_VideoDevice *video,
 				     Uint8 *data, Uint8 *mask,
@@ -1159,6 +1159,34 @@ static int GP2X_ShowWMCursor(_THIS, WMcursor *wmcursor)
 }
 
 ////
+// Set colour & alpha of a cursor (alpha is 0-15)
+void SDL_GP2X_SetCursorColour(SDL_Cursor *scursor,
+			      int bred, int bgreen, int bblue, int balpha,
+			      int fred, int fgreen, int fblue, int falpha)
+{
+  SDL_PrivateVideoData *data = current_video->hidden;
+  SDL_WMcursor *cursor = (SDL_WMcursor*)scursor->wm_cursor;
+
+  cursor->fgr = ((fgreen & 0xFF) << 8) | (fred & 0xFF);
+  cursor->fb = fblue & 0xFF;
+  cursor->bgr = ((bgreen &0xFF) << 8) | (bred & 0xFF);
+  cursor->bb = bblue & 0xFF;
+  cursor->falpha = falpha & 0x0F;
+  cursor->balpha = balpha & 0x0F;
+
+  if (cursor == data->visible_cursor) {
+    data->io[MLC_HWC_FGR] = cursor->fgr;
+    data->io[MLC_HWC_FB] =  cursor->fb;
+    data->io[MLC_HWC_BGR] = cursor->bgr;
+    data->io[MLC_HWC_BB] =  cursor->bb;
+    data->io[MLC_HWC_CNTL] = (cursor->falpha << 12) |
+      (cursor->balpha << 8) |
+      cursor->dimension;
+  }
+}
+
+
+////
 // Move the cursor to specified (physical) coordinate
 static void GP2X_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
 {
@@ -1267,33 +1295,6 @@ void SDL_GP2X_Display(SDL_Rect *area)
     data->io[MLC_STL_HSC] = data->scale_x;
     data->io[MLC_STL_VSCL] = data->scale_y & 0xffff;
     data->io[MLC_STL_VSCH] = data->scale_y >> 16;
-  }
-}
-
-////
-// Set colour & alpha of a cursor (alpha is 0-15)
-void SDL_GP2X_SetCursorColour(SDL_Cursor *scursor,
-			      int bred, int bgreen, int bblue, int balpha,
-			      int fred, int fgreen, int fblue, int falpha)
-{
-  SDL_PrivateVideoData *data = current_video->hidden;
-  SDL_WMcursor *cursor = (SDL_WMcursor*)scursor->wm_cursor;
-
-  cursor->fgr = ((fgreen & 0xFF) << 8) | (fred & 0xFF);
-  cursor->fb = fblue & 0xFF;
-  cursor->bgr = ((bgreen &0xFF) << 8) | (bred & 0xFF);
-  cursor->bb = bblue & 0xFF;
-  cursor->falpha = falpha & 0x0F;
-  cursor->balpha = balpha & 0x0F;
-
-  if (cursor == data->visible_cursor) {
-    data->io[MLC_HWC_FGR] = cursor->fgr;
-    data->io[MLC_HWC_FB] =  cursor->fb;
-    data->io[MLC_HWC_BGR] = cursor->bgr;
-    data->io[MLC_HWC_BB] =  cursor->bb;
-    data->io[MLC_HWC_CNTL] = (cursor->falpha << 12) |
-      (cursor->balpha << 8) |
-      cursor->dimension;
   }
 }
 

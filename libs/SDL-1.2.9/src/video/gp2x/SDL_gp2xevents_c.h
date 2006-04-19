@@ -30,6 +30,8 @@ static char rcsid =
 /* Variables and functions exported by SDL_sysevents.c to other parts 
    of the native video subsystem (SDL_sysvideo.c)
 */
+extern int GP2X_OpenMouse(_THIS);
+extern void GP2X_CloseMouse(_THIS);
 extern void GP2X_InitOSKeymap(_THIS);
 extern void GP2X_PumpEvents(_THIS);
 

@@ -36,5 +36,7 @@ static char rcsid =
 
 /* The implementation dependent data for the window manager cursor */
 struct WMcursor {
-	int unused;
+  video_bucket *bucket;
+  int dimension;
+  unsigned short fgr, fb, bgr, bb, falpha, balpha;
 };
