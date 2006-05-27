@@ -17,6 +17,9 @@ Added Hardware cursor support
 Added regions - user-definable areas of the physical display to show.
 Added support for non-scaled displays that are smaller than native resolution.
 Disabled cursor support initially - details below.
+Added single USB mouse support.
+Added USB joystick support (untested).
+Added backlight & CPU speed adjustments.
 
 TODO: 
 
@@ -41,6 +44,13 @@ The primary surface (as set by SDL_SetVideoMode) is limited to 8 or 16 bit.
 24 and 32 bit modes are NOT supported, driver will use 16bit instead.
 SetVideoMode also forces SDL_HWSURFACE
 
+WARNING: Loading images with IMG_Load(filename) will create SWSURFACES, to
+convert them to HWSURFACES do this:
+
+	img_temp = IMG_Load("my_image.png");
+	img = SDL_DisplayFormat(img_temp);
+	SDL_FreeSurface(img_temp);
+
 Screen sizes can be between 64x64 and 1024x768 inclusive, but the width must
 be a multiple of 8 (legacy), width will be rounded up if need be.
 The primary surface will be visually expanded or shrunk to fill either the
@@ -63,10 +73,6 @@ The harware cursor is capable of colour (although only 2), but is 24bit
 regardless of the display surface. It can also alpha-blend it's fore- and
 background colours at different levels, each ranging from 0=transparent to
 15=opaque.
-
-The cursor isn't shown by default on HWSURFACE. If you want to use it you
-need to call SDL_ShowCursor(SDL_ENABLE); This is contary to the standard SDL
-behaviour which defaults to showing it.
 
 
 ****
@@ -146,6 +152,29 @@ void SDL_GP2X_ActivateRegion(int region, int activate);
   There is a fifth region, region 5, but this is fullscreen only and hence
   not available to SDL_GP2X_DefineRegion().
 
+////
+void SDL_SYS_JoystickGp2xSys(SDL_Joystick joystick, int command);
+
+  joystick _must_ be the value returned by SDL_JoystickOpen(0). This is
+  because this function relies on data that is stored in the joystick
+  structure of the internal joystick. To be doing anything on the GP2X
+  you'll more than likely be wanting access to the buttons anyway.
+  The values you can pass as the command are as follows:
+    BACK_LIGHT_OFF	- Switches the backlight off ;)
+    BACK_LIGHT_ON	- Switches the backlight back on.
+    BATT_LED_OFF	- Switches the red battery light on.
+    BATT_LED_ON		- Switches the red battery light off.
+    FCLK_200		- Runs the CPU at 200 MHz.
+    FCLK_166		- Runs the CPU at 166 MHz.
+    FCLK_133		- Runs the CPU at 133 MHz.
+    FCLK_100		- Runs the CPU at 100 MHz.
+    FCLK_78		- Runs the CPU at  78 MHz.
+    FCLK_64		- Runs the CPU at  64 MHz.
+  The following is allowed, but I've just checked the soruce for /dev/gpio to
+  see what speed it corresponded to and found that it doesn't actually do
+  anything.
+    FCLK_DEFAULT	- Runs the CPU at it's default speed.
+  
 
 *************************************************************
 ** The following functions are implemented, but not tested **

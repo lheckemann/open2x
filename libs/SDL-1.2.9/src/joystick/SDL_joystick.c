@@ -76,8 +76,8 @@ int SDL_JoystickInit(void)
  */
 int SDL_NumJoysticks(void)
 {
-	//return SDL_numjoysticks;
-	return 1;
+	return SDL_numjoysticks;
+	//return 1;
 }
 
 /*

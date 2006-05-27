@@ -161,6 +161,24 @@ extern DECLSPEC Uint8 SDLCALL SDL_JoystickGetButton(SDL_Joystick *joystick, int 
  */
 extern DECLSPEC void SDLCALL SDL_JoystickClose(SDL_Joystick *joystick);
 
+/*
+ * GP2X backlight control (as it's connected to GPIO)
+ */
+#define IOCTL_GP2X_CONTROL_LIB    _IOR('v', 0x00 ,unsigned long)
+#define BACK_LIGHT_OFF		0
+#define BACK_LIGHT_ON		1
+#define BATT_LED_ON		2
+#define BATT_LED_OFF		3
+
+#define FCLK_200			10
+#define FCLK_166			11
+#define FCLK_133			12
+#define FCLK_100			13	
+#define FCLK_78				14
+#define FCLK_64				15
+#define FCLK_DEFAULT		        16
+
+void SDL_SYS_JoystickGp2xSys(SDL_Joystick *joystick,int cmd);
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

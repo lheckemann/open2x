@@ -318,6 +318,8 @@ static int GP2X_VideoInit(_THIS, SDL_PixelFormat *vformat)
     data->stl_regions[i] = data->io[MLC_STL1_STX + i];
   data->mlc_ovlay_cntr = data->io[MLC_OVLAY_CNTR];
 
+  // Save vsync polarity (since GPH change it in different firmwares)
+  data->vsync_polarity = data->io[DPC_V_SYNC] & DPC_VSFLDPOL;
   // Check what video mode we're in (LCD, NTSC or PAL)
   data->phys_width = data->io[DPC_X_MAX] + 1;
   data->phys_height = data->io[DPC_Y_MAX] + 1;
@@ -727,8 +729,11 @@ static int GP2X_FlipHWSurface(_THIS, SDL_Surface *surface)
     GP2X_DummyBlit(this);
   }
 
-  // wait for vblank to start
-  do {} while ((data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+  // wait for vblank to start, choose transition type by polarity
+  if (data->vsync_polarity)
+    do {} while ((data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+  else
+    do {} while (!(data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
 
   // Wait to be on even field (non-interlaced always returns 0)
   //  do {} while (data->io[SC_STATUS] & SC_DISP_FIELD);

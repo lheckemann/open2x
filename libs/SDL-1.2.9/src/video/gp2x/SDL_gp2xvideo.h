@@ -69,9 +69,9 @@ typedef struct SDL_PrivateVideoData {
   int memory_fd, fbcon_fd, mouse_fd, keyboard_fd;
   int saved_keybd_mode;
   //  struct termios saved_kbd_termios;
-
   int x_offset, y_offset, ptr_offset;
   int w, h, pitch;
+  int vsync_polarity;
   int phys_width, phys_height, phys_pitch, phys_ilace;
   int scale_x, scale_y;
   float xscale, yscale;
