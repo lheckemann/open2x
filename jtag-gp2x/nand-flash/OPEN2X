@@ -1,0 +1,16 @@
+$URL$
+$Id: OPEN2X 177 2006-08-10 18:24:04Z djwillis $
+
+The source code provides NAND flashing functionality for the GP2X. 
+It is designed to flash a suitable bootloader to 0x0 on the NAND (up to bootloader size).
+It wraps the bootloader to flash into a header and links it with an ARM-ELF designed to run from 3D00000.
+
+Credits:
+
+Rob Brown for SDK2X 
+    (http://www.cobbleware.com)
+
+DignSys Inc. for there scarce but useful bits of GPL'ed NAND code 
+    (http://www.dignsys.com/eng)
+
+This code is released by the Open2x project (http://www.distant-earth.com/open2x/).
