@@ -38,10 +38,35 @@ static char rcsid =
 #define _THIS	SDL_VideoDevice *this
 
 // Allocate 5MB for the frame buffer (seems to be how gph have it)
-#define GP2X_VIDEO_MEM_SIZE ((5*1024*1024) - 4096)
+//#define GP2X_VIDEO_MEM_SIZE ((5*1024*1024) - 4096)
+
+// New memory allocation, VIDEO_MEM is now the entire upper 32MB with
+//  the reserved parts marked internally as unusable.
+//  OFFSET is from base of video memory to start of fbcon0
+#define GP2X_VIDEO_MEM_SIZE (32*1024*1024)
+#define GP2X_SCREEN_OFFSET 0
+//0x1101000
 
 // Number of native modes supported
 #define SDL_NUMMODES 8
+
+// TV control
+#define IOCTL_CX25874_DISPLAY_MODE_SET	_IOW('v', 0x02, unsigned char)
+#define IOCTL_CX25874_TV_MODE_POSITION	_IOW('v', 0x0A, unsigned char)
+
+#define TV_POS_LEFT	0
+#define TV_POS_RIGHT	1
+#define TV_POS_UP	2
+#define TV_POS_DOWN	3
+
+
+#define CX25874_ID 	0x8A
+
+#define DISPLAY_LCD     0x1
+#define DISPLAY_MONITOR 0x2
+#define DISPLAY_TV_NTSC 0x3
+#define DISPLAY_TV_PAL 	0x4
+#define DISPLAY_TV_GAME_NTSC 0x05
 
 
 ////
@@ -87,6 +112,7 @@ typedef struct SDL_PrivateVideoData {
   char *surface_mem;
   int memory_left;
   int memory_max;
+  int allow_scratch_memory;
   SDL_WMcursor *visible_cursor;
   int cursor_px, cursor_py, cursor_vx, cursor_vy;
   SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
@@ -107,21 +133,21 @@ extern VideoBootStrap GP2X_bootstrap;
 // convert virtual address to physical
 static inline unsigned int GP2X_Phys(_THIS, char *virt)
 {
-  return (unsigned int)((long)virt - (long)(this->hidden->vmem) + 0x3101000);
+  return (unsigned int)((long)virt - (long)(this->hidden->vmem) + 0x2000000);
 }
 
 ////
 // convert virtual address to physical (lower word)
 static inline unsigned short GP2X_PhysL(_THIS, char *virt)
 {
-  return (unsigned short)(((long)virt - (long)(this->hidden->vmem) + 0x3101000) & 0xffff);
+  return (unsigned short)(((long)virt - (long)(this->hidden->vmem) + 0x2000000) & 0xffff);
 }
 
 ////
 // convert virtual address to phyical (upper word)
 static inline unsigned short GP2X_PhysH(_THIS, char *virt)
 {
-  return (unsigned short)(((long)virt - (long)(this->hidden->vmem) + 0x3101000) >> 16);
+  return (unsigned short)(((long)virt - (long)(this->hidden->vmem) + 0x2000000) >> 16);
 }
 
 ////

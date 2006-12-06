@@ -37,6 +37,7 @@ static char rcsid =
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 #include "SDL.h"
 #include "SDL_error.h"
@@ -68,8 +69,8 @@ static void GP2X_VideoQuit(_THIS);
 static void GP2X_SurfaceFree(_THIS, video_bucket *bucket);
 static video_bucket *GP2X_SurfaceAllocate(_THIS, int size);
 
-static int GP2X_InitHWSurfaces(_THIS, SDL_Surface *screen,
-			       char *base, int size);
+static int GP2X_InitHWSurfaces(_THIS /*, SDL_Surface *screen,
+				       char *base, int size */ );
 static void GP2X_FreeHWSurfaces(_THIS);
 static int GP2X_AllocHWSurface(_THIS, SDL_Surface *surface);
 static int GP2X_LockHWSurface(_THIS, SDL_Surface *surface);
@@ -254,7 +255,7 @@ static int GP2X_VideoInit(_THIS, SDL_PixelFormat *vformat)
     return -1;
   }
   data->vmem = mmap(NULL, GP2X_VIDEO_MEM_SIZE, PROT_READ|PROT_WRITE,
-		    MAP_SHARED, data->memory_fd, 0x3101000);
+		    MAP_SHARED, data->memory_fd, 0x2000000);
   if (data->vmem == (char *)-1) {
     SDL_SetError("Unable to get video memory");
     data->vmem = NULL;
@@ -325,8 +326,8 @@ static int GP2X_VideoInit(_THIS, SDL_PixelFormat *vformat)
   data->phys_height = data->io[DPC_Y_MAX] + 1;
   data->phys_ilace = (data->io[DPC_CNTL] & DPC_INTERLACE) ? 1 : 0;
 #ifdef GP2X_DEBUG
-  fprintf(stderr, "SDL_GP2X: Physical screen = %dx%d (ilace = %d)\n",
-	  data->phys_width, data->phys_height, data->phys_ilace);
+  fprintf(stderr, "SDL_GP2X: Physical screen = %dx%d (ilace = %d, pol = %d)\n",
+	  data->phys_width, data->phys_height, data->phys_ilace, data->vsync_polarity);
 #endif
   for (i = 0; i < SDL_NUMMODES; i++) {
     data->SDL_modelist[i] = malloc(sizeof(SDL_Rect));
@@ -347,6 +348,7 @@ static int GP2X_VideoInit(_THIS, SDL_PixelFormat *vformat)
   this->info.blit_hw = 1;
   this->info.blit_hw_CC = 1;
 
+  GP2X_InitHWSurfaces(this);
   // Enable mouse and keyboard support
   //  GP2X_OpenKeyboard(this);
   GP2X_OpenMouse(this);
@@ -377,6 +379,7 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
 				      int bpp, Uint32 flags)
 {
   SDL_PrivateVideoData *data = this->hidden;
+  video_bucket *screen_bucket;
   char *pixelbuffer;
 #ifdef GP2X_DEBUG
   fprintf(stderr, "SDL_GP2X: Setting video mode %dx%d %d bpp, flags=%X\n",
@@ -412,7 +415,15 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
   if (data->phys_ilace && (width == 720))
     data->phys_pitch *= 2;
   this->screen = current;
-  current->pixels = data->vmem;
+  SDL_CursorQuit();
+  GP2X_FreeHWSurfaces(this);
+  GP2X_InitHWSurfaces(this);
+  // sep screen from allocator: removed 1 line, added 2 lines
+  //current->pixels = data->vmem + GP2X_SCREEN_OFFSET;
+  screen_bucket = GP2X_SurfaceAllocate(this, height * data->pitch * ((flags & SDL_DOUBLEBUF) ? 2:1));
+  if (!screen_bucket)
+    return NULL;
+  current->pixels = screen_bucket->base;
 
   data->x_offset = data->y_offset = 0;
   data->ptr_offset = 0;
@@ -425,16 +436,17 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
   data->yscale = (float)data->phys_height / (float)height;
 
   data->buffer_showing = 0;
-  data->buffer_addr[0] = data->vmem;
-  data->surface_mem = data->vmem + (height * data->pitch);
+  data->buffer_addr[0] = current->pixels;
+  data->surface_mem = data->vmem; // + (height * data->pitch);
   data->memory_max = GP2X_VIDEO_MEM_SIZE - height * data->pitch;
   if (flags & SDL_DOUBLEBUF) {
-    current->pixels = data->buffer_addr[1] = data->surface_mem;
-    data->surface_mem += height * data->pitch;
+    data->buffer_addr[1] = current->pixels += height * data->pitch;
+    //    data->surface_mem += height * data->pitch;
     data->memory_max -= height * data->pitch;
   }
-  GP2X_FreeHWSurfaces(this);
-  GP2X_InitHWSurfaces(this, current, data->surface_mem, data->memory_max);
+  // sep screen from allocator - added 1 line, removed 1 line
+  current->hwdata = (struct private_hwdata *)&data->video_mem;
+  //  GP2X_InitHWSurfaces(this, current, data->surface_mem, data->memory_max);
 
   // Load the registers
   data->io[MLC_STL_HSC] = data->scale_x;
@@ -462,48 +474,111 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
 
 ////
 // Initialize HW surface list
-static int GP2X_InitHWSurfaces(_THIS, SDL_Surface *screen, char *base, int size)
+//static int GP2X_InitHWSurfaces(_THIS, SDL_Surface *screen, char *base, int size)
+static int GP2X_InitHWSurfaces(_THIS)
 {
-  video_bucket *bucket;
+  video_bucket *bucket, *first_bucket, *second_bucket, *third_bucket;
   int cursor_state;
+  char *base = this->hidden->vmem;
 #ifdef GP2X_DEBUG
-  fprintf(stderr, "SDL_GP2X: InitHWSurfaces %p, %d\n", base, size);
+  fprintf(stderr, "SDL_GP2X: InitHWSurfaces\n");
 #endif
 
-  this->hidden->memory_left = size;
-  this->hidden->memory_max = size;
+  first_bucket = (video_bucket *)malloc(sizeof(*bucket));
+  second_bucket = (video_bucket *)malloc(sizeof(*bucket));
+  if ((first_bucket == NULL) || (second_bucket == NULL)) {
+    SDL_OutOfMemory();
+    return -1;
+  }
 
-  if (this->hidden->memory_left > 0) {
-    bucket = (video_bucket *)malloc(sizeof(*bucket));
-    if (bucket == NULL) {
+  // ***HACK*** whether gfx memory has 16MB scratch available
+#ifdef GP2X_DEBUG
+  fprintf(stderr, "SDL_GP2X: InitHWSurfaces scratch = %d\n", this->hidden->allow_scratch_memory);
+#endif
+  if (this->hidden->allow_scratch_memory) {
+    third_bucket = (video_bucket *)malloc(sizeof(*bucket));
+    if (third_bucket == NULL) {
       SDL_OutOfMemory();
       return -1;
     }
-    bucket->next = NULL;
-    bucket->prev = &this->hidden->video_mem;
-    bucket->used = 0;
-    bucket->dirty = 0;
-    bucket->base = base;
-    bucket->size = size;
-  } else
-    bucket = NULL;
-#ifdef GP2X_DEBUG
-  fprintf(stderr, "SDL_GP2X: Screen bucket %p\n", &this->hidden->video_mem);
-  fprintf(stderr, "SDL_GP2X: First free bucket %p (size = %d)\n", bucket, size);
-#endif  
-  this->hidden->video_mem.next = bucket;
+    first_bucket->next = second_bucket;
+    first_bucket->prev = &this->hidden->video_mem;
+    first_bucket->used = 0;
+    first_bucket->dirty = 0;
+    first_bucket->base = base;
+    first_bucket->size = 16*1024*1024;
+
+    second_bucket->next = third_bucket;
+    second_bucket->prev = first_bucket;
+    second_bucket->used = 2;
+    second_bucket->dirty = 0;
+    second_bucket->base = base + 16*1024*1024;
+    second_bucket->size = 1024*1024;
+
+    third_bucket->next = NULL;
+    third_bucket->prev = second_bucket;
+    third_bucket->used = 0;
+    third_bucket->dirty = 0;
+    third_bucket->base = base + 17*1024*1024;
+    third_bucket->size = 5*1024*1024;
+  } else {
+    first_bucket->next = second_bucket;
+    first_bucket->prev = &this->hidden->video_mem;
+    first_bucket->used = 2;
+    first_bucket->dirty = 0;
+    first_bucket->base = base;
+    first_bucket->size = 17*1024*1024;
+
+    second_bucket->next = NULL;
+    second_bucket->prev = first_bucket;
+    second_bucket->used = 0;
+    second_bucket->dirty = 0;
+    second_bucket->base = base + 17*1024*1024;
+    second_bucket->size = 5*1024*1024;
+  }
+
+  this->hidden->video_mem.next = first_bucket;
   this->hidden->video_mem.prev = NULL;
   this->hidden->video_mem.used = 1;
   this->hidden->video_mem.dirty = 0;
-  this->hidden->video_mem.base = screen->pixels;
-  this->hidden->video_mem.size = (unsigned int)((long)base - (long)screen->pixels);
-  screen->hwdata = (struct private_hwdata *)&this->hidden->video_mem;
+  this->hidden->video_mem.base = base; // screen->pixels;
+  //  this->hidden->video_mem.size = (unsigned int)((long)base - (long)screen->pixels);
+  // set these three variables to amount of memory free
+  this->hidden->video_mem.size =
+    this->hidden->memory_left =
+    this->hidden->memory_max =
+    (this->hidden->allow_scratch_memory ? 21:5) * 1024*1024;
 
-  SDL_CursorQuit();
+  ////
+  //  screen->hwdata = (struct private_hwdata *)&this->hidden->video_mem;
+
   SDL_CursorInit(1);
-  //  SDL_{ShowCursor(0);
 
   return 0;
+}
+
+////
+// Insert invalid addresses into surface list
+static int GP2X_insert_invalid_memory(_THIS, char *block_start, int block_size)
+{
+  video_bucket *bucket = &this->hidden->video_mem;
+  char *block_end = block_start + block_size;
+
+  // Find bucket which encloses invalid area
+  
+  while (((bucket = bucket->next) != NULL) &&
+	 (bucket->base + bucket->size <= block_start)) {
+    if (bucket->base > block_start) {
+      bucket = NULL;
+      break;
+    }
+  }
+  if (bucket == NULL) {
+#ifdef GP2X_DEBUG
+    fputs("GP2X_insert_invalid_memory: block not in bucket list\n", stderr);
+#endif
+    return -1;
+  }
 }
 
 ////
@@ -590,10 +665,10 @@ static void GP2X_SurfaceFree(_THIS, video_bucket *bucket)
   video_bucket *wanted;
   SDL_PrivateVideoData *data = this->hidden;
 #ifdef GP2X_DEBUG
-    fprintf(stderr, "SDL_GP2X: SurfaceManager freeing %d bytes @ %p from bucket %p\n", bucket->size, bucket->base, bucket);
+  fprintf(stderr, "SDL_GP2X: SurfaceManager freeing %d bytes @ %p from bucket %p\n", bucket->size, bucket->base, bucket);
 #endif
 
-  if (bucket->used) {
+  if (bucket->used == 1) {
     data->memory_left += bucket->size;
     bucket->used = 0;
 
@@ -724,10 +799,9 @@ static int GP2X_FlipHWSurface(_THIS, SDL_Surface *surface)
   //  fprintf(stderr, "SDL_GP2X: Flip %p\n", surface);
 #endif
   // make sure the blitter has finished
-  if (GP2X_IsSurfaceBusy(this->screen)) {
-    GP2X_WaitBusySurfaces(this);
-    GP2X_DummyBlit(this);
-  }
+  GP2X_WaitBusySurfaces(this);
+  GP2X_DummyBlit(this);
+  do {} while (data->fio[MESGSTATUS] & MESG_BUSY);
 
   // wait for vblank to start, choose transition type by polarity
   if (data->vsync_polarity)
@@ -1050,6 +1124,51 @@ static int GP2X_HWAccelBlit(SDL_Surface *src, SDL_Rect *src_rect,
 ////
 // HW cursor support
 
+// Support routine to fill cursor data
+static void fill_cursor_data(Uint16 *cursor, int w, int h, int size,
+			     int skip, Uint8 *data, Uint8 *mask)
+{
+  Uint16 *cursor_addr = cursor;
+  Uint16 *cursor_end  = cursor + size;
+  int x, y, datab, maskb, pixel, i, dimension;
+  //############
+  //######
+  //###### HW LACE NEEDS FIXING
+  //######
+  //############
+  dimension = (size == 256 ? 32 : 64);
+  if (skip) skip = dimension << 4;
+  for (y = 0; y < h; y++) {
+    for (x = 0; x < w; x += 8) {
+      datab = *data++;
+      maskb = *mask++;
+      pixel = 0;
+      for (i = 8; i; i--) {
+	pixel <<= 2;
+	if (!(maskb & 0x01))
+	  pixel |= 0x02;
+	else if (!(datab & 0x01))
+	  pixel |= 0x01;
+	maskb >>= 1;
+	datab >>= 1;
+      }
+      *cursor_addr++ = pixel;
+    }
+    while (x < dimension) {
+      *cursor_addr++ = 0xAAAA;
+      x += 8;
+    }
+    if (skip) {
+      cursor_addr += skip;
+      data += 4;
+      mask += 4;
+      y++;
+    }
+  }
+  while(cursor_addr < cursor_end)
+    *cursor_addr++ = 0xAAAA;
+}
+
 // Create cursor in HW format
 static WMcursor *GP2X_CreateWMCursor(SDL_VideoDevice *video,
 				     Uint8 *data, Uint8 *mask,
@@ -1091,33 +1210,12 @@ static WMcursor *GP2X_CreateWMCursor(SDL_VideoDevice *video,
   cursor->falpha = 0xf;
   cursor->balpha = 0xf;
 
+  cursor_addr = (Uint16*)cursor->bucket->base;
   if (pvd->phys_ilace) {
+    fill_cursor_data(cursor_addr, w, h, cursor_size, 1, data, mask);
+    fill_cursor_data(cursor_addr + (cursor_size << 1), w, h, cursor_size, 1, data + (cursor_dimension << 4), mask + (cursor_dimension << 4));
   } else {
-    cursor_addr = (Uint16*)cursor->bucket->base;
-    cursor_end = cursor_addr + cursor_size;
-    for (y = 0; y < h; y++) {
-      for (x = 0; x < w; x += 8) {
-	datab = *data++;
-	maskb = *mask++;
-	pixel = 0;
-	for (i = 8; i; i--) {
-	  pixel <<= 2;
-	  if (!(maskb & 0x01))
-	    pixel |= 0x02;
-	  else if (!(datab & 0x01))
-	    pixel |= 0x01;
-	  maskb >>= 1;
-	  datab >>= 1;
-	}
-	*cursor_addr++ = pixel;
-      }
-      while (x < cursor_dimension) {
-	*cursor_addr++ = 0xAAAA;
-	x += 8;
-      }
-    }
-    while(cursor_addr < cursor_end)
-      *cursor_addr++ = 0xAAAA;
+    fill_cursor_data(cursor_addr, w, h, cursor_size, 0, data, mask);
   }
   return (WMcursor*)cursor;
 }
@@ -1199,8 +1297,9 @@ static void GP2X_WarpWMCursor(_THIS, Uint16 x, Uint16 y)
 
   data->cursor_px = x;
   data->cursor_py = y;
-  data->io[MLC_HWC_STX] = x;
-  data->io[MLC_HWC_STY] = y;
+  //  data->io[MLC_HWC_STX] = x;
+  //  data->io[MLC_HWC_STY] = y;
+  SDL_PrivateMouseMotion(0, 0, x, y);
 }
 
 ////
@@ -1216,7 +1315,10 @@ static void GP2X_MoveWMCursor(_THIS, int x, int y)
   x *= data->xscale;
   y -= data->y_offset;
   y *= data->yscale;
-  GP2X_WarpWMCursor(this, x, y);
+  data->cursor_px = x;
+  data->cursor_py = y;
+  data->io[MLC_HWC_STX] = x;
+  data->io[MLC_HWC_STY] = y;
 }
 
 
@@ -1376,4 +1478,73 @@ void SDL_GP2X_MiniDisplay(int x, int y)
   mini_region.w = data->w;
   mini_region.h = data->h;
   SDL_GP2X_DefineRegion(1, &mini_region);
+}
+
+// Lets the user wait for the blitter to finish
+void SDL_GP2X_WaitForBlitter()
+{
+  GP2X_WaitBusySurfaces(current_video);
+}
+
+static int tv_device = 0;
+
+// Switch TV mode on/off, and set position & offsets
+int SDL_GP2X_TV(int state)
+{
+  if (state == 0) {   // Turn TV off
+    if (tv_device) {  // close device to return to LCD
+      fputs("Closing CX25874\n", stderr);
+      close(tv_device);
+      tv_device = 0;
+    }
+    return 0;
+  }
+
+  // Turn TV on
+  if (!tv_device) {  // open device to enable TV
+    fputs("Opening CX25874\n", stderr);
+    tv_device = open("/dev/cx25874", O_RDWR, 0);
+    if (!tv_device) {
+      SDL_SetError("Failed to open TV device.");
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int SDL_GP2X_TVMode(int mode)
+{
+  // No device open, or mode is out of range
+  if ((!tv_device) || (mode < 1) || (mode > 5))
+    return -1;
+  fprintf(stderr, "Switching tv mode to %d\n", mode);
+  ioctl(tv_device, IOCTL_CX25874_DISPLAY_MODE_SET, mode);
+  return 0;
+}
+
+void SDL_GP2X_TVAdjust(int direction)
+{
+  if ((!tv_device) || (direction < 0) || (direction > 3))
+    return;
+
+  fprintf(stderr, "Moving TV by %d\n", direction);
+  ioctl(tv_device, IOCTL_CX25874_TV_MODE_POSITION, direction);
+}
+
+////
+// Mark gfx memory as allowed
+void SDL_GP2X_AllowGfxMemory(char *start, int size)
+{
+  SDL_PrivateVideoData *data = current_video->hidden;
+  char *end = start + size;
+  char *block = 0x2000000;  // Start of upper memory
+
+  data->allow_scratch_memory = 1;
+}
+  
+
+void SDL_GP2X_DenyGfxMemory(char *start, int size)
+{
+  SDL_PrivateVideoData *data = current_video->hidden;
+  data->allow_scratch_memory = 0;
 }

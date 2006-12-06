@@ -50,6 +50,8 @@ static char rcsid =
 #include "SDL_joystick_c.h"
 
 #define GP2X 1
+static const char *SDL_GP2X_JOYSTICK = "GP2X_JOYSTICK";
+
 /* Special joystick configurations */
 static struct {
   const char *name;
@@ -198,7 +200,7 @@ static char *mystrdup(const char *string)
   char *newstring;
 
   newstring = (char *)malloc(strlen(string)+1);
-  if ( newstring ) {
+  if (newstring) {
     strcpy(newstring, string);
   }
   return(newstring);
@@ -215,20 +217,20 @@ static char *mystrdup(const char *string)
 
 #define	PEPC_VK_UP          (1<< 0)	
 #define	PEPC_VK_UP_LEFT     (1<< 1)	
-#define	PEPC_VK_UP_RIGHT    (1<< 2)	
-#define	PEPC_VK_DOWN        (1<< 3)	
-#define	PEPC_VK_DOWN_LEFT   (1<< 4)	
+#define	PEPC_VK_LEFT        (1<< 2)	
+#define	PEPC_VK_DOWN_LEFT   (1<< 3)	
+#define	PEPC_VK_DOWN        (1<< 4)	
 #define	PEPC_VK_DOWN_RIGHT  (1<< 5)	
-#define	PEPC_VK_LEFT        (1<< 6)	
-#define	PEPC_VK_RIGHT       (1<< 7)	
-#define	PEPC_VK_FA          (1<< 8)	
-#define	PEPC_VK_FB          (1<< 9)	
-#define	PEPC_VK_FY          (1<<10)	
-#define	PEPC_VK_FX          (1<<11)	
-#define	PEPC_VK_FL          (1<<12)	
-#define	PEPC_VK_FR          (1<<13)	
-#define	PEPC_VK_SELECT      (1<<14)	
-#define	PEPC_VK_START       (1<<15)	
+#define	PEPC_VK_RIGHT       (1<< 6)	
+#define	PEPC_VK_UP_RIGHT    (1<< 7)	
+#define	PEPC_VK_START       (1<< 8)	
+#define	PEPC_VK_SELECT      (1<< 9)	
+#define	PEPC_VK_FL          (1<<10)	
+#define	PEPC_VK_FR          (1<<11)	
+#define	PEPC_VK_FA          (1<<12)	
+#define	PEPC_VK_FB          (1<<13)	
+#define	PEPC_VK_FX          (1<<14)	
+#define	PEPC_VK_FY          (1<<15)	
 #define	PEPC_VK_VOL_UP      (1<<16)	
 #define	PEPC_VK_VOL_DOWN    (1<<17)	
 #define	PEPC_VK_STICK_PUSH  (1<<18)	
@@ -344,15 +346,17 @@ int SDL_SYS_JoystickInit(void)
   int n, duplicate;
 
   fputs("SDL_SYS_JoystickInit\n", stderr);
-  numjoysticks = 0;
+  SDL_joylist[0].fname = mystrdup(SDL_GP2X_JOYSTICK);
+  dev_nums[0] = 0;
+  numjoysticks = 1;
 
 /* First see if the user specified a joystick to use */
   if (getenv("SDL_JOYSTICK_DEVICE") != NULL) {
     strncpy(path, getenv("SDL_JOYSTICK_DEVICE"), sizeof(path));
     path[sizeof(path)-1] = '\0';
-    if ( stat(path, &sb) == 0 ) {
+    if (stat(path, &sb) == 0) {
       fd = open(path, O_RDONLY, 0);
-      if ( fd >= 0 ) {
+      if (fd >= 0) {
 	/* Assume the user knows what they're doing. */
 	SDL_joylist[numjoysticks].fname = mystrdup(path);
 	if ( SDL_joylist[numjoysticks].fname ) {
@@ -377,7 +381,7 @@ int SDL_SYS_JoystickInit(void)
 	 * This happens when we see a stick via symlink.
 	 */
 	duplicate = 0;
-	for (n=1; (n<numjoysticks) && !duplicate; ++n) {
+	for (n=0; (n<numjoysticks) && !duplicate; ++n) {
 	  if ( sb.st_rdev == dev_nums[n] ) {
 	    duplicate = 1;
 	  }
@@ -402,8 +406,8 @@ int SDL_SYS_JoystickInit(void)
 	close(fd);
 
 	/* We're fine, add this joystick */
-	SDL_joylist[numjoysticks].fname =mystrdup(path);
-	if ( SDL_joylist[numjoysticks].fname ) {
+	SDL_joylist[numjoysticks].fname = mystrdup(path);
+	if (SDL_joylist[numjoysticks].fname) {
 	  dev_nums[numjoysticks] = sb.st_rdev;
 	  ++numjoysticks;
 	}
@@ -428,9 +432,9 @@ int SDL_SYS_JoystickInit(void)
 #endif
 
 #ifdef GP2X  // GP2X has an internal one
-  numjoysticks++;
+  //  numjoysticks++;
 #endif
-  return numjoysticks ;
+  return numjoysticks;
 }
 
 /* Function to get the device-dependent name of a joystick */
@@ -444,7 +448,7 @@ const char *SDL_SYS_JoystickName(int index)
 #ifdef GP2X
   fprintf(stderr, "SDL_GP2X: SYS_JoystickName(%d)\n", index);
   if (index == 0)
-    return "PEP_JOYSTICK";
+    return SDL_joylist[0].fname;
 #endif
 
 #ifndef NO_LOGICAL_JOYSTICKS
@@ -518,64 +522,84 @@ void SDL_GP2X_JoystickUpdate(SDL_Joystick *joystick)
   ret = read(joystick->hwdata->fd, &buff, 4); 
   prev_buttons 	= joystick->hwdata->prev_buttons;
   changed 		= buff^prev_buttons; 
-  
+
+#ifdef GP2X
+  //fprintf(stderr, "SDL_GP2X: Joystick buttons :%X\n", buff);
+#endif
   if (changed & PEPC_VK_UP)
-    SDL_PrivateJoystickButton(joystick, 0,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_UP,
 		(buff & PEPC_VK_UP) ? SDL_PRESSED : SDL_RELEASED);
+
   if (changed & PEPC_VK_UP_LEFT)
-    SDL_PrivateJoystickButton(joystick, 1,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_UP_LEFT,
 		(buff & PEPC_VK_UP_LEFT) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_UP_RIGHT)
-    SDL_PrivateJoystickButton(joystick, 2,
-		(buff & PEPC_VK_UP_RIGHT) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_DOWN)
-    SDL_PrivateJoystickButton(joystick, 3,
-		(buff & PEPC_VK_DOWN) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_DOWN_LEFT)
-    SDL_PrivateJoystickButton(joystick, 4,
-		(buff & PEPC_VK_DOWN_LEFT) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_DOWN_RIGHT)
-    SDL_PrivateJoystickButton(joystick, 5,
-		(buff & PEPC_VK_DOWN_RIGHT) ? SDL_PRESSED : SDL_RELEASED);
+
   if (changed & PEPC_VK_LEFT)
-    SDL_PrivateJoystickButton(joystick, 6,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_LEFT,
 		(buff & PEPC_VK_LEFT) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_DOWN_LEFT)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_DOWN_LEFT,
+		(buff & PEPC_VK_DOWN_LEFT) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_DOWN)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_DOWN,
+		(buff & PEPC_VK_DOWN) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_DOWN_RIGHT)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_DOWN_RIGHT,
+		(buff & PEPC_VK_DOWN_RIGHT) ? SDL_PRESSED : SDL_RELEASED);
+
   if (changed & PEPC_VK_RIGHT)
-    SDL_PrivateJoystickButton(joystick, 7,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_RIGHT,
 		(buff & PEPC_VK_RIGHT) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_UP_RIGHT)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_UP_RIGHT,
+		(buff & PEPC_VK_UP_RIGHT) ? SDL_PRESSED : SDL_RELEASED);
   
-  if (changed & PEPC_VK_FA)
-    SDL_PrivateJoystickButton(joystick, 8,
-		(buff & PEPC_VK_FA) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_FB)
-    SDL_PrivateJoystickButton(joystick, 9,
-		(buff & PEPC_VK_FB) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_FX)
-    SDL_PrivateJoystickButton(joystick, 10,
-		(buff & PEPC_VK_FX) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_FY)
-    SDL_PrivateJoystickButton(joystick, 11,
-		(buff & PEPC_VK_FY) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_FL)
-    SDL_PrivateJoystickButton(joystick, 12,
-		(buff & PEPC_VK_FL) ? SDL_PRESSED : SDL_RELEASED);
-  if (changed & PEPC_VK_FR)
-    SDL_PrivateJoystickButton(joystick, 13,
-		(buff & PEPC_VK_FR) ? SDL_PRESSED : SDL_RELEASED);
   if (changed & PEPC_VK_START)
-    SDL_PrivateJoystickButton(joystick, 14,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_START,
 		(buff & PEPC_VK_START) ? SDL_PRESSED : SDL_RELEASED);
+
   if (changed & PEPC_VK_SELECT)
-    SDL_PrivateJoystickButton(joystick, 15,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_SELECT,
 		(buff & PEPC_VK_SELECT) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_FL)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_FL,
+		(buff & PEPC_VK_FL) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_FR)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_FR,
+		(buff & PEPC_VK_FR) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_FA)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_FA,
+		(buff & PEPC_VK_FA) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_FB)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_FB,
+		(buff & PEPC_VK_FB) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_FX)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_FX,
+		(buff & PEPC_VK_FX) ? SDL_PRESSED : SDL_RELEASED);
+
+  if (changed & PEPC_VK_FY)
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_FY,
+		(buff & PEPC_VK_FY) ? SDL_PRESSED : SDL_RELEASED);
+
   if (changed & PEPC_VK_VOL_UP)
-    SDL_PrivateJoystickButton(joystick, 16,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_VOL_UP,
 		(buff & PEPC_VK_VOL_UP) ? SDL_PRESSED : SDL_RELEASED);
+
   if (changed & PEPC_VK_VOL_DOWN)
-    SDL_PrivateJoystickButton(joystick, 17,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_VOL_DOWN,
 		(buff & PEPC_VK_VOL_DOWN) ? SDL_PRESSED : SDL_RELEASED);
+
   if (changed & PEPC_VK_STICK_PUSH)
-    SDL_PrivateJoystickButton(joystick, 18,
+    SDL_PrivateJoystickButton(joystick, GP2X_VK_STICK_PUSH,
 		(buff & PEPC_VK_STICK_PUSH) ? SDL_PRESSED : SDL_RELEASED);
 	
   joystick->hwdata->prev_buttons = buff;
@@ -913,8 +937,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 
 #ifndef NO_LOGICAL_JOYSTICKS
 
-static SDL_Joystick* FindLogicalJoystick(
-					 SDL_Joystick *joystick,
+static SDL_Joystick* FindLogicalJoystick(SDL_Joystick *joystick,
 					 struct joystick_logical_values* v)
 {
   SDL_Joystick *logicaljoy;
@@ -941,8 +964,7 @@ static SDL_Joystick* FindLogicalJoystick(
   return logicaljoy;
 }
 
-static int LogicalJoystickButton(
-				 SDL_Joystick *joystick, Uint8 button,
+static int LogicalJoystickButton(SDL_Joystick *joystick, Uint8 button,
 				 Uint8 state)
 {
   struct joystick_logical_values* buttons;
@@ -966,8 +988,7 @@ static int LogicalJoystickButton(
   return 1;
 }
 
-static int LogicalJoystickAxis(
-			       SDL_Joystick *joystick, Uint8 axis, Sint16 value)
+static int LogicalJoystickAxis(SDL_Joystick *joystick, Uint8 axis, Sint16 value)
 {
   struct joystick_logical_values* axes;
   SDL_Joystick *logicaljoy = NULL;

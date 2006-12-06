@@ -13,18 +13,21 @@ Added hardware support, made as a seperate video driver rather than
 extending fbcon driver.
 Added ability to scale display surface to full-screen.
 Fixed X & Y buttons.
-Added Hardware cursor support
+Added (partial) hardware cursor support
 Added regions - user-definable areas of the physical display to show.
 Added support for non-scaled displays that are smaller than native resolution.
-Disabled cursor support initially - details below.
 Added single USB mouse support.
-Added USB joystick support (untested).
+Added USB joystick support.
 Added backlight & CPU speed adjustments.
+Added preliminary TV-out control.
+Added option to allow extra 16MB gfx memory
 
 TODO: 
 
-Clean GPH changes to source (Please: Modularise it)
-More (anybody) ;-)
+  Cursor support may be flaky on interlaced TV modes.
+  Better control of gfx memory.
+  Lots more
+
 
 BUILDING:
 
@@ -174,7 +177,56 @@ void SDL_SYS_JoystickGp2xSys(SDL_Joystick joystick, int command);
   see what speed it corresponded to and found that it doesn't actually do
   anything.
     FCLK_DEFAULT	- Runs the CPU at it's default speed.
-  
+
+////
+void SDL_GP2X_TV(int state);  
+
+  Allows user control of TV-Out.
+    state = 0		Internal screen on - TV off.
+    state = 1		TV on - internal screen off
+
+////
+int SDL_GP2X_TVMode(int mode);
+
+  Allows switching of the TV-out chip's mode.
+  Where mode is one of :-
+    DISPLAY_LCD,
+    DISPLAY_MONITOR,
+    DISPLAY_TV_NTSC,
+    DISPLAY_TV_PAL,
+    DISPLAY_TV_GAME_NTSC;
+
+////
+void SDL_GP2X_TVAdjust(int direction);
+
+  Allows adjustment of TV position.
+  Where direction is one of :-
+    TV_POS_LEFT,
+    TV_POS_RIGHT,
+    TV_POS_UP,
+    TV_POS_DOWN;
+
+////
+void SDL_GP2X_AllowGfxMemory(char *start, int size);
+
+  Allows the user to make regions of upper memory available to SDL.
+  Call this function AFTER SDL_Init() but before SDL_SetVideoMode().
+
+  ** Partial implementation
+  ** The values are currently ignored, calling this function will enable
+  ** SDL to use the first 16MB of upper memory in addition to the standard
+  ** 5MB frame buffer. Gfx memory will be 21MB
+
+////
+void SDL_GP2X_DenyGfxMemory(char *start, int size);
+
+  Allows the user to make regions of upper memory unavailable to SDL.
+  Call this function AFTER SDL_Init() but before SDL_SetVideoMode().
+
+  ** Partial implementation
+  ** The values are currently ignored, calling this function will prevent
+  ** SDL from using the first 16MB of upper memory.
+  ** Gfx memory will be the standard 5MB frame buffer.
 
 *************************************************************
 ** The following functions are implemented, but not tested **

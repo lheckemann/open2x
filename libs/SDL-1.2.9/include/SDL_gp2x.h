@@ -22,6 +22,15 @@ void SDL_GP2X_SetCursorColour(WMcursor *wcursor,
 void SDL_GP2X_DefineRegion(int region, SDL_Rect *area);
 void SDL_GP2X_ActivateRegion(int region, int activate);
 void SDL_GP2X_MiniDisplay(int x, int y);
+void SDL_GP2X_WaitForBlitter();
+
+int  SDL_GP2X_TV(int state);
+int  SDL_GP2X_TVMode(int mode);
+void SDL_GP2X_TVAdjust(int direction);
+
+void SDL_GP2X_AllowGfxMemory(char *start, int size);
+void SDL_GP2X_DenyGfxMemory(char *start, int size);
+
 
 #ifdef __cplusplus
 }

@@ -178,6 +178,28 @@ extern DECLSPEC void SDLCALL SDL_JoystickClose(SDL_Joystick *joystick);
 #define FCLK_64				15
 #define FCLK_DEFAULT		        16
 
+enum {             // GP2X joystick button numbers
+  GP2X_VK_UP = 0,
+  GP2X_VK_UP_LEFT,
+  GP2X_VK_LEFT,
+  GP2X_VK_DOWN_LEFT,
+  GP2X_VK_DOWN,
+  GP2X_VK_DOWN_RIGHT,
+  GP2X_VK_RIGHT,
+  GP2X_VK_UP_RIGHT,
+  GP2X_VK_START,
+  GP2X_VK_SELECT,
+  GP2X_VK_FL,
+  GP2X_VK_FR,
+  GP2X_VK_FA,
+  GP2X_VK_FB,
+  GP2X_VK_FX,
+  GP2X_VK_FY,
+  GP2X_VK_VOL_UP,
+  GP2X_VK_VOL_DOWN,
+  GP2X_VK_STICK_PUSH
+};
+
 void SDL_SYS_JoystickGp2xSys(SDL_Joystick *joystick,int cmd);
 
 /* Ends C function definitions when using C++ */
