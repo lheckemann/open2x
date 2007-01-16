@@ -460,7 +460,7 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
   data->io[MLC_STL_ALPHAH] = 255;
   data->io[MLC_OVLAY_CNTR] |= DISP_STL1EN;
 
-  pixelbuffer = data->vmem;
+  pixelbuffer = current->pixels;
   if (data->phys_ilace) {
     data->io[MLC_STL_OADRL] = GP2X_PhysL(this, pixelbuffer);
     data->io[MLC_STL_OADRH] = GP2X_PhysH(this, pixelbuffer);
