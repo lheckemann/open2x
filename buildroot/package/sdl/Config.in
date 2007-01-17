@@ -24,4 +24,4 @@ endchoice
 config BR2_PACKAGE_SDL_VERSION
 	string
 #	default "1.2.9"     if BR2_PACKAGE_SDL_VERSION_1_2_9
-	default "latest"     if BR2_PACKAGE_SDL_VERSION_LATEST
+	default "latest"      if BR2_PACKAGE_SDL_VERSION_LATEST

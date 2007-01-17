@@ -3,7 +3,10 @@
 # SDL
 #
 #############################################################
-SDL_VERSION:=$(BR2_PACKAGE_SDL_VERSION)
+ifeq ($(BR2_PACKAGE_SDL_VERSION), "latest")
+SDL_VERSION:=latest
+endif
+
 SDL_CAT:=$(ZCAT)
 SDL_DIR:=$(BUILD_DIR)/SDL-$(SDL_VERSION)
 include package/sdl/sdl-$(SDL_VERSION).makefile
