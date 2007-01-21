@@ -1,0 +1,28 @@
+#
+# MMCSD subsystem configuration
+#
+mainmenu_option next_comment
+comment 'MMC/SD Card support'
+
+tristate 'MMC/SD support' CONFIG_MMCSD
+if [ "$CONFIG_MMCSD" = "y" -o "$CONFIG_MMCSD" = "m" ]; then
+  bool '  MMC/SD debugging' CONFIG_MMCSD_DEBUG
+  if [ "$CONFIG_MMCSD_DEBUG" = "y" ]; then
+    int '  MMC/SD debugging verbosity (0=quiet, 3=noisy)' CONFIG_MMCSD_DEBUG_VERBOSE 0
+  fi
+
+  dep_tristate ' Block device(Memory Card) support' CONFIG_MMCSD_DISK $CONFIG_MMCSD
+  define_tristate CONFIG_MMCSD_SLOT $CONFIG_MMCSD
+fi
+
+comment 'MMC/SD Controllers device drivers'
+
+if [ "$CONFIG_ARCH_OMAP" = "y" ]; then
+   dep_tristate 'OMAP1510/1610 MMCSD/SD' CONFIG_OMAP_MMCSD $CONFIG_MMCSD
+fi
+
+if [ "$CONFIG_ARCH_MAINSTONE" = "y" ]; then
+    dep_tristate 'Intel HCDDBBVA0 (Mainstone) MMCSD/SD' CONFIG_MAINSTONE_MMCSD $CONFIG_MMCSD
+fi
+
+endmenu
