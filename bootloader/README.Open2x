@@ -1,1 +1,17 @@
 Open2x bootloader (U-Boot) source trees can be found in this module.
+
+--- u-boot-mmsp2-1.0.0 ---
+
+This is the base version of U-Boot 1.0.0 for the MMSP2 board (the board the GP2X is based on) - It is of most use for reference.
+
+--- u-boot-open2x-1.0.0_FW1 ---
+
+This is the main source for the GP2X firmware version 1.* compatible Open2x U-Boot (also often known as ART103's U-Boot). 
+Only use if you do not plan to use newer (firmware 2 >) YAFFS based file systems.
+
+--- u-boot-open2x-1.0.0_FW2-3 ---
+
+This is the current source for the GP2X firmware version 1 > compatible Open2x U-Boot. 
+
+This code is currently highly unstable but in time will become the basis of the Open2x U-Boot bootloader for all firmware versions.
+The aim is to make it compatible with every official firmware and all Open2x release and to also support another other non-Linux kernels people may work on.
