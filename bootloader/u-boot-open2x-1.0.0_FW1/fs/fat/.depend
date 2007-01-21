@@ -1,0 +1,30 @@
+fat.o: fat.c ../../include/common.h ../../include/config.h \
+ ../../include/configs/mmsp2dtk.h ../../include/cmd_confdefs.h \
+ ../../include/linux/bitops.h ../../include/asm/bitops.h \
+ ../../include/linux/types.h ../../include/linux/config.h \
+ ../../include/linux/posix_types.h ../../include/linux/stddef.h \
+ ../../include/asm/posix_types.h ../../include/asm/types.h \
+ ../../include/linux/string.h ../../include/asm/string.h \
+ ../../include/asm/ptrace.h ../../include/asm/proc/ptrace.h \
+ /usr/local/arm/2.95.3/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ ../../include/part.h ../../include/flash.h ../../include/image.h \
+ ../../include/asm/u-boot.h ../../include/asm/global_data.h \
+ ../../include/asm/u-boot-arm.h ../../include/fat.h \
+ ../../include/asm/byteorder.h \
+ ../../include/linux/byteorder/little_endian.h \
+ ../../include/linux/byteorder/swab.h \
+ ../../include/linux/byteorder/generic.h
+file.o: file.c ../../include/common.h ../../include/config.h \
+ ../../include/configs/mmsp2dtk.h ../../include/cmd_confdefs.h \
+ ../../include/linux/bitops.h ../../include/asm/bitops.h \
+ ../../include/linux/types.h ../../include/linux/config.h \
+ ../../include/linux/posix_types.h ../../include/linux/stddef.h \
+ ../../include/asm/posix_types.h ../../include/asm/types.h \
+ ../../include/linux/string.h ../../include/asm/string.h \
+ ../../include/asm/ptrace.h ../../include/asm/proc/ptrace.h \
+ /usr/local/arm/2.95.3/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ ../../include/part.h ../../include/flash.h ../../include/image.h \
+ ../../include/asm/u-boot.h ../../include/asm/global_data.h \
+ ../../include/asm/u-boot-arm.h ../../include/malloc.h \
+ ../../include/fat.h ../../include/linux/stat.h \
+ ../../include/linux/time.h

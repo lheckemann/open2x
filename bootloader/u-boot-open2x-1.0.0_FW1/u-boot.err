@@ -1,0 +1,140 @@
+In file included from ../include/config.h:2,
+                 from envcrc.c:29:
+../include/configs/mmsp2dtk.h:66:1: warning: C++ style comments are not allowed in ISO C90
+../include/configs/mmsp2dtk.h:66:1: warning: (this will be reported only once per input file)
+../include/configs/mmsp2dtk.h:242:33: warning: extra tokens at end of #undef directive
+In file included from ../include/config.h:2,
+                 from environment.c:24:
+../include/configs/mmsp2dtk.h:242:33: warning: extra tokens at end of #undef directive
+board.c: In function `start_armboot':
+board.c:244: warning: assignment discards qualifiers from pointer target type
+board.c:281: warning: implicit declaration of function `display_logo'
+interrupts.c: In function `udelay':
+interrupts.c:289: warning: `ReadTime' might be used uninitialized in this function
+speed.c: In function `get_PLLCLK':
+speed.c:69: warning: unused variable `i'
+mmsp2dtk.c: In function `board_init':
+mmsp2dtk.c:278: warning: implicit declaration of function `setup_async'
+mmsp2dtk.c: In function `board_late_init':
+mmsp2dtk.c:298: warning: implicit declaration of function `sdk2x_SdHwInit'
+mmsp2dtk.c:303: warning: implicit declaration of function `get_dev'
+mmsp2dtk.c:303: warning: assignment makes pointer from integer without a cast
+mmsp2dtk.c:307: warning: implicit declaration of function `fat_register_device'
+mmsp2dtk.c:296: warning: unused variable `dev'
+mmsp2dtk.c: In function `nand_init':
+mmsp2dtk.c:331: warning: assignment of read-only variable `bankc'
+mmsp2dtk.c:332: warning: assignment of read-only variable `nand'
+mmsp2dtk.c:324: warning: unused variable `gd'
+mmsp2dtk.c: In function `display_Firmware':
+mmsp2dtk.c:443: warning: implicit declaration of function `show_Firmware'
+mmsp2dtk.c: In function `attempt_firmware_upgrade':
+mmsp2dtk.c:512: warning: implicit declaration of function `do_fat_fsload'
+mmsp2dtk.c:513: warning: unsigned int format, ulong arg (arg 2)
+mmsp2dtk.c:520: warning: unsigned int format, ulong arg (arg 3)
+mmsp2dtk.c:532: warning: implicit declaration of function `nand_erase_func'
+mmsp2dtk.c:536: warning: implicit declaration of function `nand_write_func'
+mmsp2dtk.c:550: warning: unsigned int format, ulong arg (arg 2)
+mmsp2dtk.c:557: warning: unsigned int format, ulong arg (arg 3)
+mmsp2dtk.c:586: warning: unsigned int format, ulong arg (arg 2)
+mmsp2dtk.c:593: warning: unsigned int format, ulong arg (arg 3)
+mmsp2dtk.c:610: warning: implicit declaration of function `nand_write_jffs2_func'
+video/logo.c: In function `DPC_UTIL_HVSYNC_GPX320240':
+video/logo.c:150: warning: large integer implicitly truncated to unsigned type
+video/logo.c: In function `DPC_UTIL_DATA_INV':
+video/logo.c:161: warning: large integer implicitly truncated to unsigned type
+video/logo.c: In function `set_gpio_ctrl':
+video/logo.c:357: warning: assignment makes integer from pointer without a cast
+video/logo.c:358: warning: assignment makes integer from pointer without a cast
+video/logo.c:363: warning: assignment makes integer from pointer without a cast
+video/logo.c: In function `init_lcd':
+video/logo.c:654: warning: implicit declaration of function `sdk2x_LcdSetPrintBase'
+video/logo.c: In function `show_logo':
+video/logo.c:694: warning: implicit declaration of function `sdk2x_LcdTextOut'
+video/logo.c:663: warning: unused variable `b'
+video/logo.c:663: warning: unused variable `g'
+video/logo.c:663: warning: unused variable `r'
+video/logo.c:662: warning: unused variable `i'
+In file included from /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x.h:25,
+                 from /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_priv.h:25,
+                 from sdk2x_sd_hw.c:22:
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:96: warning: `struct stat' declared inside parameter list
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:96: warning: its scope is only this definition or declaration, which is probably not what you want.
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:102: warning: `struct stat' declared inside parameter list
+sdk2x_sd_hw.c:78: warning: `CsdFluff' defined but not used
+In file included from /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x.h:25,
+                 from /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_priv.h:25,
+                 from sdk2x_system.c:23:
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:96: warning: `struct stat' declared inside parameter list
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:96: warning: its scope is only this definition or declaration, which is probably not what you want.
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:102: warning: `struct stat' declared inside parameter list
+In file included from /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x.h:25,
+                 from /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_priv.h:25,
+                 from sdk2x_lcd.c:23:
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:96: warning: `struct stat' declared inside parameter list
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:96: warning: its scope is only this definition or declaration, which is probably not what you want.
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/mmsp2dtk/sdk2x_sd.h:102: warning: `struct stat' declared inside parameter list
+main.c: In function `main_loop':
+main.c:439: warning: implicit declaration of function `sdk2x_LcdTextOut'
+main.c:478: warning: implicit declaration of function `sdk2x_MSleep'
+main.c:495: warning: embedded `\0' in format
+main.c:501: warning: implicit declaration of function `sdk2x_SdHwInit'
+main.c:508: warning: implicit declaration of function `do_fat_fsload'
+main.c:516: warning: embedded `\0' in format
+main.c:522: warning: embedded `\0' in format
+main.c:526: warning: implicit declaration of function `attempt_firmware_upgrade'
+main.c:527: warning: embedded `\0' in format
+In file included from cmd_fat.c:37:
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/fat.h:30: warning: `CONFIG_SUPPORT_VFAT' redefined
+/mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h:60: warning: this is the location of the previous definition
+cmd_loadub.c: In function `loadub_common':
+cmd_loadub.c:60: warning: implicit declaration of function `copy_filename'
+cmd_loadub.c:95: warning: unsigned int format, ulong arg (arg 2)
+cmd_loadub.c:96: warning: implicit declaration of function `usbd_recv'
+cmd_nand.c: In function `nand_write_page_yaffs':
+cmd_nand.c:111: warning: unused variable `nandptr'
+cmd_nand.c: In function `do_nand':
+cmd_nand.c:327: warning: unsigned int format, ulong arg (arg 3)
+cmd_nand.c:327: warning: unsigned int format, ulong arg (arg 4)
+cmd_nand.c:388: warning: unsigned int format, ulong arg (arg 4)
+cmd_nand.c:388: warning: unsigned int format, ulong arg (arg 5)
+cmd_nand.c:407: warning: unsigned int format, ulong arg (arg 3)
+cmd_nand.c:407: warning: unsigned int format, ulong arg (arg 4)
+cmd_nand.c: In function `nand_rw':
+cmd_nand.c:581: warning: unused variable `a'
+cmd_nand.c: In function `NanD_Command':
+cmd_nand.c:699: warning: unused variable `nandptr'
+cmd_nand.c: In function `NanD_ReadBuf':
+cmd_nand.c:977: warning: initialization makes pointer from integer without a cast
+cmd_nand.c:973: warning: unused variable `nandptr'
+cmd_nand.c: In function `nand_write_page':
+cmd_nand.c:1194: warning: unused variable `nandptr'
+cmd_nand.c: In function `nand_write_oob':
+cmd_nand.c:1425: warning: unused variable `nandptr'
+cmd_nand.c: In function `nand_write_jffs2_func':
+cmd_nand.c:1510: warning: unsigned int format, ulong arg (arg 4)
+cmd_nand.c:1510: warning: unsigned int format, ulong arg (arg 5)
+cmd_nand.c: In function `nand_write_func':
+cmd_nand.c:1524: warning: unsigned int format, ulong arg (arg 4)
+cmd_nand.c:1524: warning: unsigned int format, ulong arg (arg 5)
+cmd_nand.c: In function `nand_write_page_without_ecc':
+cmd_nand.c:1930: warning: unused variable `nandptr'
+cmd_nand.c: In function `nand_rw_without_ecc':
+cmd_nand.c:2028: warning: unused variable `pages_per_block'
+cmd_nand.c:2027: warning: unused variable `a'
+cmd_nand.c:2024: warning: unused variable `eccbuf'
+cmd_usb.c: In function `do_usb':
+cmd_usb.c:442: warning: unused variable `stor_dev'
+cmd_usb.c: At top level:
+cmd_usb.c:42: warning: `usb_stor_curr_dev' defined but not used
+In file included from fat.c:30:
+../../include/fat.h:30: warning: `CONFIG_SUPPORT_VFAT' redefined
+../../include/configs/mmsp2dtk.h:60: warning: this is the location of the previous definition
+fat.c: In function `get_fatent':
+fat.c:215: warning: initialization from incompatible pointer type
+In file included from file.c:31:
+../../include/fat.h:30: warning: `CONFIG_SUPPORT_VFAT' redefined
+../../include/configs/mmsp2dtk.h:60: warning: this is the location of the previous definition
+mmsp20_rtc.c: In function `rtc_get':
+mmsp20_rtc.c:41: warning: unused variable `rtc'
+mmsp20_rtc.c: In function `rtc_set':
+mmsp20_rtc.c:46: warning: unused variable `rtc'

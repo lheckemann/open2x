@@ -1,0 +1,119 @@
+bzlib.o: bzlib.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h
+bzlib_crctable.o: bzlib_crctable.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h
+bzlib_decompress.o: bzlib_decompress.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h
+bzlib_randtable.o: bzlib_randtable.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h
+bzlib_huffman.o: bzlib_huffman.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h
+crc32.o: crc32.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/common.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/bitops.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/bitops.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/stddef.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/ptrace.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/proc/ptrace.h \
+ /usr/local/arm/2.95.3/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/part.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/flash.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/image.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/u-boot.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/global_data.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/u-boot-arm.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/zlib.h
+ctype.o: ctype.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/ctype.h
+display_options.o: display_options.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/common.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/bitops.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/bitops.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/stddef.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/ptrace.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/proc/ptrace.h \
+ /usr/local/arm/2.95.3/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/part.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/flash.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/image.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/u-boot.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/global_data.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/u-boot-arm.h
+ldiv.o: ldiv.c
+string.o: string.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/stddef.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/ctype.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/malloc.h
+vsprintf.o: vsprintf.c \
+ /usr/local/arm/2.95.3/lib/gcc-lib/arm-linux/2.95.3/include/stdarg.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/stddef.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/ctype.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/common.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/configs/mmsp2dtk.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/cmd_confdefs.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/bitops.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/bitops.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/ptrace.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/proc/ptrace.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/part.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/flash.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/image.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/u-boot.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/global_data.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/u-boot-arm.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/command.h
+zlib.o: zlib.c \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/zlib.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/string.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/config.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/linux/stddef.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/posix_types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/types.h \
+ /mnt/store/work_dir/GP2x/devkitPro/u-boot-gph/include/asm/string.h
