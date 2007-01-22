@@ -1,0 +1,545 @@
+*** pnmtopng.c.19990317	Wed Mar 17 11:03:25 1999
+--- pnmtopng.c	Tue Jul 13 15:49:21 1999
+***************
+*** 17,31 ****
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.37.2 (17 March 1999)"
+  
+! /* GRR 990308:  declared "clobberable" automatic variables in convertpnm()
+   *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
+   *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
+!  *  compiled with one size in libpng and another size here).
+!  */
+  
+! /* GRR 980621:  moved some if-tests out of full-image loops; added fix for
+   *  following problem discovered by Magnus Holmgren and debugged by Glenn:
+   *
+   *    The pnm has three colors:  0 0 0, 204 204 204, and 255 255 255.
+--- 17,34 ----
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.37.3 (13 July 1999)"
+  
+! /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+!  *  blocks and added png_destroy_write_struct() and pm_close(ifp) in each
+!  *  pm_error() block.  */
+! 
+! /* GRR 19990308:  declared "clobberable" automatic variables in convertpnm()
+   *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
+   *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
+!  *  compiled with one size in libpng and another size here).  */
+  
+! /* GRR 19980621:  moved some if-tests out of full-image loops; added fix for
+   *  following problem discovered by Magnus Holmgren and debugged by Glenn:
+   *
+   *    The pnm has three colors:  0 0 0, 204 204 204, and 255 255 255.
+***************
+*** 151,156 ****
+--- 154,160 ----
+    int c;
+    char *cp;
+  
++   /* GRR:  need to check for malloc failure here */
+    info_ptr->text = (png_text *)malloc (MAXCOMMENTS * sizeof (png_text));
+    j = 0;
+    textpos = 0;
+***************
+*** 171,181 ****
+          if (textline[0] == '"') {
+            i++;
+            while (textline[i] != '"' && textline[i] != '\n')
+!             (*(cp++) = textline[i++]);
+            i++;
+          } else {
+            while (textline[i] != ' ' && textline[i] != '\t' && textline[i] != '\n')
+!             (*(cp++) = textline[i++]);
+          }
+          *(cp++) = '\0';
+          cp = malloc (textpos);
+--- 175,185 ----
+          if (textline[0] == '"') {
+            i++;
+            while (textline[i] != '"' && textline[i] != '\n')
+!             *(cp++) = textline[i++];
+            i++;
+          } else {
+            while (textline[i] != ' ' && textline[i] != '\t' && textline[i] != '\n')
+!             *(cp++) = textline[i++];
+          }
+          *(cp++) = '\0';
+          cp = malloc (textpos);
+***************
+*** 185,191 ****
+          strcpy (cp, &textline[i]);
+          info_ptr->text[j].text_length = strlen (cp);
+          j++;
+!       }        else {
+          j--;
+          cp = malloc (info_ptr->text[j].text_length + textpos);
+          strcpy (cp, info_ptr->text[j].text);
+--- 189,195 ----
+          strcpy (cp, &textline[i]);
+          info_ptr->text[j].text_length = strlen (cp);
+          j++;
+!       } else {
+          j--;
+          cp = malloc (info_ptr->text[j].text_length + textpos);
+          strcpy (cp, info_ptr->text[j].text);
+***************
+*** 307,327 ****
+    png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
+      &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+    if (png_ptr == NULL) {
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+-     fclose(ifp);
+      png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+!     fclose(ifp);
+!     png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
+!     free (png_ptr);
+!     free (info_ptr);
+      pm_error ("setjmp returns error condition (1)");
+    }
+  
+--- 311,330 ----
+    png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
+      &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+    if (png_ptr == NULL) {
++     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
++     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+!     png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_close (ifp);
+      pm_error ("setjmp returns error condition (1)");
+    }
+  
+***************
+*** 348,353 ****
+--- 351,358 ----
+    if (alpha) {
+      alpha_mask = pgm_readpgm (afp, &alpha_cols, &alpha_rows, &alpha_maxval);
+      if (alpha_cols != cols || alpha_rows != rows) {
++       png_destroy_write_struct (&png_ptr, &info_ptr);
++       pm_close (ifp);
+        pm_error ("dimensions for image and alpha mask do not agree");
+      }
+      /* check if the alpha mask can be represented by a single transparency
+***************
+*** 422,429 ****
+  
+    sbitval = 0;
+    if (pnm_type != PBM_TYPE || alpha) {
+!     if (maxval > 65535 && !downscale)
+        pm_error ("can only handle files up to 16-bit (use -downscale to override");
+  
+      if (maxval < 65536) {
+        sbitval = pm_maxvaltobits (maxval);
+--- 427,437 ----
+  
+    sbitval = 0;
+    if (pnm_type != PBM_TYPE || alpha) {
+!     if (maxval > 65535 && !downscale) {
+!       png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_close (ifp);
+        pm_error ("can only handle files up to 16-bit (use -downscale to override");
++     }
+  
+      if (maxval < 65536) {
+        sbitval = pm_maxvaltobits (maxval);
+***************
+*** 677,683 ****
+--- 685,695 ----
+          for (i = 0 ; i < colors + 1 ; i++) {
+            if ((alphas_of_color[i] = (gray *)malloc (MAXCOLORS * sizeof (int)))
+                == NULL)
++           {
++             png_destroy_write_struct (&png_ptr, &info_ptr);
++             pm_close (ifp);
+              pm_error ("out of memory allocating alpha/palette entries");
++           }
+            alphas_of_color_cnt[i] = 0;
+          }
+          num_alphas_of_color = colors + 1;
+***************
+*** 788,795 ****
+        depth = 2;
+      else if (maxval == 1)
+        depth = 1;
+!     else
+        pm_error (" (can't happen) undefined maxval");
+  
+      if (alpha) {
+        if (pnm_type == PPM_TYPE)
+--- 800,810 ----
+        depth = 2;
+      else if (maxval == 1)
+        depth = 1;
+!     else {
+!       png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_close (ifp);
+        pm_error (" (can't happen) undefined maxval");
++     }
+  
+      if (alpha) {
+        if (pnm_type == PPM_TYPE)
+***************
+*** 814,822 ****
+    /* now write the file */
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+!     png_write_destroy (png_ptr);
+!     free (png_ptr);
+!     free (info_ptr);
+      pm_error ("setjmp returns error condition (2)");
+    }
+  
+--- 829,836 ----
+    /* now write the file */
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+!     png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_close (ifp);
+      pm_error ("setjmp returns error condition (2)");
+    }
+  
+***************
+*** 911,919 ****
+          }
+        }
+        /* indices should have just crossed paths */
+!       if (bot_idx != top_idx + 1)
+          pm_error ("internal inconsistency: remapped bot_idx = %d, top_idx = %d",
+            bot_idx, top_idx);
+        for (i = 0 ; i < colors ; i++) {
+          for (j = alphas_first_index[i] ; j < alphas_first_index[i+1] ; j++) {
+            palette[mapping[j]].red   = PPM_GETR (chv[i].color);
+--- 925,936 ----
+          }
+        }
+        /* indices should have just crossed paths */
+!       if (bot_idx != top_idx + 1) {
+!         png_destroy_write_struct (&png_ptr, &info_ptr);
+!         pm_close (ifp);
+          pm_error ("internal inconsistency: remapped bot_idx = %d, top_idx = %d",
+            bot_idx, top_idx);
++       }
+        for (i = 0 ; i < colors ; i++) {
+          for (j = alphas_first_index[i] ; j < alphas_first_index[i+1] ; j++) {
+            palette[mapping[j]].red   = PPM_GETR (chv[i].color);
+***************
+*** 963,970 ****
+          info_ptr->trans_values.blue = PPM_GETB (transcolor);
+        }
+      } else {
+!       if (transparent > 0)
+          pm_error (" (can't happen) transparency AND alpha");
+      }
+  
+    /* bKGD chunk */
+--- 980,990 ----
+          info_ptr->trans_values.blue = PPM_GETB (transcolor);
+        }
+      } else {
+!       if (transparent > 0) {
+!         png_destroy_write_struct (&png_ptr, &info_ptr);
+!         pm_close (ifp);
+          pm_error (" (can't happen) transparency AND alpha");
++       }
+      }
+  
+    /* bKGD chunk */
+***************
+*** 1056,1063 ****
+    /* let libpng take care of, e.g., bit-depth conversions */
+    png_set_packing (png_ptr);
+  
+!   /* GRR:  need to check for malloc failure here */
+!   line = malloc (cols*8); /* max: 3 color channels, one alpha channel, 16-bit */
+  
+    for (pass = 0 ; pass < png_set_interlace_handling (png_ptr) ; pass++) {
+      for (y = 0 ; y < rows ; y++) {
+--- 1076,1088 ----
+    /* let libpng take care of, e.g., bit-depth conversions */
+    png_set_packing (png_ptr);
+  
+!   /* max: 3 color channels, one alpha channel, 16-bit */
+!   if ((line = (png_byte *) malloc (cols*8)) == NULL)
+!   {
+!     png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_close (ifp);
+!     pm_error ("out of memory allocating PNG row buffer");
+!   }
+  
+    for (pass = 0 ; pass < png_set_interlace_handling (png_ptr) ; pass++) {
+      for (y = 0 ; y < rows ; y++) {
+***************
+*** 1072,1079 ****
+          } else if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+            color = ppm_lookupcolor (cht, &p);
+            if (alpha) {
+!             for (i = alphas_first_index[color] ; i < alphas_first_index[color+1] ; i++)
+!               if (alpha_mask[y][x] == alphas_of_color[color][i - alphas_first_index[color]]) {
+                  color = mapping[i];
+                  break;
+                }
+--- 1097,1107 ----
+          } else if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+            color = ppm_lookupcolor (cht, &p);
+            if (alpha) {
+!             for (i = alphas_first_index[color] ;
+!                  i < alphas_first_index[color+1] ; i++)
+!               if (alpha_mask[y][x] ==
+!                   alphas_of_color[color][i - alphas_first_index[color]])
+!               {
+                  color = mapping[i];
+                  break;
+                }
+***************
+*** 1091,1096 ****
+--- 1119,1126 ----
+              *pp++ = PPM_GETB (p) >> 8;
+            *pp++ = PPM_GETB (p)&0xff;
+          } else {
++           png_destroy_write_struct (&png_ptr, &info_ptr);
++           pm_close (ifp);
+            pm_error (" (can't happen) undefined color_type");
+          }
+          if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA) {
+***************
+*** 1257,1263 ****
+          sscanf (argv[argn], "%d", &filter);
+          if ((filter < 0) || (filter > 4))
+          {
+!           pm_message ("filter must be 0 (none), 1 (sub), 2 (up), 3 (avg) or 4 (paeth)");
+            pm_usage (usage);
+          }
+        }
+--- 1287,1294 ----
+          sscanf (argv[argn], "%d", &filter);
+          if ((filter < 0) || (filter > 4))
+          {
+!           pm_message
+!             ("filter must be 0 (none), 1 (sub), 2 (up), 3 (avg) or 4 (paeth)");
+            pm_usage (usage);
+          }
+        }
+*** pngtopnm.c.19990317	Wed Mar 17 11:17:43 1999
+--- pngtopnm.c	Tue Jul 13 15:22:59 1999
+***************
+*** 16,28 ****
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! #define VERSION "2.37.2 (17 March 1999)"
+  
+! /* GRR 990317:  declared "clobberable" automatic variables in convertpng()
+   *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
+   *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
+!  *  compiled with one size in libpng and another size here).
+!  */
+  
+  #include <math.h>
+  #include "pnm.h"
+--- 16,30 ----
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! #define VERSION "2.37.3 (13 July 1999)"
+  
+! /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+!  *  blocks and added "pm_close(ifp)" in each.  */
+! 
+! /* GRR 19990317:  declared "clobberable" automatic variables in convertpng()
+   *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
+   *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
+!  *  compiled with one size in libpng and another size here).  */
+  
+  #include <math.h>
+  #include "pnm.h"
+***************
+*** 261,287 ****
+  
+    type_string = alpha_string = "";
+  
+!   if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE)
+      pm_error ("input file empty or too short");
+!   if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0)
+      pm_error ("input file not a PNG file");
+  
+    png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
+      &pngtopnm_jmpbuf_struct, pngtopnm_error_handler, NULL);
+    if (png_ptr == NULL) {
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pngtopnm_jmpbuf_struct.jmpbuf)) {
+!     png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+!     free (png_ptr);
+!     free (info_ptr);
+      pm_error ("setjmp returns error condition");
+    }
+  
+--- 263,294 ----
+  
+    type_string = alpha_string = "";
+  
+!   if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE) {
+!     pm_close (ifp);
+      pm_error ("input file empty or too short");
+!   }
+!   if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0) {
+!     pm_close (ifp);
+      pm_error ("input file not a PNG file");
++   }
+  
+    png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
+      &pngtopnm_jmpbuf_struct, pngtopnm_error_handler, NULL);
+    if (png_ptr == NULL) {
++     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
++     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pngtopnm_jmpbuf_struct.jmpbuf)) {
+!     png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_close (ifp);
+      pm_error ("setjmp returns error condition");
+    }
+  
+***************
+*** 336,345 ****
+  
+    png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
+    if (png_image == NULL) {
+!     png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!     free (png_ptr);
+!     free (info_ptr);
+!     pm_error ("couldn't alloc space for image");
+    }
+  
+    if (info_ptr->bit_depth == 16)
+--- 343,351 ----
+  
+    png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
+    if (png_image == NULL) {
+!     png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_close (ifp);
+!     pm_error ("couldn't allocate space for image");
+    }
+  
+    if (info_ptr->bit_depth == 16)
+***************
+*** 362,371 ****
+        for (x = 0 ; x < y ; x++)
+          free (png_image[x]);
+        free (png_image);
+!       png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!       free (png_ptr);
+!       free (info_ptr);
+!       pm_error ("couldn't alloc space for image");
+      }
+    }
+  
+--- 368,376 ----
+        for (x = 0 ; x < y ; x++)
+          free (png_image[x]);
+        free (png_image);
+!       png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!       pm_close (ifp);
+!       pm_error ("couldn't allocate space for image");
+      }
+    }
+  
+***************
+*** 554,563 ****
+      for (y = 0 ; y < info_ptr->height ; y++)
+        free (png_image[y]);
+      free (png_image);
+!     png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!     free (png_ptr);
+!     free (info_ptr);
+!     pm_error ("couldn't alloc space for image");
+    }
+  
+    if (alpha == alpha_only) {
+--- 559,567 ----
+      for (y = 0 ; y < info_ptr->height ; y++)
+        free (png_image[y]);
+      free (png_image);
+!     png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_close (ifp);
+!     pm_error ("couldn't allocate space for image");
+    }
+  
+    if (alpha == alpha_only) {
+***************
+*** 669,677 ****
+            for (i = 0 ; i < info_ptr->height ; i++)
+              free (png_image[i]);
+            free (png_image);
+!           png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!           free (png_ptr);
+!           free (info_ptr);
+            pm_error ("unknown PNG color type");
+        }
+        pnm_pixel++;
+--- 673,680 ----
+            for (i = 0 ; i < info_ptr->height ; i++)
+              free (png_image[i]);
+            free (png_image);
+!           png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!           pm_close (ifp);
+            pm_error ("unknown PNG color type");
+        }
+        pnm_pixel++;
+***************
+*** 684,693 ****
+    for (y = 0 ; y < info_ptr->height ; y++)
+      free (png_image[y]);
+    free (png_image);
+!   png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+! 
+!   free (png_ptr);
+!   free (info_ptr);
+  }
+  
+  #ifdef __STDC__
+--- 687,693 ----
+    for (y = 0 ; y < info_ptr->height ; y++)
+      free (png_image[y]);
+    free (png_image);
+!   png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+  }
+  
+  #ifdef __STDC__

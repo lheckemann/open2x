@@ -1,0 +1,888 @@
+*** pnmtopng.README.stock	Sat Mar 21 10:13:30 1998
+--- pnmtopng.README	Fri Jul  3 11:54:40 1998
+***************
+*** 1,9 ****
+  ** PNMTOPNG / PNGTOPNM
+! ** version 2.37 - March 1998
+  
+! The utilities pnmtopng and pngtopnm are based on other pbm tools and
+! require the libraries included in the pbmplus package. Also required are
+! the png library and the zlib compression library.
+  
+  These can be found at:
+  	ftp://swrinde.nde.swri.edu/pub/png/src/libpng-*
+--- 1,14 ----
+  ** PNMTOPNG / PNGTOPNM
+! ** version 2.37.1 - 3 July 1998
+  
+! [This is a semi-official bug-fix and enhancement release in Willem's absence.
+!  Version 2.37 (March 1998) was never publicly released, partly because Willem
+!  had hoped to quiet gcc's "<var> might be clobbered by `longjmp'" warnings.
+!  Those still exist in this release but can be ignored.  --Greg Roelofs]
+! 
+! The utilities pnmtopng and pngtopnm are based on other pbm tools and require
+! the libraries included in the pbmplus/netpbm package. Also required are the
+! png library and the zlib compression library.
+  
+  These can be found at:
+  	ftp://swrinde.nde.swri.edu/pub/png/src/libpng-*
+***************
+*** 11,26 ****
+  	ftp://ftp.x.org/contrib/utilities/netpbm-1mar1994*
+  
+  To compile and install a makefile is provided. Do check the directories
+! where you have put the required libraries. Then either accomodate the 
+  makefile or make links from generic names to version specific directories,
+  which is the recommended way.
+  
+  For testing purposes, have a look at the test-set PngSuite.tar.gz, which
+! contains for all PNG color-types and various chunk types a small test-
+! image. It can be found at:
+!         http://mht3.gintic.gov.sg:8000/pngsuite/
+! 	ftp://swrinde.nde.swri.edu/pub/png/images/suite/pngsuite
+  
+  ------
+  Alexander Lehmann <alex@hal.rhein-main.de>
+! Willem van Schaik <willem@gintic.gov.sg>
+--- 16,31 ----
+  	ftp://ftp.x.org/contrib/utilities/netpbm-1mar1994*
+  
+  To compile and install a makefile is provided. Do check the directories
+! where you have put the required libraries. Then either accommodate the 
+  makefile or make links from generic names to version specific directories,
+  which is the recommended way.
+  
+  For testing purposes, have a look at the test-set PngSuite.tar.gz, which
+! contains a small test-image for every PNG color type and for most PNG chunk
+! types. It can be found at:
+! 	http://www.schaik.com/pngsuite/pngsuite.html
+! 	ftp://swrinde.nde.swri.edu/pub/png/images/suite/
+  
+  ------
+  Alexander Lehmann <alex@hal.rhein-main.de>
+! Willem van Schaik <willem@schaik.com>
+*** pngtopnm.c.stock	Sun Mar 29 08:34:42 1998
+--- pngtopnm.c	Fri Jul  3 11:55:21 1998
+***************
+*** 3,11 ****
+  ** read a Portable Network Graphics file and produce a portable anymap
+  **
+  ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+! **                        and Willem van Schaik <willem@gintic.gov.sg>
+! **
+! ** version 2.37 - March 1998
+  **
+  ** Permission to use, copy, modify, and distribute this software and its
+  ** documentation for any purpose and without fee is hereby granted, provided
+--- 3,9 ----
+  ** read a Portable Network Graphics file and produce a portable anymap
+  **
+  ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+! **                        and Willem van Schaik <willem@schaik.com>
+  **
+  ** Permission to use, copy, modify, and distribute this software and its
+  ** documentation for any purpose and without fee is hereby granted, provided
+***************
+*** 18,37 ****
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! #define VERSION "2.37 (March 1998)"
+  
+  #include <math.h>
+  #include "pnm.h"
+  #include "png.h"
+  
+  #ifndef TRUE
+! #define TRUE 1
+  #endif
+  #ifndef FALSE
+! #define FALSE 0
+  #endif
+  #ifndef NONE
+! #define NONE 0
+  #endif
+  
+  /* function prototypes */
+--- 16,35 ----
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! #define VERSION "2.37.1 (3 July 1998)"
+  
+  #include <math.h>
+  #include "pnm.h"
+  #include "png.h"
+  
+  #ifndef TRUE
+! #  define TRUE 1
+  #endif
+  #ifndef FALSE
+! #  define FALSE 0
+  #endif
+  #ifndef NONE
+! #  define NONE 0
+  #endif
+  
+  /* function prototypes */
+***************
+*** 204,211 ****
+    png_uint_16 c, c2, c3, a;
+    int pnm_type;
+    int i;
+!   char *type_string;
+!   char *alpha_string;
+    int trans_mix;
+    pixel backcolor;
+    char gamma_string[80];
+--- 202,209 ----
+    png_uint_16 c, c2, c3, a;
+    int pnm_type;
+    int i;
+!   char *type_string = "";
+!   char *alpha_string = "";
+    int trans_mix;
+    pixel backcolor;
+    char gamma_string[80];
+*** pnmtopng.c.stock	Sun Mar 29 08:34:31 1998
+--- pnmtopng.c	Fri Jul  3 11:56:16 1998
+***************
+*** 6,15 ****
+  ** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
+  ** thanks to Greg Roelofs <newt@pobox.com> for contributions and bug-fixes
+  **
+! ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+! **                        and Willem van Schaik <willem@gintic.gov.sg>
+! **
+! ** version 2.37 - March 1998
+  **
+  ** Permission to use, copy, modify, and distribute this software and its
+  ** documentation for any purpose and without fee is hereby granted, provided
+--- 6,13 ----
+  ** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
+  ** thanks to Greg Roelofs <newt@pobox.com> for contributions and bug-fixes
+  **
+! ** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+! **                        and Willem van Schaik <willem@schaik.com>
+  **
+  ** Permission to use, copy, modify, and distribute this software and its
+  ** documentation for any purpose and without fee is hereby granted, provided
+***************
+*** 19,25 ****
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.37 (March 1998)"
+  
+  #include "pnm.h"
+  #include "png.h"
+--- 17,39 ----
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.37.1 (3 July 1998)"
+! 
+! /* GRR 980621:  moved some if-tests out of full-image loops; added fix for
+!  *  following problem discovered by Magnus Holmgren and debugged by Glenn:
+!  *
+!  *    The pnm has three colors:  0 0 0, 204 204 204, and 255 255 255.
+!  *    These were apparently scaled to 0 0 0, 12 12 12, and 15 15 15.
+!  *    That would have been OK if the file had been written as color-type
+!  *    0 (grayscale), but it was written as an indexed-color file, in
+!  *    which the colors from the pnm file should have been used rather
+!  *    than the scaled colors.  What appears in the PLTE chunk is
+!  *    0 0 0, 12 12 12, and 15 15 15, which of course results in a
+!  *    very dark image.
+!  *
+!  *  (temporarily ifdef'd for easier inspection and before/after testing)
+!  */
+! #define GRR_GRAY_PALETTE_FIX
+  
+  #include "pnm.h"
+  #include "png.h"
+***************
+*** 27,39 ****
+  #include "ppmcmap.h"
+  
+  #ifndef TRUE
+! #define TRUE 1
+  #endif
+  #ifndef FALSE
+! #define FALSE 0
+  #endif
+  #ifndef NONE
+! #define NONE 0
+  #endif
+  #define MAXCOLORS 256
+  #define MAXCOMMENTS 256
+--- 41,53 ----
+  #include "ppmcmap.h"
+  
+  #ifndef TRUE
+! #  define TRUE 1
+  #endif
+  #ifndef FALSE
+! #  define FALSE 0
+  #endif
+  #ifndef NONE
+! #  define NONE 0
+  #endif
+  #define MAXCOLORS 256
+  #define MAXCOMMENTS 256
+***************
+*** 186,193 ****
+  FILE *tfp;
+  #endif
+  {
+!   xel **xels;
+!   xel p;
+    int rows, cols, format, pnm_type;
+    xelval maxval;
+    xelval maxmaxval = 255;
+--- 200,207 ----
+  FILE *tfp;
+  #endif
+  {
+!   xel **xels;	/* GRR:  a xel is always a pixel; pixel may be ulg or struct */
+!   xel p;	/*        (pnm.h)                  (ppm.h)  */
+    int rows, cols, format, pnm_type;
+    xelval maxval;
+    xelval maxmaxval = 255;
+***************
+*** 195,201 ****
+    xelval value;
+    pixel transcolor;
+    int sbitval;
+-   int isgray;
+    int mayscale;
+    pixel backcolor;
+  
+--- 209,214 ----
+***************
+*** 209,229 ****
+    png_byte *pp;
+    int pass;
+    int color;
+!   gray **alpha_mask;
+    gray alpha_maxval;
+    int alpha_rows;
+    int alpha_cols;
+!   int alpha_sbitval;
+    int alpha_trans;
+    int num_alphas_of_color = 0;
+    gray *alphas_of_color[MAXCOLORS];
+    int alphas_of_color_cnt[MAXCOLORS];
+    int alphas_first_index[MAXCOLORS+1];
+    int mapping[MAXCOLORS];
+!   int palette_size;
+    colorhist_vector chv;
+!   colorhash_table cht;
+!   int depth, colors;
+    int fulldepth;
+    int x, y;
+    int i, j;
+--- 222,242 ----
+    png_byte *pp;
+    int pass;
+    int color;
+!   gray **alpha_mask = NULL;	/* initialized to quiet compiler warnings */
+    gray alpha_maxval;
+    int alpha_rows;
+    int alpha_cols;
+!   int alpha_sbitval = 0;	/* initialized to quiet compiler warnings */
+    int alpha_trans;
+    int num_alphas_of_color = 0;
+    gray *alphas_of_color[MAXCOLORS];
+    int alphas_of_color_cnt[MAXCOLORS];
+    int alphas_first_index[MAXCOLORS+1];
+    int mapping[MAXCOLORS];
+!   int palette_size = 0;		/* initialized to quiet compiler warnings */
+    colorhist_vector chv;
+!   colorhash_table cht = NULL;	/* initialized to quiet compiler warnings */
+!   int depth=0, colors;		/* initialized to quiet compiler warnings */
+    int fulldepth;
+    int x, y;
+    int i, j;
+***************
+*** 327,341 ****
+  
+    /* first of all, check if we have a grayscale image written as PPM */
+  
+!   isgray = TRUE;
+!   if (pnm_type == PPM_TYPE) {
+      for (y = 0 ; y < rows && isgray ; y++)
+        for (x = 0 ; x < cols && isgray ; x++) {
+          p = xels[y][x];
+          if (PPM_GETR (p) != PPM_GETG (p) || PPM_GETG (p) != PPM_GETB (p))
+            isgray = FALSE;
+        }
+!     if (isgray && !force)
+        pnm_type = PGM_TYPE;
+    }
+  
+--- 340,355 ----
+  
+    /* first of all, check if we have a grayscale image written as PPM */
+  
+!   if (pnm_type == PPM_TYPE && !force) {
+!     int isgray = TRUE;
+! 
+      for (y = 0 ; y < rows && isgray ; y++)
+        for (x = 0 ; x < cols && isgray ; x++) {
+          p = xels[y][x];
+          if (PPM_GETR (p) != PPM_GETG (p) || PPM_GETG (p) != PPM_GETB (p))
+            isgray = FALSE;
+        }
+!     if (isgray)
+        pnm_type = PGM_TYPE;
+    }
+  
+***************
+*** 365,371 ****
+            pm_message ("rescaling to 8-bit");
+          scaleval = 255;
+        } else {
+!         /* to do:  this can; xels aren't big enough - larger pixels & maxvals needed */
+          if (sizeof(scaleval) < 2) {   /* unsigned char by default */
+            pm_message ("cannot rescale to 16-bit; rescaling to 8-bit instead (maxval = %d)",
+              maxval);
+--- 379,386 ----
+            pm_message ("rescaling to 8-bit");
+          scaleval = 255;
+        } else {
+!         /* to do:  this can fail; xels aren't big enough - larger pixels &
+!          * maxvals are needed */
+          if (sizeof(scaleval) < 2) {   /* unsigned char by default */
+            pm_message ("cannot rescale to 16-bit; rescaling to 8-bit instead (maxval = %d)",
+              maxval);
+***************
+*** 404,433 ****
+  
+    if (pnm_type != PBM_TYPE && maxval == 65535 && !force) {
+      mayscale = TRUE;
+!     for (y = 0 ; y < rows && mayscale ; y++)
+!       for (x = 0 ; x < cols && mayscale ; x++) {
+!         p = xels[y][x];
+!         if (pnm_type == PGM_TYPE ?
+!             (PNM_GET1 (p)&0xff)*0x101 != PNM_GET1 (p) :
+!             (PPM_GETR (p)&0xff)*0x101 != PPM_GETR (p) ||
+!             (PPM_GETG (p)&0xff)*0x101 != PPM_GETG (p) ||
+!             (PPM_GETB (p)&0xff)*0x101 != PPM_GETB (p))
+!           mayscale = FALSE;
+!       }
+      if (mayscale) {
+        if (verbose)
+!         pm_message ("scaling to 8-bit (superflous 16-bit data)");
+        maxval = 255;
+!       for (y = 0 ; y < rows ; y++)
+!         for (x = 0 ; x < cols ; x++) {
+!           p = xels[y][x];
+!           if (pnm_type == PGM_TYPE) {
+              PNM_ASSIGN1 (xels[y][x], PNM_GET1 (p)&0xff);
+!           } else {
+              PPM_ASSIGN (xels[y][x], PPM_GETR (p)&0xff,  PPM_GETG (p)&0xff,
+                          PPM_GETB (p)&0xff);
+            }
+!         }
+        if (transparent > 0) {
+          p = transcolor;
+          if (pnm_type == PGM_TYPE) {
+--- 419,458 ----
+  
+    if (pnm_type != PBM_TYPE && maxval == 65535 && !force) {
+      mayscale = TRUE;
+!     if (pnm_type == PGM_TYPE)
+!       for (y = 0 ; y < rows && mayscale ; y++)
+!         for (x = 0 ; x < cols && mayscale ; x++) {
+!           p = xels[y][x];
+!           if ( (PNM_GET1 (p)&0xff)*0x101 != PNM_GET1 (p) )
+!             mayscale = FALSE;
+!         }
+!     else /* PPM_TYPE */
+!       for (y = 0 ; y < rows && mayscale ; y++)
+!         for (x = 0 ; x < cols && mayscale ; x++) {
+!           p = xels[y][x];
+!           if ( (PPM_GETR (p)&0xff)*0x101 != PPM_GETR (p) ||
+!                (PPM_GETG (p)&0xff)*0x101 != PPM_GETG (p) ||
+!                (PPM_GETB (p)&0xff)*0x101 != PPM_GETB (p) )
+!             mayscale = FALSE;
+!         }
+      if (mayscale) {
+        if (verbose)
+!         pm_message ("scaling to 8-bit (superfluous 16-bit data)");
+        maxval = 255;
+!       if (pnm_type == PGM_TYPE) {
+!         for (y = 0 ; y < rows ; y++)
+!           for (x = 0 ; x < cols ; x++) {
+!             p = xels[y][x];
+              PNM_ASSIGN1 (xels[y][x], PNM_GET1 (p)&0xff);
+!           }
+!       } else { /* PPM_TYPE */
+!         for (y = 0 ; y < rows ; y++)
+!           for (x = 0 ; x < cols ; x++) {
+!             p = xels[y][x];
+              PPM_ASSIGN (xels[y][x], PPM_GETR (p)&0xff,  PPM_GETG (p)&0xff,
+                          PPM_GETB (p)&0xff);
+            }
+!       }
+        if (transparent > 0) {
+          p = transcolor;
+          if (pnm_type == PGM_TYPE) {
+***************
+*** 488,494 ****
+  
+          maxval = 15;
+          if (verbose)
+!           pm_message ("scaling to 4-bit (grayscale superflous data)");
+          if (sbitval > 0) sbitval >>= 1;
+        }
+      }
+--- 513,519 ----
+  
+          maxval = 15;
+          if (verbose)
+!           pm_message ("scaling to 4-bit (grayscale superfluous data)");
+          if (sbitval > 0) sbitval >>= 1;
+        }
+      }
+***************
+*** 510,516 ****
+          }
+          maxval = 3;
+          if (verbose)
+!           pm_message ("scaling to 2-bit (grayscale superflous data)");
+          if (sbitval > 0) sbitval >>= 1;
+        }
+      }
+--- 535,541 ----
+          }
+          maxval = 3;
+          if (verbose)
+!           pm_message ("scaling to 2-bit (grayscale superfluous data)");
+          if (sbitval > 0) sbitval >>= 1;
+        }
+      }
+***************
+*** 532,575 ****
+          }
+          maxval = 1;
+          if (verbose)
+!           pm_message ("scaling to 1-bit (grayscale superflous data)");
+          sbitval = 0;
+        }
+      }
+    }
+  
+    /* 
+!      we can write a palette file under following conditions:
+!      - when maxval > 255, we never write a paletted image
+!      - when maxval <= 255:
+         - for ppm files if we have <= 256 colors
+         - for alpha if we have <= 256 color/transparency pairs
+!        - for pgm files (with or without alpha) if the number of bits needed for the 
+! 	 gray-transparency pairs is smaller then the number of bits needed for maxval
+    */
+  
+-   /* for the palette check if we want to apply ppm-functions to grayscale
+-       images, thus we have to copy the grayscale values to the rgb channels */
+-   if (pnm_type == PGM_TYPE) {
+-     for (y = 0 ; y < rows ; y++)
+-       for (x = 0 ; x < cols ; x++) {
+-         value = PNM_GET1 (xels[y][x]);
+-         PPM_ASSIGN (xels[y][x], value, value, value);
+-       }
+-   }
+- 
+    if ((!force) && (pnm_type != PBM_TYPE) && (maxval <= 255)) {
+      if (verbose) {
+        pm_message ("maxval is %d", maxval);
+        pm_message ("computing colormap...");
+      }
+      chv = ppm_computecolorhist (xels, cols, rows, MAXCOLORS, &colors);
+      if (verbose) {
+        pm_message ("%d colors found", colors);
+      }
+!     if ((chv == (colorhist_vector) 0) ||
+!         (pnm_type == PGM_TYPE && pm_maxvaltobits(colors) >= 
+! 				(pm_maxvaltobits(maxval) / 2)) ||
+          (pnm_type == PPM_TYPE && maxval > 255)) {
+        chv = NULL;
+        if (verbose) {
+--- 557,600 ----
+          }
+          maxval = 1;
+          if (verbose)
+!           pm_message ("scaling to 1-bit (grayscale superfluous data)");
+          sbitval = 0;
+        }
+      }
+    }
+  
+    /* 
+!      We can write a palette file if maxval <= 255 and one of the following is
+!      true:
+         - for ppm files if we have <= 256 colors
+         - for alpha if we have <= 256 color/transparency pairs
+!        - for pgm files (with or without alpha) if the number of bits needed for
+!          the gray-transparency pairs is smaller then the number of bits needed
+!          for maxval
+!      When maxval > 255, we never write a paletted image.
+    */
+  
+    if ((!force) && (pnm_type != PBM_TYPE) && (maxval <= 255)) {
+      if (verbose) {
+        pm_message ("maxval is %d", maxval);
+        pm_message ("computing colormap...");
+      }
++     /* for the palette check, we have to copy the grayscale values to the RGB
++         channels if we want to apply ppm-functions to grayscale images */
++     if (pnm_type == PGM_TYPE) {
++       for (y = 0 ; y < rows ; y++)
++         for (x = 0 ; x < cols ; x++) {
++           value = PNM_GET1 (xels[y][x]);
++           PPM_ASSIGN (xels[y][x], value, value, value);
++         }
++     }
+      chv = ppm_computecolorhist (xels, cols, rows, MAXCOLORS, &colors);
+      if (verbose) {
+        pm_message ("%d colors found", colors);
+      }
+!     if ((chv == (colorhist_vector) NULL) ||    /* GRR:    v--- was `=' here */
+!         (pnm_type == PGM_TYPE && pm_maxvaltobits(colors) > 
+!                                 (pm_maxvaltobits(maxval) / 2)) ||
+          (pnm_type == PPM_TYPE && maxval > 255)) {
+        chv = NULL;
+        if (verbose) {
+***************
+*** 577,583 ****
+        }      
+      }
+  
+!     if (chv != (colorhist_vector) 0) {
+  
+        if (alpha) {
+          /* now check if there are different alpha values for the same color
+--- 602,608 ----
+        }      
+      }
+  
+!     if (chv != (colorhist_vector) NULL) {
+  
+        if (alpha) {
+          /* now check if there are different alpha values for the same color
+***************
+*** 585,591 ****
+             one extra for possible background color */
+          cht = ppm_colorhisttocolorhash (chv, colors);
+          for (i = 0 ; i < colors + 1 ; i++) {
+!           if ((alphas_of_color[i] = (gray *)malloc (MAXCOLORS * sizeof (int))) == NULL)
+              pm_error ("out of memory allocating alpha/palette entries");
+            alphas_of_color_cnt[i] = 0;
+          }
+--- 610,617 ----
+             one extra for possible background color */
+          cht = ppm_colorhisttocolorhash (chv, colors);
+          for (i = 0 ; i < colors + 1 ; i++) {
+!           if ((alphas_of_color[i] = (gray *)malloc (MAXCOLORS * sizeof (int)))
+!               == NULL)
+              pm_error ("out of memory allocating alpha/palette entries");
+            alphas_of_color_cnt[i] = 0;
+          }
+***************
+*** 614,620 ****
+            ppm_freecolorhist (chv);
+            chv = NULL;
+            if (verbose)
+!             pm_message ("too many color/transparency pairs, writing a non-mapped file");
+          }
+        } /* if alpha */
+  
+--- 640,647 ----
+            ppm_freecolorhist (chv);
+            chv = NULL;
+            if (verbose)
+!             pm_message (
+!               "too many color/transparency pairs, writing a non-mapped file");
+          }
+        } /* if alpha */
+  
+***************
+*** 627,633 ****
+                 (alpha && alphas_first_index[colors] < MAXCOLORS))
+            {
+              background = colors;
+!             ppm_addtocolorhist (chv, &colors, MAXCOLORS, &backcolor, colors, colors);
+              if (alpha) {
+                alphas_of_color[background][0] = 255;   /* opaque */
+                alphas_of_color_cnt[background] = 1;    /* unique */
+--- 654,661 ----
+                 (alpha && alphas_first_index[colors] < MAXCOLORS))
+            {
+              background = colors;
+!             ppm_addtocolorhist (chv, &colors, MAXCOLORS, &backcolor, colors,
+!               colors);
+              if (alpha) {
+                alphas_of_color[background][0] = 255;   /* opaque */
+                alphas_of_color_cnt[background] = 1;    /* unique */
+***************
+*** 655,660 ****
+--- 683,706 ----
+      else
+        palette_size = colors;
+  
++ #ifdef GRR_GRAY_PALETTE_FIX
++     if (maxval < 255) {
++       if (verbose)
++         pm_message ("rescaling palette values to 8-bit");
++       for (i = 0 ; i < colors ; i++) {
++         p = chv[i].color;
++         PPM_DEPTH (chv[i].color, p, maxval, 255);
++       }
++       /* ...also image pixels so they still match the palette [inefficient!] */
++       for (y = 0 ; y < rows ; y++)
++         for (x = 0 ; x < cols ; x++) {
++           p = xels[y][x];
++           PPM_DEPTH (xels[y][x], p, maxval, 255);
++         }
++       maxval = 255;  /* necessary for transparent case, at least */
++     }
++ #endif
++ 
+      if (palette_size <= 2)
+        depth = 1;
+      else if (palette_size <= 4)
+***************
+*** 696,703 ****
+    if (verbose)
+      pm_message ("writing a%s %d-bit %s%s file%s",
+                  fulldepth == 8 ? "n" : "", fulldepth,
+!                 chv ? "palette": (pnm_type == PPM_TYPE ? "rgb" : "gray"),
+!                 alpha ? (chv ? "+transparency" : "+alpha") : "", interlace? " (interlaced)" : "");
+  
+    /* now write the file */
+  
+--- 742,750 ----
+    if (verbose)
+      pm_message ("writing a%s %d-bit %s%s file%s",
+                  fulldepth == 8 ? "n" : "", fulldepth,
+!                 chv ? "palette": (pnm_type == PPM_TYPE ? "RGB" : "gray"),
+!                 alpha ? (chv ? "+transparency" : "+alpha") : "",
+!                 interlace? " (interlaced)" : "");
+  
+    /* now write the file */
+  
+***************
+*** 719,726 ****
+  
+    if (chv != NULL)
+      info_ptr->color_type = PNG_COLOR_TYPE_PALETTE;
+!   else
+!   if (pnm_type == PPM_TYPE)
+      info_ptr->color_type = PNG_COLOR_TYPE_RGB;
+    else
+      info_ptr->color_type = PNG_COLOR_TYPE_GRAY;
+--- 766,772 ----
+  
+    if (chv != NULL)
+      info_ptr->color_type = PNG_COLOR_TYPE_PALETTE;
+!   else if (pnm_type == PPM_TYPE)
+      info_ptr->color_type = PNG_COLOR_TYPE_RGB;
+    else
+      info_ptr->color_type = PNG_COLOR_TYPE_GRAY;
+***************
+*** 945,950 ****
+--- 991,997 ----
+    /* let libpng take care of, e.g., bit-depth conversions */
+    png_set_packing (png_ptr);
+  
++   /* GRR:  need to check for malloc failure here */
+    line = malloc (cols*8); /* max: 3 color channels, one alpha channel, 16-bit */
+  
+    for (pass = 0 ; pass < png_set_interlace_handling (png_ptr) ; pass++) {
+***************
+*** 1168,1175 ****
+      if (pm_keymatch (argv[argn], "-force", 3)) {
+        force = TRUE;
+      } else {
+!       fprintf(stderr,"pnmtopng version %s, compiled with libpng version %s\n",
+!         VERSION, PNG_LIBPNG_VER_STRING);
+        pm_usage (usage);
+      }
+      argn++;
+--- 1215,1234 ----
+      if (pm_keymatch (argv[argn], "-force", 3)) {
+        force = TRUE;
+      } else {
+!       fprintf(stderr,"pnmtopng version %s.\n", VERSION);
+!       fprintf(stderr, "   Compiled with libpng %s; using libpng %s.\n",
+!         PNG_LIBPNG_VER_STRING, png_libpng_ver);
+!       fprintf(stderr, "   Compiled with zlib %s; using zlib %s.\n",
+!         ZLIB_VERSION, zlib_version);
+! #ifdef PGM_BIGGRAYS
+!       fprintf(stderr,
+!         "   Compiled with 16-bit netpbm support (PGM_BIGGRAYS defined).\n");
+! #else
+!       fprintf(stderr,
+!         "   Compiled with %d-bit netpbm support (PPM_MAXMAXVAL = %d).\n",
+!         pm_maxvaltobits (PPM_MAXMAXVAL), PPM_MAXMAXVAL);
+! #endif
+!       fprintf(stderr, "\n");
+        pm_usage (usage);
+      }
+      argn++;
+*** Makefile.Linux.stock	Sun Mar 29 06:50:31 1998
+--- Makefile.Linux	Fri Jul  3 11:03:00 1998
+***************
+*** 1,71 ****
+  # Makefile for pnmtopng/pngtopnm
+! # CopyPright (C) 1995-1998 Willem van Schaik
+  
+! CC = gcc -O3 -Wall -D_BSD_SOURCE 
+  CP = cp
+  RM = rm
+  
+  # change to match your directories
+  # it is suggested that you place things like libpng and zlib in 
+  # version-specific directories like ../zlib-1.0 and that you make a 
+  # symbolic link like "ln -s zlib-1.0 zlib" in the .. directory 
+  
+- LIBPNG = ../libpng
+- ZLIB = ../zlib
+- #NETPBM = ../netpbm
+- NETPBM = /usr/local/netpbm
+  
+  # where "make install" puts pnmtopng and pngtopnm
+  
+! #INSTDIR = ../$(NETPBM)/pnm
+  INSTDIR = /usr/local
+  
+- CCFLAGS = \
+- 	-I$(LIBPNG) \
+- 	-I$(ZLIB) \
+- 	-I$(NETPBM) \
+- 	-I$(NETPBM)/pnm \
+- 	-I$(NETPBM)/ppm \
+- 	-I$(NETPBM)/pgm \
+- 	-I$(NETPBM)/pbm
+- 
+- LDFLAGS = \
+- 	-L. \
+- 	-L$(LIBPNG) \
+- 	-L$(ZLIB) \
+- 	-L$(NETPBM)/pnm \
+- 	-L$(NETPBM)/ppm \
+- 	-L$(NETPBM)/pgm \
+- 	-L$(NETPBM)/pbm
+  
+  SRCS = pnmtopng.c pngtopnm.c
+  OBJS = pnmtopng.o pngtopnm.o
+! LIBS = -lpng -lz -lpnm -lppm -lpgm -lpbm -lm
+! EXES = pnmtopng pngtopnm
+  
+- # dependency rules
+  
+! all: pnmtopng pngtopnm
+  
+! pnmtopng.o: pnmtopng.c
+! 	$(CC) -c $(CCFLAGS) pnmtopng.c
+  
+  pnmtopng: pnmtopng.o
+! 	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+! 
+! pngtopnm.o: pngtopnm.c
+! 	$(CC) -c $(CCFLAGS) pngtopnm.c
+  
+  pngtopnm: pngtopnm.o
+! 	$(CC) $(LDFLAGS) -o pngtopnm pngtopnm.o $(LIBS) 
+  
+  install: all
+! 	$(CP) pnmtopng $(INSTDIR)/bin
+! 	$(CP) pnmtopng.1 $(INSTDIR)/man/man1
+! 	$(CP) pngtopnm $(INSTDIR)/bin
+! 	$(CP) pngtopnm.1 $(INSTDIR)/man/man1
+  
+  clean:
+! 	$(RM) -f *.o pnmtopng pngtopnm
+  
+! # end of makefile
+--- 1,80 ----
+  # Makefile for pnmtopng/pngtopnm
+! # Copyright (C) 1995-1998 Willem van Schaik
+  
+! CC = gcc
+  CP = cp
+  RM = rm
+  
+  # change to match your directories
++ #
+  # it is suggested that you place things like libpng and zlib in 
+  # version-specific directories like ../zlib-1.0 and that you make a 
+  # symbolic link like "ln -s zlib-1.0 zlib" in the .. directory 
++ #
++ # if the libraries and header files are already installed in /usr/lib and 
++ # /usr/include, just set the "INC" and "LIB" variables to empty strings and
++ # set the "LIB2" variables to /usr/lib/lib<whatever>.a
++ 
++ #PNGDIR = ../libgr2/png
++ PNGDIR = ../libpng
++ PNGINC = -I$(PNGDIR)
++ PNGLIB = -L$(PNGDIR) -lpng
++ PNGLIB2 = $(PNGDIR)/libpng.a
++ 
++ #PNGDIR = ../libgr2/zlib
++ ZDIR = ../zlib
++ ZINC = -I$(ZDIR)
++ ZLIB = -L$(ZDIR) -lz
++ ZLIB2 = $(ZDIR)/libz.a
++ 
++ #PBMDIR = /usr/local/netpbm
++ #PBMDIR = ../libgr2
++ PBMDIR = ../netpbm
++ PBMINC = -I$(PBMDIR)/pnm -I$(PBMDIR)/ppm -I$(PBMDIR)/pgm -I$(PBMDIR)/pbm
++ PBMLIB = -L$(PBMDIR)/pnm -L$(PBMDIR)/ppm -L$(PBMDIR)/pgm -L$(PBMDIR)/pbm \
++ 	 -lpnm -lppm -lpgm -lpbm
++ PBMLIB2 = $(PBMDIR)/pnm/libpnm.a $(PBMDIR)/ppm/libppm.a \
++ 	  $(PBMDIR)/pgm/libpgm.a $(PBMDIR)/pbm/libpbm.a
+  
+  
+  # where "make install" puts pnmtopng and pngtopnm
+  
+! #INSTDIR = $(PBMDIR)/pnm
+  INSTDIR = /usr/local
+  
+  
++ CFLAGS = -O3 -Wall -D_BSD_SOURCE $(PNGINC) $(ZINC) $(PBMINC)
++ LDFLAGS = $(PNGLIB) $(ZLIB) $(PBMLIB) -lm
++ LDFLAGS2 = $(PNGLIB2) $(ZLIB2) $(PBMLIB2) -lm
++ 
++ MANS = pnmtopng.1 pngtopnm.1
+  SRCS = pnmtopng.c pngtopnm.c
+  OBJS = pnmtopng.o pngtopnm.o
+! EXES = pnmtopng pngtopnm pnmtopng-static pngtopnm-static
+  
+  
+! # dependency rules
+  
+! all: $(EXES)
+  
+  pnmtopng: pnmtopng.o
+! 	$(CC) -o $@ pnmtopng.o $(LDFLAGS)
+  
+  pngtopnm: pngtopnm.o
+! 	$(CC) -o $@ pngtopnm.o $(LDFLAGS)
+! 
+! pnmtopng-static: pnmtopng.o
+! 	$(CC) -o $@ pnmtopng.o $(LDFLAGS2)
+! 
+! pngtopnm-static: pngtopnm.o
+! 	$(CC) -o $@ pngtopnm.o $(LDFLAGS2)
+  
+  install: all
+! 	$(CP) $(EXES) $(INSTDIR)/bin
+! 	$(CP) $(MANS) $(INSTDIR)/man/man1
+  
+  clean:
+! 	$(RM) -f $(OBJS) $(EXES)
+! 
+  
+! # end of Makefile.Linux

@@ -1,0 +1,468 @@
+*** pnmtopng.c.stock	Fri Jul  3 11:56:16 1998
+--- pnmtopng.c	Wed Mar 17 11:03:25 1999
+***************
+*** 17,23 ****
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.37.1 (3 July 1998)"
+  
+  /* GRR 980621:  moved some if-tests out of full-image loops; added fix for
+   *  following problem discovered by Magnus Holmgren and debugged by Glenn:
+--- 17,29 ----
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.37.2 (17 March 1999)"
+! 
+! /* GRR 990308:  declared "clobberable" automatic variables in convertpnm()
+!  *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
+!  *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
+!  *  compiled with one size in libpng and another size here).
+!  */
+  
+  /* GRR 980621:  moved some if-tests out of full-image loops; added fix for
+   *  following problem discovered by Magnus Holmgren and debugged by Glenn:
+***************
+*** 36,45 ****
+  #define GRR_GRAY_PALETTE_FIX
+  
+  #include "pnm.h"
+! #include "png.h"
+  
+  #include "ppmcmap.h"
+  
+  #ifndef TRUE
+  #  define TRUE 1
+  #endif
+--- 42,55 ----
+  #define GRR_GRAY_PALETTE_FIX
+  
+  #include "pnm.h"
+! #include "png.h"	/* includes zlib.h and setjmp.h */
+  
+  #include "ppmcmap.h"
+  
++ typedef struct _jmpbuf_wrapper {
++   jmp_buf jmpbuf;
++ } jmpbuf_wrapper;
++ 
+  #ifndef TRUE
+  #  define TRUE 1
+  #endif
+***************
+*** 54,61 ****
+  
+  /* function prototypes */
+  #ifdef __STDC__
+! static int closestcolor (pixel color, colorhist_vector chv, int colors, xelval maxval);
+  static void read_text (png_info *info_ptr, FILE *tfp);
+  static void convertpnm (FILE *ifp, FILE *afp, FILE *tfp);
+  int main (int argc, char *argv[]);
+  #endif
+--- 64,73 ----
+  
+  /* function prototypes */
+  #ifdef __STDC__
+! static int closestcolor (pixel color, colorhist_vector chv, int colors,
+!                          xelval maxval);
+  static void read_text (png_info *info_ptr, FILE *tfp);
++ static void pnmtopng_error_handler (png_structp png_ptr, png_const_charp msg);
+  static void convertpnm (FILE *ifp, FILE *afp, FILE *tfp);
+  int main (int argc, char *argv[]);
+  #endif
+***************
+*** 92,97 ****
+--- 104,110 ----
+  static int filter = -1;
+  static int compression = -1;
+  static int force = FALSE;
++ static jmpbuf_wrapper pnmtopng_jmpbuf_struct;
+  
+  #ifdef __STDC__
+  static int closestcolor (pixel color, colorhist_vector chv, int colors, xelval maxval)
+***************
+*** 192,197 ****
+--- 205,243 ----
+  }
+  
+  #ifdef __STDC__
++ static void pnmtopng_error_handler (png_structp png_ptr, png_const_charp msg)
++ #else
++ static void pnmtopng_error_handler (png_ptr, msg)
++ png_structp png_ptr;
++ png_const_charp msg;
++ #endif
++ {
++   jmpbuf_wrapper  *jmpbuf_ptr;
++ 
++   /* this function, aside from the extra step of retrieving the "error
++    * pointer" (below) and the fact that it exists within the application
++    * rather than within libpng, is essentially identical to libpng's
++    * default error handler.  The second point is critical:  since both
++    * setjmp() and longjmp() are called from the same code, they are
++    * guaranteed to have compatible notions of how big a jmp_buf is,
++    * regardless of whether _BSD_SOURCE or anything else has (or has not)
++    * been defined. */
++ 
++   fprintf(stderr, "pnmtopng:  fatal libpng error: %s\n", msg);
++   fflush(stderr);
++ 
++   jmpbuf_ptr = png_get_error_ptr(png_ptr);
++   if (jmpbuf_ptr == NULL) {         /* we are completely hosed now */
++     fprintf(stderr,
++       "pnmtopng:  EXTREMELY fatal error: jmpbuf unrecoverable; terminating.\n");
++     fflush(stderr);
++     exit(99);
++   }
++ 
++   longjmp(jmpbuf_ptr->jmpbuf, 1);
++ }
++ 
++ #ifdef __STDC__
+  static void convertpnm (FILE *ifp, FILE *afp, FILE *tfp)
+  #else
+  static void convertpnm (ifp, afp, tfp)
+***************
+*** 202,214 ****
+  {
+    xel **xels;	/* GRR:  a xel is always a pixel; pixel may be ulg or struct */
+    xel p;	/*        (pnm.h)                  (ppm.h)  */
+!   int rows, cols, format, pnm_type;
+    xelval maxval;
+-   xelval maxmaxval = 255;
+    xelval scaleval;
+    xelval value;
+    pixel transcolor;
+-   int sbitval;
+    int mayscale;
+    pixel backcolor;
+  
+--- 248,258 ----
+  {
+    xel **xels;	/* GRR:  a xel is always a pixel; pixel may be ulg or struct */
+    xel p;	/*        (pnm.h)                  (ppm.h)  */
+!   int rows, cols, format;
+    xelval maxval;
+    xelval scaleval;
+    xelval value;
+    pixel transcolor;
+    int mayscale;
+    pixel backcolor;
+  
+***************
+*** 222,250 ****
+    png_byte *pp;
+    int pass;
+    int color;
+-   gray **alpha_mask = NULL;	/* initialized to quiet compiler warnings */
+    gray alpha_maxval;
+    int alpha_rows;
+    int alpha_cols;
+-   int alpha_sbitval = 0;	/* initialized to quiet compiler warnings */
+    int alpha_trans;
+-   int num_alphas_of_color = 0;
+    gray *alphas_of_color[MAXCOLORS];
+    int alphas_of_color_cnt[MAXCOLORS];
+    int alphas_first_index[MAXCOLORS+1];
+    int mapping[MAXCOLORS];
+!   int palette_size = 0;		/* initialized to quiet compiler warnings */
+!   colorhist_vector chv;
+!   colorhash_table cht = NULL;	/* initialized to quiet compiler warnings */
+!   int depth=0, colors;		/* initialized to quiet compiler warnings */
+    int fulldepth;
+    int x, y;
+    int i, j;
+  
+!   png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      fclose(ifp);
+--- 266,315 ----
+    png_byte *pp;
+    int pass;
+    int color;
+    gray alpha_maxval;
+    int alpha_rows;
+    int alpha_cols;
+    int alpha_trans;
+    gray *alphas_of_color[MAXCOLORS];
+    int alphas_of_color_cnt[MAXCOLORS];
+    int alphas_first_index[MAXCOLORS+1];
+    int mapping[MAXCOLORS];
+!   int colors;
+    int fulldepth;
+    int x, y;
+    int i, j;
+  
+!   /* these variables are declared static because gcc wasn't kidding
+!    * about "variable XXX might be clobbered by `longjmp' or `vfork'"
+!    * (stack corruption observed on Solaris 2.6 with gcc 2.8.1, even
+!    * in the absence of any other error condition) */
+!   static int pnm_type;
+!   static xelval maxmaxval;
+!   static int sbitval;
+!   static gray **alpha_mask;
+!   static int alpha_sbitval;
+!   static int num_alphas_of_color;
+!   static int palette_size;
+!   static colorhist_vector chv;
+!   static colorhash_table cht;
+!   static int depth;
+! 
+! 
+!   /* these guys are initialized to quiet compiler warnings: */
+!   maxmaxval = 255;
+!   num_alphas_of_color = 0;
+!   alpha_mask = NULL;
+!   alpha_sbitval = 0;
+!   palette_size = 0;
+!   cht = NULL;
+!   depth = 0;
+! 
+!   png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
+!     &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+    if (png_ptr == NULL) {
+      pm_error ("cannot allocate LIBPNG structure");
+    }
++ 
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      fclose(ifp);
+***************
+*** 252,263 ****
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+!   if (setjmp (png_ptr->jmpbuf)) {
+      fclose(ifp);
+      png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
+      free (png_ptr);
+      free (info_ptr);
+!     pm_error ("setjmp returns error condition");
+    }
+  
+    xels = pnm_readpnm (ifp, &cols, &rows, &maxval, &format);
+--- 317,328 ----
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+!   if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+      fclose(ifp);
+      png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
+      free (png_ptr);
+      free (info_ptr);
+!     pm_error ("setjmp returns error condition (1)");
+    }
+  
+    xels = pnm_readpnm (ifp, &cols, &rows, &maxval, &format);
+***************
+*** 748,758 ****
+  
+    /* now write the file */
+  
+!   if (setjmp (png_ptr->jmpbuf)) {
+      png_write_destroy (png_ptr);
+      free (png_ptr);
+      free (info_ptr);
+!     pm_error ("setjmp returns error condition");
+    }
+  
+  #ifdef OLDPNG
+--- 813,823 ----
+  
+    /* now write the file */
+  
+!   if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+      png_write_destroy (png_ptr);
+      free (png_ptr);
+      free (info_ptr);
+!     pm_error ("setjmp returns error condition (2)");
+    }
+  
+  #ifdef OLDPNG
+*** pngtopnm.c.stock	Fri Jul  3 11:55:21 1998
+--- pngtopnm.c	Wed Mar 17 11:17:43 1999
+***************
+*** 16,26 ****
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! #define VERSION "2.37.1 (3 July 1998)"
+  
+  #include <math.h>
+  #include "pnm.h"
+! #include "png.h"
+  
+  #ifndef TRUE
+  #  define TRUE 1
+--- 16,36 ----
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! #define VERSION "2.37.2 (17 March 1999)"
+! 
+! /* GRR 990317:  declared "clobberable" automatic variables in convertpng()
+!  *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
+!  *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
+!  *  compiled with one size in libpng and another size here).
+!  */
+  
+  #include <math.h>
+  #include "pnm.h"
+! #include "png.h"	/* includes zlib.h and setjmp.h */
+! 
+! typedef struct _jmpbuf_wrapper {
+!   jmp_buf jmpbuf;
+! } jmpbuf_wrapper;
+  
+  #ifndef TRUE
+  #  define TRUE 1
+***************
+*** 35,44 ****
+  /* function prototypes */
+  #ifdef __STDC__
+  static png_uint_16 _get_png_val (png_byte **pp, int bit_depth);
+! static void store_pixel (xel *pix, png_uint_16 r, png_uint_16 g, png_uint_16 b, png_uint_16 a);
+  static int iscolor (png_color c);
+  static void save_text (png_info *info_ptr, FILE *tfp);
+  static void show_time (png_info *info_ptr);
+  static void convertpng (FILE *ifp, FILE *tfp);
+  int main (int argc, char *argv[]);
+  #endif
+--- 45,56 ----
+  /* function prototypes */
+  #ifdef __STDC__
+  static png_uint_16 _get_png_val (png_byte **pp, int bit_depth);
+! static void store_pixel (xel *pix, png_uint_16 r, png_uint_16 g, png_uint_16 b,
+!                          png_uint_16 a);
+  static int iscolor (png_color c);
+  static void save_text (png_info *info_ptr, FILE *tfp);
+  static void show_time (png_info *info_ptr);
++ static void pngtopnm_error_handler (png_structp png_ptr, png_const_charp msg);
+  static void convertpng (FILE *ifp, FILE *tfp);
+  int main (int argc, char *argv[]);
+  #endif
+***************
+*** 57,62 ****
+--- 69,75 ----
+  static int text = FALSE;
+  static char *text_file;
+  static int mtime = FALSE;
++ static jmpbuf_wrapper pngtopnm_jmpbuf_struct;
+  
+  #define get_png_val(p) _get_png_val (&(p), info_ptr->bit_depth)
+  
+***************
+*** 180,185 ****
+--- 193,231 ----
+    }
+  }
+  
++ #ifdef __STDC__
++ static void pngtopnm_error_handler (png_structp png_ptr, png_const_charp msg)
++ #else
++ static void pngtopnm_error_handler (png_ptr, msg)
++ png_structp png_ptr;
++ png_const_charp msg;
++ #endif
++ {
++   jmpbuf_wrapper  *jmpbuf_ptr;
++ 
++   /* this function, aside from the extra step of retrieving the "error
++    * pointer" (below) and the fact that it exists within the application
++    * rather than within libpng, is essentially identical to libpng's
++    * default error handler.  The second point is critical:  since both
++    * setjmp() and longjmp() are called from the same code, they are
++    * guaranteed to have compatible notions of how big a jmp_buf is,
++    * regardless of whether _BSD_SOURCE or anything else has (or has not)
++    * been defined. */
++ 
++   fprintf(stderr, "pnmtopng:  fatal libpng error: %s\n", msg);
++   fflush(stderr);
++ 
++   jmpbuf_ptr = png_get_error_ptr(png_ptr);
++   if (jmpbuf_ptr == NULL) {         /* we are completely hosed now */
++     fprintf(stderr,
++       "pnmtopng:  EXTREMELY fatal error: jmpbuf unrecoverable; terminating.\n");
++     fflush(stderr);
++     exit(99);
++   }
++ 
++   longjmp(jmpbuf_ptr->jmpbuf, 1);
++ }
++ 
+  #define SIG_CHECK_SIZE 4
+  
+  #ifdef __STDC__
+***************
+*** 202,229 ****
+    png_uint_16 c, c2, c3, a;
+    int pnm_type;
+    int i;
+-   char *type_string = "";
+-   char *alpha_string = "";
+    int trans_mix;
+    pixel backcolor;
+    char gamma_string[80];
+  
+    if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE)
+      pm_error ("input file empty or too short");
+    if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0)
+      pm_error ("input file not a PNG file");
+  
+!   png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+!   if (setjmp (png_ptr->jmpbuf)) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+      free (png_ptr);
+      free (info_ptr);
+--- 248,284 ----
+    png_uint_16 c, c2, c3, a;
+    int pnm_type;
+    int i;
+    int trans_mix;
+    pixel backcolor;
+    char gamma_string[80];
+  
++   /* these variables are declared static because gcc wasn't kidding
++    * about "variable XXX might be clobbered by `longjmp' or `vfork'"
++    * (stack corruption observed on Solaris 2.6 with gcc 2.8.1, even
++    * in the absence of any other error condition) */
++   static char *type_string;
++   static char *alpha_string;
++ 
++   type_string = alpha_string = "";
++ 
+    if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE)
+      pm_error ("input file empty or too short");
+    if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0)
+      pm_error ("input file not a PNG file");
+  
+!   png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
+!     &pngtopnm_jmpbuf_struct, pngtopnm_error_handler, NULL);
+    if (png_ptr == NULL) {
+      pm_error ("cannot allocate LIBPNG structure");
+    }
++ 
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+!   if (setjmp (pngtopnm_jmpbuf_struct.jmpbuf)) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+      free (png_ptr);
+      free (info_ptr);

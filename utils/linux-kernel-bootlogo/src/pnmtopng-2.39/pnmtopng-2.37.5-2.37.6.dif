@@ -1,0 +1,398 @@
+diff -ruN pnmtopng-2.37.5/pnmtopng_version.h pnmtopng-2.37.6/pnmtopng_version.h
+--- pnmtopng-2.37.5/pnmtopng_version.h	Wed Dec 31 16:00:00 1969
++++ pnmtopng-2.37.6/pnmtopng_version.h	Sat Jul 21 11:04:12 2001
+@@ -0,0 +1 @@
++#define VERSION "2.37.6 (21 July 2001)"
+diff -ruN pnmtopng-2.37.5/version.h pnmtopng-2.37.6/version.h
+--- pnmtopng-2.37.5/version.h	Tue Oct 24 07:07:09 2000
++++ pnmtopng-2.37.6/version.h	Wed Dec 31 16:00:00 1969
+@@ -1 +0,0 @@
+-#define VERSION "2.37.5 (24 October 2000)"
+diff -ruN pnmtopng-2.37.5/README pnmtopng-2.37.6/README
+--- pnmtopng-2.37.5/README	Tue Oct 24 07:32:07 2000
++++ pnmtopng-2.37.6/README	Sat Jul 21 11:03:09 2001
+@@ -1,5 +1,5 @@
+ ** PNMTOPNG / PNGTOPNM
+-** version 2.37.5 - 24 October 2000
++** version 2.37.6 - 21 July 2001
+ 
+ [This is a semi-official bug-fix and enhancement release; I sort of took over
+  maintenance of this package while Willem was on an extended bike trip, and
+@@ -14,7 +14,8 @@
+  analysis and fix by Rafal Rzeczkowski), and it supports the new/upcoming
+  pbmplus release.  Version 2.37.5 fixes a bug in -transparent handling (pnmtopng
+  no longer chooses an approximate color if the specified one isn't present) and
+- quiets a gcc warning in the non-16-bit version.
++ quiets a gcc warning in the non-16-bit version.  Version 2.37.6 fixes a bug
++ in -background handling for low-bit-depth grayscale images.
+  --Greg Roelofs]
+ 
+ The utilities pnmtopng and pngtopnm are based on other pbm tools and require
+@@ -27,10 +28,12 @@
+ 	ftp://ftp.x.org/contrib/utilities/netpbm-1mar1994*
+ or see
+ 	http://www.libpng.org/pub/png/apps/pnmtopng.html
++	http://www.libpng.org/pub/png/libpng.html
++	http://www.zlib.org/
+ 	http://netpbm.sourceforge.net/
+-	http://www.acme.com/software/pbmplus/		[update coming soon?]
++	http://www.acme.com/software/pbmplus/		[update coming someday?]
+ 
+-To compile and install a makefile is provided. Do check the directories
++To compile and install, a makefile is provided. Do check the directories
+ where you have put the required libraries. Then either accommodate the 
+ makefile or make links from generic names (e.g., zlib) to version-specific
+ directories (e.g., zlib-1.1.3), which is the recommended way.
+diff -ruN pnmtopng-2.37.5/Makefile.NeXT pnmtopng-2.37.6/Makefile.NeXT
+--- pnmtopng-2.37.5/Makefile.NeXT	Fri Dec  3 20:55:54 1999
++++ pnmtopng-2.37.6/Makefile.NeXT	Sat Jul 21 11:05:13 2001
+@@ -50,13 +50,13 @@
+ 
+ all: pnmtopng pngtopnm
+ 
+-pnmtopng.o: pnmtopng.c version.h
++pnmtopng.o: pnmtopng.c pnmtopng_version.h
+ 	$(CC) -c $(CCFLAGS) pnmtopng.c
+ 
+ pnmtopng: pnmtopng.o
+ 	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+ 
+-pngtopnm.o: pngtopnm.c version.h
++pngtopnm.o: pngtopnm.c pnmtopng_version.h
+ 	$(CC) -c $(CCFLAGS) pngtopnm.c
+ 
+ pngtopnm: pngtopnm.o
+diff -ruN pnmtopng-2.37.5/Makefile.gcc pnmtopng-2.37.6/Makefile.gcc
+--- pnmtopng-2.37.5/Makefile.gcc	Sun Dec  5 21:21:31 1999
++++ pnmtopng-2.37.6/Makefile.gcc	Sat Jul 21 11:05:06 2001
+@@ -17,13 +17,17 @@
+ 
+ #PNGDIR = ../libgr2/png
+ PNGDIR = ../libpng
++#PNGDIR = /usr/local/lib
+ PNGINC = -I$(PNGDIR)
++#PNGINC = -I/usr/local/include
+ PNGLIB = -L$(PNGDIR) -lpng
+ PNGLIB2 = $(PNGDIR)/libpng.a
+ 
+-#PNGDIR = ../libgr2/zlib
++#ZDIR = ../libgr2/zlib
+ ZDIR = ../zlib
++#ZDIR = /usr/local/lib
+ ZINC = -I$(ZDIR)
++#ZINC = -I/usr/local/include
+ ZLIB = -L$(ZDIR) -lz
+ ZLIB2 = $(ZDIR)/libz.a
+ 
+@@ -37,7 +41,7 @@
+ 	  $(PBMDIR)/pgm/libpgm.a $(PBMDIR)/pbm/libpbm.a
+ 
+ ## # GRR 19991205:  use this section instead for the new/coming pbmplus release
+-## PBMDIR = ../pbmplus-19991128
++## PBMDIR = ../pbmplus-19991128-glibc
+ ## PBMINC = -I$(PBMDIR)/inc
+ ## PBMLIB = -L$(PBMDIR)/libpnm -lpnm
+ ## PBMLIB2 = $(PBMDIR)/libpnm/libpnm.a
+@@ -63,8 +67,8 @@
+ 
+ all: $(EXES)
+ 
+-pnmtopng.o:	pnmtopng.c version.h
+-pngtopnm.o:	pngtopnm.c version.h
++pnmtopng.o:	pnmtopng.c pnmtopng_version.h
++pngtopnm.o:	pngtopnm.c pnmtopng_version.h
+ 
+ pnmtopng: pnmtopng.o
+ 	$(CC) -o $@ pnmtopng.o $(LDFLAGS)
+diff -ruN pnmtopng-2.37.5/Makefile.std pnmtopng-2.37.6/Makefile.std
+--- pnmtopng-2.37.5/Makefile.std	Fri Dec  3 20:58:40 1999
++++ pnmtopng-2.37.6/Makefile.std	Sat Jul 21 11:05:23 2001
+@@ -47,13 +47,13 @@
+ 
+ all: pnmtopng pngtopnm
+ 
+-pnmtopng.o: pnmtopng.c version.h
++pnmtopng.o: pnmtopng.c pnmtopng_version.h
+ 	$(CC) -c $(CCFLAGS) pnmtopng.c
+ 
+ pnmtopng: pnmtopng.o
+ 	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+ 
+-pngtopnm.o: pngtopnm.c version.h
++pngtopnm.o: pngtopnm.c pnmtopng_version.h
+ 	$(CC) -c $(CCFLAGS) pngtopnm.c
+ 
+ pngtopnm: pngtopnm.o
+diff -ruN pnmtopng-2.37.5/pngtopnm.c pnmtopng-2.37.6/pngtopnm.c
+--- pnmtopng-2.37.5/pngtopnm.c	Sun Dec  5 18:51:25 1999
++++ pnmtopng-2.37.6/pngtopnm.c	Sat Jul 21 10:50:40 2001
+@@ -4,6 +4,7 @@
+ **
+ ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+ **                        and Willem van Schaik <willem@schaik.com>
++** Copyright (C) 1999,2001 by Greg Roelofs <newt@pobox.com>
+ **
+ ** Permission to use, copy, modify, and distribute this software and its
+ ** documentation for any purpose and without fee is hereby granted, provided
+@@ -16,6 +17,8 @@
+ ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+ */
+ 
++/* GRR 20010721:  renamed version.h to less generic pnmtopng_version.h */
++
+ /* GRR 19991203:  moved VERSION to new version.h header file */
+ 
+ /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+@@ -27,9 +30,9 @@
+  *  compiled with one size in libpng and another size here).  */
+ 
+ #include <math.h>
+-#include "pnm.h"
+-#include "png.h"	/* includes zlib.h and setjmp.h */
+-#include "version.h"	/* VERSION macro */
++#include "png.h"		/* includes zlib.h and setjmp.h */
++#include "pnmtopng_version.h"	/* VERSION macro */
++#include <pnm.h>
+ 
+ typedef struct _jmpbuf_wrapper {
+   jmp_buf jmpbuf;
+diff -ruN pnmtopng-2.37.5/pnmtopng.c pnmtopng-2.37.6/pnmtopng.c
+--- pnmtopng-2.37.5/pnmtopng.c	Tue Oct 24 07:06:55 2000
++++ pnmtopng-2.37.6/pnmtopng.c	Sat Jul 21 10:58:55 2001
+@@ -4,10 +4,10 @@
+ **
+ ** derived from pnmtorast.c (c) 1990,1991 by Jef Poskanzer and some
+ ** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
+-** thanks to Greg Roelofs <newt@pobox.com> for contributions and bug-fixes
+ **
+ ** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+ **                        and Willem van Schaik <willem@schaik.com>
++** Copyright (C) 1998-2001 by Greg Roelofs <newt@pobox.com>
+ **
+ ** Permission to use, copy, modify, and distribute this software and its
+ ** documentation for any purpose and without fee is hereby granted, provided
+@@ -17,19 +17,25 @@
+ ** implied warranty.
+ */
+ 
++/* GRR 20010721:  fixed bug reported by Werner Lemberg <wl@gnu.org>:
++ *  bKGD value not scaled properly in sub-8-bit grayscale images (should
++ *  be scaled identically to tRNS value).  Also renamed version.h to
++ *  less generic pnmtopng_version.h and replaced one last (deprecated)
++ *  png_write_destroy() call. */
++
+ /* GRR 20000930:  fixed bug reported by Steven Grady <grady@xcf.berkeley.edu>:
+  *  if -transparent option given but exact color does not exist (e.g., when
+  *  doing batch conversion of a web site), pnmtopng would pick an approximate
+- *  color instead of ignoring the transparency.  Also added 2 (== warning)
+- *  return code for such cases.  (1 already used by pm_error().) */
++ *  color instead of ignoring the transparency.  Also added return code 2
++ *  (== warning) for such cases.  (1 already used by pm_error().) */
+ 
+ /* GRR 20000315:  ifdef'd out a never-reached (for non-PGM_BIGGRAYS) case
+  *  that causes a gcc warning. */
+ 
+ /* GRR 19991203:  incorporated fix by Rafal Rzeczkowski <rzeczkrg@mcmaster.ca>:
+- *  gray images with exactly 16 shades were being to 8-bit grayscale rather
+- *  than 4-bit palette due to misuse of the pm_maxvaltobits() function.  Also
+- *  moved VERSION to new version.h header file. */
++ *  gray images with exactly 16 shades were being promoted to 8-bit grayscale
++ *  rather than 4-bit palette due to misuse of the pm_maxvaltobits() function.
++ *  Also moved VERSION to new version.h header file. */
+ 
+ /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+  *  blocks and added png_destroy_write_struct() and pm_close(ifp) in each
+@@ -51,21 +57,17 @@
+  *    than the scaled colors.  What appears in the PLTE chunk is
+  *    0 0 0, 12 12 12, and 15 15 15, which of course results in a
+  *    very dark image.
+- *
+- *  (temporarily ifdef'd for easier inspection and before/after testing)
+  */
+-#define GRR_GRAY_PALETTE_FIX
+ 
+ #ifndef PNMTOPNG_WARNING_LEVEL
+ #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
+ #endif                               /*  2 for warnings (1 == error) */
+ 
+-#include <string.h>	/* strcat() */
+-#include "pnm.h"
+-#include "png.h"	/* includes zlib.h and setjmp.h */
+-#include "version.h"	/* VERSION macro */
+-
+-#include "ppmcmap.h"	/* NOT installed by default with netpbm */
++#include <string.h>		/* strcat() */
++#include <png.h>		/* includes zlib.h and setjmp.h */
++#include "pnmtopng_version.h"	/* VERSION macro */
++#include <pnm.h>
++#include <ppmcmap.h>		/* NOT installed by default with netpbm */
+ 
+ typedef struct _jmpbuf_wrapper {
+   jmp_buf jmpbuf;
+@@ -607,11 +609,10 @@
+           for (x = 0 ; x < cols ; x++) {
+             PNM_ASSIGN1 (xels[y][x], PNM_GET1 (xels[y][x])&0xf);
+           }
+-
+-        if (transparent > 0) {
+-          PNM_ASSIGN1 (transcolor, PNM_GET1 (transcolor)&0xf);
+-        }
+-
++        if (transparent > 0)
++          PNM_ASSIGN1 (transcolor, PNM_GET1 (transcolor) & 0xf);
++        if (background > 0)
++          PNM_ASSIGN1 (backcolor, PNM_GET1 (backcolor) & 0xf);
+         maxval = 15;
+         if (verbose)
+           pm_message ("scaling to 4-bit (grayscale superfluous data)");
+@@ -631,9 +632,10 @@
+           for (x = 0 ; x < cols ; x++) {
+             PNM_ASSIGN1 (xels[y][x], PNM_GET1 (xels[y][x]) & 3);
+           }
+-        if (transparent > 0) {
++        if (transparent > 0)
+           PNM_ASSIGN1 (transcolor, PNM_GET1 (transcolor) & 3);
+-        }
++        if (background > 0)
++          PNM_ASSIGN1 (backcolor, PNM_GET1 (backcolor) & 3);
+         maxval = 3;
+         if (verbose)
+           pm_message ("scaling to 2-bit (grayscale superfluous data)");
+@@ -653,9 +655,10 @@
+           for (x = 0 ; x < cols ; x++) {
+             PNM_ASSIGN1 (xels[y][x], PNM_GET1 (xels[y][x])&1);
+           }
+-        if (transparent > 0) {
++        if (transparent > 0)
+           PNM_ASSIGN1 (transcolor, PNM_GET1 (transcolor) & 1);
+-        }
++        if (background > 0)
++          PNM_ASSIGN1 (backcolor, PNM_GET1 (backcolor) & 1);
+         maxval = 1;
+         if (verbose)
+           pm_message ("scaling to 1-bit (grayscale superfluous data)");
+@@ -693,7 +696,7 @@
+     if (verbose) {
+       pm_message ("%d colors found", colors);
+     }
+-    /* RR:  note that if colors == 16, maxval == 15 (i.e., range == 0-15) */
++    /* GRR:  note that if colors == 16, maxval == 15 (i.e., range == 0-15) */
+     if ((chv == (colorhist_vector) NULL) ||    /* GRR:      v-- was `=' here */
+         (pnm_type == PGM_TYPE && pm_maxvaltobits(colors-1) > 
+                                 (pm_maxvaltobits(maxval) / 2)) ||
+@@ -704,7 +707,7 @@
+       }      
+     }
+ 
+-    if (chv != (colorhist_vector) NULL) {
++    if (chv != (colorhist_vector) NULL) {  /* palette image not yet ruled out */
+ 
+       if (alpha) {
+         /* now check if there are different alpha values for the same color
+@@ -744,7 +747,7 @@
+             alphas_first_index[colors]);
+         if (alphas_first_index[colors] > MAXCOLORS) {
+           ppm_freecolorhist (chv);
+-          chv = NULL;
++          chv = NULL;   /* NOT a palette image */
+           if (verbose)
+             pm_message (
+               "too many color/transparency pairs, writing a non-mapped file");
+@@ -752,6 +755,7 @@
+       } /* if alpha */
+ 
+       /* add possible background color to palette */
++      /* GRR:  BUG? this doesn't check whether chv is NULL (previous block): */
+       if (background > -1) {
+         cht = ppm_colorhisttocolorhash (chv, colors);
+         background = ppm_lookupcolor (cht, &backcolor);
+@@ -781,7 +785,7 @@
+ 
+     }
+   } else {
+-    chv = NULL;
++    chv = NULL;   /* NOT a palette image */
+   }
+ 
+   if (chv) {
+@@ -790,7 +794,6 @@
+     else
+       palette_size = colors;
+ 
+-#ifdef GRR_GRAY_PALETTE_FIX
+     if (maxval < 255) {
+       if (verbose)
+         pm_message ("rescaling palette values to 8-bit");
+@@ -806,7 +809,6 @@
+         }
+       maxval = 255;  /* necessary for transparent case, at least */
+     }
+-#endif
+ 
+     if (palette_size <= 2)
+       depth = 1;
+@@ -864,10 +866,7 @@
+     pm_error ("setjmp returns error condition (2)");
+   }
+ 
+-#ifdef OLDPNG
+-  png_write_init (png_ptr);
+-  png_info_init (info_ptr);
+-#endif
++  /* GRR:  all of this needs to be rewritten to avoid direct struct access */
+   png_init_io (png_ptr, stdout);
+   info_ptr->width = cols;
+   info_ptr->height = rows;
+@@ -1003,7 +1002,7 @@
+     }
+     ppm_freecolorhist (chv);
+ 
+-  } else /* color_type != PNG_COLOR_TYPE_PALETTE */
++  } else /* color_type != PNG_COLOR_TYPE_PALETTE */ {
+     if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY) {
+       if (transparent > 0) {
+         info_ptr->valid |= PNG_INFO_tRNS;
+@@ -1024,6 +1023,7 @@
+         pm_error (" (can't happen) transparency AND alpha");
+       }
+     }
++  }
+ 
+   /* bKGD chunk */
+   if (background > -1) {
+@@ -1033,15 +1033,14 @@
+         info_ptr->background.index = mapping[alphas_first_index[background]];
+       else
+         info_ptr->background.index = background;
+-    } else
+-    if (info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
+-        info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
++    } else if (info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
++               info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
++    {
+       info_ptr->background.red = PPM_GETR (backcolor);
+       info_ptr->background.green = PPM_GETG (backcolor);
+       info_ptr->background.blue = PPM_GETB (backcolor);
+-    } else
+-    if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
+-        info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
++    } else if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
++               info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+       info_ptr->background.gray = PNM_GET1 (backcolor);
+     }
+   }
+@@ -1171,12 +1170,9 @@
+     }
+   }
+   png_write_end (png_ptr, info_ptr);
+-  png_write_destroy (png_ptr);
+-  /* flush first because free(png_ptr) can segfault due to jmpbuf problems
+-     in png_write_destroy */
++  /* flush first in case freeing png_ptr segfaults due to jmpbuf problems */
+   fflush (stdout);
+-  free (png_ptr);
+-  free (info_ptr);
++  png_destroy_write_struct(&png_ptr, &info_ptr);
+   for (i = 0 ; i < num_alphas_of_color ; i++)
+     free(alphas_of_color[i]);
+ 

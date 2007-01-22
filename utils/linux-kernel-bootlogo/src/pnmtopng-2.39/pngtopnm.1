@@ -1,0 +1,109 @@
+.TH pngtopnm 1 "12 November 2005"
+.IX pngtopnm
+.SH NAME
+pngtopnm - convert a Portable Network Graphics file into a portable anymap
+.SH SYNOPSIS
+.B pngtopnm
+.RB [-verbose]
+[-alpha | -mix]
+[-background color]
+.br
+[-gamma value]
+[-text file]
+[-time]
+.RI [ pngfile ]
+.SH DESCRIPTION
+Reads a Portable Network Graphics as input.
+.IX png
+Produces a portable anymap as output.
+The type of the output file depends on the input file - if it's
+black & white, a
+.I pbm
+file is written, else if it's grayscale a
+.I pgm
+file, else a
+.I ppm
+file.
+.SH OPTIONS
+.TP
+.B -verbose
+Display the format of the input file and the type of the output file. If
+the chunks are part of the
+.I png-file,
+the alpha, transparency and gamma-values will be indicated.
+.TP
+.B -alpha
+Output the alpha channel or transparency mask of the image. The result is either a
+.I pbm
+file or
+.I pgm
+file, depending on whether different levels of transparency appear.
+.TP
+.B -mix
+Compose the image with the transparency or alpha mask against a the
+background. When a background chunk is available that color is taken,
+else black will do.
+.TP
+.B -background color
+If no background color chunck is present in the 
+.I png-file,
+or when another color is required this parameter can be used to set the 
+background color of images. This is especially useful for alpha-channel
+images or those with transparency chunks. The format, to specify the color in, 
+is either (in the case of orange) "1.0,0.5,0.0", where the values are floats 
+between zero and one, or with the syntax "#RGB", "#RRGGBB" or "#RRRRGGGGBBBB" 
+where R, G and B are hexa-decimal numbers.
+.TP
+.B -gamma value
+Converts the image to a new display-gamma value. When a gAMA chunk is present
+in the
+.I png-file,
+the image-gamma value will be used. When not, the image-gamma is considered 
+to be 1.0. Based on the image-gamma and the display-gamma given with this
+option the colors written to the
+.I pnm-file
+will be adjusted. 
+.br
+Because the gamma's of uncompensated monitors are around 2.6, which results 
+in an image-gamma of 0.45, some typical situations are: 
+when the image-gamma is 0.45 (use -verbose to check) and the picture is too 
+light, your system is gamma-corrected, so convert with "-gamma 1.0". 
+When no gAMA chunk is present or the image-gamma is 1.0, use 2.2 to make the 
+picture lighter and 0.45 to make the picture darker.
+.TP
+.B -text file
+Writes the tEXt and zTXt chunks to a file, in a format as described in the
+.I pnmtopng
+man-page.
+.TP
+.B -time
+Prints the tIME chunk to stderr.
+.PP
+All flags can be abbreviated to their shortest unique prefix.
+.SH "SEE ALSO"
+pnmtopng(1), ptot(1), pnmgamma(1), pnm(5)
+.SH NOTE
+Instead of pngtopnm|pnmtoxxx, a specific converter should be used, if
+available. For example,
+.I ptot
+(PNG to TIFF conversion), etc.
+.SH BUGS
+There could be an option to read the comment text from pnm comments instead
+of a separate file.
+.PP
+The program could be much faster, with a bit of code optimizing.  See also
+the forked version distributed with the (new) NetPBM suite.
+.SH AUTHORS
+Copyright (C) 1995-1998 by Alexander Lehmann
+.br
+                        and Willem van Schaik.
+.br
+Copyright (C) 1999-2005 by Greg Roelofs.
+.\" Permission to use, copy, modify, and distribute this software and its
+.\" documentation for any purpose and without fee is hereby granted, provided
+.\" that the above copyright notice appear in all copies and that both that
+.\" copyright notice and this permission notice appear in supporting
+.\" documentation.  This software is provided "as is" without express or
+.\" implied warranty.
+.\"
+.\" This man-page was derived from rasttopnm.1 by Jef Poskanzer

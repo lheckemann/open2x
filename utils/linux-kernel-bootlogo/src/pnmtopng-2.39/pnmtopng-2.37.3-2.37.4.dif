@@ -1,0 +1,668 @@
+diff -c pnmtopng-2.37.3/README pnmtopng-2.37.4/README
+*** pnmtopng-2.37.3/README	Thu Aug  5 18:35:41 1999
+--- pnmtopng-2.37.4/README	Sun Dec  5 21:25:55 1999
+***************
+*** 1,5 ****
+  ** PNMTOPNG / PNGTOPNM
+! ** version 2.37.3 - 13 July 1999
+  
+  [This is a semi-official bug-fix and enhancement release; I sort of took over
+   maintenance of this package while Willem was on an extended bike trip, and
+--- 1,5 ----
+  ** PNMTOPNG / PNGTOPNM
+! ** version 2.37.4 - 5 December 1999
+  
+  [This is a semi-official bug-fix and enhancement release; I sort of took over
+   maintenance of this package while Willem was on an extended bike trip, and
+***************
+*** 9,15 ****
+   2.37.2; under Solaris, they resulted in stack corruption even when there was
+   no error in the image files or libraries.  Version 2.37.3 fixes a minor bug
+   w.r.t. error exits and generally does cleaner error exits (close files, etc.)
+!  --Greg Roelofs]
+  
+  The utilities pnmtopng and pngtopnm are based on other pbm tools and require
+  the libraries included in the pbmplus/netpbm package. Also required are the
+--- 9,18 ----
+   2.37.2; under Solaris, they resulted in stack corruption even when there was
+   no error in the image files or libraries.  Version 2.37.3 fixes a minor bug
+   w.r.t. error exits and generally does cleaner error exits (close files, etc.)
+!  Version 2.37.4 fixes a bug that caused 16-shade grayscale images to be written
+!  as 8-bit grayscale instead of (smaller) 4-bit colormapped images (bug report,
+!  analysis and fix by Rafal Rzeczkowski), and it supports the new/upcoming
+!  pbmplus release.  --Greg Roelofs]
+  
+  The utilities pnmtopng and pngtopnm are based on other pbm tools and require
+  the libraries included in the pbmplus/netpbm package. Also required are the
+***************
+*** 21,26 ****
+--- 24,30 ----
+  	ftp://ftp.x.org/contrib/utilities/netpbm-1mar1994*
+  or see
+  	http://www.cdrom.com/pub/png/pngcode.html
++ 	http://www.acme.com/software/pbmplus/		[update coming soon!]
+  
+  To compile and install a makefile is provided. Do check the directories
+  where you have put the required libraries. Then either accommodate the 
+***************
+*** 38,43 ****
+  	http://www.cdrom.com/pub/png/pngs-img.html
+  
+  ------
+! Alexander Lehmann <alex@hal.rhein-main.de>
+  Willem van Schaik <willem@schaik.com>
+  Greg Roelofs <newt@pobox.com>
+--- 42,47 ----
+  	http://www.cdrom.com/pub/png/pngs-img.html
+  
+  ------
+! Alexander Lehmann <lehmann@usa.net>
+  Willem van Schaik <willem@schaik.com>
+  Greg Roelofs <newt@pobox.com>
+diff -c pnmtopng-2.37.3/pngtopnm.c pnmtopng-2.37.4/pngtopnm.c
+*** pnmtopng-2.37.3/pngtopnm.c	Tue Jul 13 15:22:59 1999
+--- pnmtopng-2.37.4/pngtopnm.c	Sun Dec  5 18:51:25 1999
+***************
+*** 16,22 ****
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! #define VERSION "2.37.3 (13 July 1999)"
+  
+  /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+   *  blocks and added "pm_close(ifp)" in each.  */
+--- 16,22 ----
+  ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+  */
+  
+! /* GRR 19991203:  moved VERSION to new version.h header file */
+  
+  /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+   *  blocks and added "pm_close(ifp)" in each.  */
+***************
+*** 29,39 ****
+--- 29,48 ----
+  #include <math.h>
+  #include "pnm.h"
+  #include "png.h"	/* includes zlib.h and setjmp.h */
++ #include "version.h"	/* VERSION macro */
+  
+  typedef struct _jmpbuf_wrapper {
+    jmp_buf jmpbuf;
+  } jmpbuf_wrapper;
+  
++ /* GRR 19991205:  this is used as a test for pre-1999 versions of netpbm and
++  *   pbmplus vs. 1999 or later (in which pm_close was split into two)
++  */
++ #ifdef PBMPLUS_RAWBITS
++ #  define pm_closer pm_close
++ #  define pm_closew pm_close
++ #endif
++ 
+  #ifndef TRUE
+  #  define TRUE 1
+  #endif
+***************
+*** 264,294 ****
+    type_string = alpha_string = "";
+  
+    if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE) {
+!     pm_close (ifp);
+      pm_error ("input file empty or too short");
+    }
+    if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0) {
+!     pm_close (ifp);
+      pm_error ("input file not a PNG file");
+    }
+  
+    png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
+      &pngtopnm_jmpbuf_struct, pngtopnm_error_handler, NULL);
+    if (png_ptr == NULL) {
+!     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+!     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pngtopnm_jmpbuf_struct.jmpbuf)) {
+      png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_close (ifp);
+      pm_error ("setjmp returns error condition");
+    }
+  
+--- 273,303 ----
+    type_string = alpha_string = "";
+  
+    if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE) {
+!     pm_closer (ifp);
+      pm_error ("input file empty or too short");
+    }
+    if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0) {
+!     pm_closer (ifp);
+      pm_error ("input file not a PNG file");
+    }
+  
+    png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
+      &pngtopnm_jmpbuf_struct, pngtopnm_error_handler, NULL);
+    if (png_ptr == NULL) {
+!     pm_closer (ifp);
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+!     pm_closer (ifp);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pngtopnm_jmpbuf_struct.jmpbuf)) {
+      png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_closer (ifp);
+      pm_error ("setjmp returns error condition");
+    }
+  
+***************
+*** 344,350 ****
+    png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
+    if (png_image == NULL) {
+      png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_close (ifp);
+      pm_error ("couldn't allocate space for image");
+    }
+  
+--- 353,359 ----
+    png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
+    if (png_image == NULL) {
+      png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_closer (ifp);
+      pm_error ("couldn't allocate space for image");
+    }
+  
+***************
+*** 369,375 ****
+          free (png_image[x]);
+        free (png_image);
+        png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!       pm_close (ifp);
+        pm_error ("couldn't allocate space for image");
+      }
+    }
+--- 378,384 ----
+          free (png_image[x]);
+        free (png_image);
+        png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!       pm_closer (ifp);
+        pm_error ("couldn't allocate space for image");
+      }
+    }
+***************
+*** 560,566 ****
+        free (png_image[y]);
+      free (png_image);
+      png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_close (ifp);
+      pm_error ("couldn't allocate space for image");
+    }
+  
+--- 569,575 ----
+        free (png_image[y]);
+      free (png_image);
+      png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!     pm_closer (ifp);
+      pm_error ("couldn't allocate space for image");
+    }
+  
+***************
+*** 674,680 ****
+              free (png_image[i]);
+            free (png_image);
+            png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!           pm_close (ifp);
+            pm_error ("unknown PNG color type");
+        }
+        pnm_pixel++;
+--- 683,689 ----
+              free (png_image[i]);
+            free (png_image);
+            png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+!           pm_closer (ifp);
+            pm_error ("unknown PNG color type");
+        }
+        pnm_pixel++;
+***************
+*** 764,772 ****
+    convertpng (ifp, tfp);
+  
+    if (text)
+!     pm_close (tfp);
+  
+!   pm_close (ifp);
+!   pm_close (stdout);
+    exit (0);
+  }
+--- 773,781 ----
+    convertpng (ifp, tfp);
+  
+    if (text)
+!     pm_closew (tfp);
+  
+!   pm_closer (ifp);
+!   pm_closew (stdout);
+    exit (0);
+  }
+diff -c pnmtopng-2.37.3/pnmtopng.c pnmtopng-2.37.4/pnmtopng.c
+*** pnmtopng-2.37.3/pnmtopng.c	Tue Jul 13 15:49:21 1999
+--- pnmtopng-2.37.4/pnmtopng.c	Sun Dec  5 18:51:35 1999
+***************
+*** 17,23 ****
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.37.3 (13 July 1999)"
+  
+  /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+   *  blocks and added png_destroy_write_struct() and pm_close(ifp) in each
+--- 17,26 ----
+  ** implied warranty.
+  */
+  
+! /* GRR 19991203:  incorporated fix by Rafal Rzeczkowski <rzeczkrg@mcmaster.ca>:
+!  *  gray images with exactly 16 shades were being to 8-bit grayscale rather
+!  *  than 4-bit palette due to misuse of the pm_maxvaltobits() function.  Also
+!  *  moved VERSION to new version.h header file. */
+  
+  /* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
+   *  blocks and added png_destroy_write_struct() and pm_close(ifp) in each
+***************
+*** 46,51 ****
+--- 49,55 ----
+  
+  #include "pnm.h"
+  #include "png.h"	/* includes zlib.h and setjmp.h */
++ #include "version.h"	/* VERSION macro */
+  
+  #include "ppmcmap.h"
+  
+***************
+*** 53,58 ****
+--- 57,70 ----
+    jmp_buf jmpbuf;
+  } jmpbuf_wrapper;
+  
++ /* GRR 19991205:  this is used as a test for pre-1999 versions of netpbm and
++  *   pbmplus vs. 1999 or later (in which pm_close was split into two) 
++  */
++ #ifdef PBMPLUS_RAWBITS
++ #  define pm_closer pm_close
++ #  define pm_closew pm_close
++ #endif
++ 
+  #ifndef TRUE
+  #  define TRUE 1
+  #endif
+***************
+*** 311,330 ****
+    png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
+      &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+    if (png_ptr == NULL) {
+!     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
+!     pm_close (ifp);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+      png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_close (ifp);
+      pm_error ("setjmp returns error condition (1)");
+    }
+  
+--- 323,342 ----
+    png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
+      &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+    if (png_ptr == NULL) {
+!     pm_closer (ifp);
+      pm_error ("cannot allocate LIBPNG structure");
+    }
+  
+    info_ptr = png_create_info_struct (png_ptr);
+    if (info_ptr == NULL) {
+      png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
+!     pm_closer (ifp);
+      pm_error ("cannot allocate LIBPNG structures");
+    }
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+      png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_closer (ifp);
+      pm_error ("setjmp returns error condition (1)");
+    }
+  
+***************
+*** 352,358 ****
+      alpha_mask = pgm_readpgm (afp, &alpha_cols, &alpha_rows, &alpha_maxval);
+      if (alpha_cols != cols || alpha_rows != rows) {
+        png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_close (ifp);
+        pm_error ("dimensions for image and alpha mask do not agree");
+      }
+      /* check if the alpha mask can be represented by a single transparency
+--- 364,370 ----
+      alpha_mask = pgm_readpgm (afp, &alpha_cols, &alpha_rows, &alpha_maxval);
+      if (alpha_cols != cols || alpha_rows != rows) {
+        png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_closer (ifp);
+        pm_error ("dimensions for image and alpha mask do not agree");
+      }
+      /* check if the alpha mask can be represented by a single transparency
+***************
+*** 429,435 ****
+    if (pnm_type != PBM_TYPE || alpha) {
+      if (maxval > 65535 && !downscale) {
+        png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_close (ifp);
+        pm_error ("can only handle files up to 16-bit (use -downscale to override");
+      }
+  
+--- 441,447 ----
+    if (pnm_type != PBM_TYPE || alpha) {
+      if (maxval > 65535 && !downscale) {
+        png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_closer (ifp);
+        pm_error ("can only handle files up to 16-bit (use -downscale to override");
+      }
+  
+***************
+*** 642,648 ****
+         - for ppm files if we have <= 256 colors
+         - for alpha if we have <= 256 color/transparency pairs
+         - for pgm files (with or without alpha) if the number of bits needed for
+!          the gray-transparency pairs is smaller then the number of bits needed
+           for maxval
+       When maxval > 255, we never write a paletted image.
+    */
+--- 654,660 ----
+         - for ppm files if we have <= 256 colors
+         - for alpha if we have <= 256 color/transparency pairs
+         - for pgm files (with or without alpha) if the number of bits needed for
+!          the gray-transparency pairs is smaller than the number of bits needed
+           for maxval
+       When maxval > 255, we never write a paletted image.
+    */
+***************
+*** 665,672 ****
+      if (verbose) {
+        pm_message ("%d colors found", colors);
+      }
+!     if ((chv == (colorhist_vector) NULL) ||    /* GRR:    v--- was `=' here */
+!         (pnm_type == PGM_TYPE && pm_maxvaltobits(colors) > 
+                                  (pm_maxvaltobits(maxval) / 2)) ||
+          (pnm_type == PPM_TYPE && maxval > 255)) {
+        chv = NULL;
+--- 677,685 ----
+      if (verbose) {
+        pm_message ("%d colors found", colors);
+      }
+!     /* RR:  note that if colors == 16, maxval == 15 (i.e., range == 0-15) */
+!     if ((chv == (colorhist_vector) NULL) ||    /* GRR:      v-- was `=' here */
+!         (pnm_type == PGM_TYPE && pm_maxvaltobits(colors-1) > 
+                                  (pm_maxvaltobits(maxval) / 2)) ||
+          (pnm_type == PPM_TYPE && maxval > 255)) {
+        chv = NULL;
+***************
+*** 687,693 ****
+                == NULL)
+            {
+              png_destroy_write_struct (&png_ptr, &info_ptr);
+!             pm_close (ifp);
+              pm_error ("out of memory allocating alpha/palette entries");
+            }
+            alphas_of_color_cnt[i] = 0;
+--- 700,706 ----
+                == NULL)
+            {
+              png_destroy_write_struct (&png_ptr, &info_ptr);
+!             pm_closer (ifp);
+              pm_error ("out of memory allocating alpha/palette entries");
+            }
+            alphas_of_color_cnt[i] = 0;
+***************
+*** 802,808 ****
+        depth = 1;
+      else {
+        png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_close (ifp);
+        pm_error (" (can't happen) undefined maxval");
+      }
+  
+--- 815,821 ----
+        depth = 1;
+      else {
+        png_destroy_write_struct (&png_ptr, &info_ptr);
+!       pm_closer (ifp);
+        pm_error (" (can't happen) undefined maxval");
+      }
+  
+***************
+*** 830,836 ****
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+      png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_close (ifp);
+      pm_error ("setjmp returns error condition (2)");
+    }
+  
+--- 843,849 ----
+  
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+      png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_closer (ifp);
+      pm_error ("setjmp returns error condition (2)");
+    }
+  
+***************
+*** 927,933 ****
+        /* indices should have just crossed paths */
+        if (bot_idx != top_idx + 1) {
+          png_destroy_write_struct (&png_ptr, &info_ptr);
+!         pm_close (ifp);
+          pm_error ("internal inconsistency: remapped bot_idx = %d, top_idx = %d",
+            bot_idx, top_idx);
+        }
+--- 940,946 ----
+        /* indices should have just crossed paths */
+        if (bot_idx != top_idx + 1) {
+          png_destroy_write_struct (&png_ptr, &info_ptr);
+!         pm_closer (ifp);
+          pm_error ("internal inconsistency: remapped bot_idx = %d, top_idx = %d",
+            bot_idx, top_idx);
+        }
+***************
+*** 982,988 ****
+      } else {
+        if (transparent > 0) {
+          png_destroy_write_struct (&png_ptr, &info_ptr);
+!         pm_close (ifp);
+          pm_error (" (can't happen) transparency AND alpha");
+        }
+      }
+--- 995,1001 ----
+      } else {
+        if (transparent > 0) {
+          png_destroy_write_struct (&png_ptr, &info_ptr);
+!         pm_closer (ifp);
+          pm_error (" (can't happen) transparency AND alpha");
+        }
+      }
+***************
+*** 1080,1086 ****
+    if ((line = (png_byte *) malloc (cols*8)) == NULL)
+    {
+      png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_close (ifp);
+      pm_error ("out of memory allocating PNG row buffer");
+    }
+  
+--- 1093,1099 ----
+    if ((line = (png_byte *) malloc (cols*8)) == NULL)
+    {
+      png_destroy_write_struct (&png_ptr, &info_ptr);
+!     pm_closer (ifp);
+      pm_error ("out of memory allocating PNG row buffer");
+    }
+  
+***************
+*** 1120,1126 ****
+            *pp++ = PPM_GETB (p)&0xff;
+          } else {
+            png_destroy_write_struct (&png_ptr, &info_ptr);
+!           pm_close (ifp);
+            pm_error (" (can't happen) undefined color_type");
+          }
+          if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA) {
+--- 1133,1139 ----
+            *pp++ = PPM_GETB (p)&0xff;
+          } else {
+            png_destroy_write_struct (&png_ptr, &info_ptr);
+!           pm_closer (ifp);
+            pm_error (" (can't happen) undefined color_type");
+          }
+          if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA) {
+***************
+*** 1352,1363 ****
+    convertpnm (ifp, afp, tfp);
+  
+    if (alpha)
+!     pm_close (afp);
+    if ((text) || (ztxt))
+!     pm_close (tfp);
+  
+!   pm_close (ifp);
+!   pm_close (stdout);
+  
+    exit (0);
+  }
+--- 1365,1376 ----
+    convertpnm (ifp, afp, tfp);
+  
+    if (alpha)
+!     pm_closer (afp);
+    if ((text) || (ztxt))
+!     pm_closer (tfp);
+  
+!   pm_closer (ifp);
+!   pm_closew (stdout);
+  
+    exit (0);
+  }
+*** /dev/null	Sun Jul 17 16:46:18 1994
+--- version.h	Sun Dec  5 18:51:42 1999
+***************
+*** 0 ****
+--- 1 ----
++ #define VERSION "2.37.4 (5 December 1999)"
+diff -c pnmtopng-2.37.3/Makefile.NeXT pnmtopng-2.37.4/Makefile.NeXT
+*** pnmtopng-2.37.3/Makefile.NeXT	Sun Mar 29 06:49:22 1998
+--- pnmtopng-2.37.4/Makefile.NeXT	Fri Dec  3 20:55:54 1999
+***************
+*** 50,62 ****
+  
+  all: pnmtopng pngtopnm
+  
+! pnmtopng.o: pnmtopng.c
+  	$(CC) -c $(CCFLAGS) pnmtopng.c
+  
+  pnmtopng: pnmtopng.o
+  	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+  
+! pngtopnm.o: pngtopnm.c
+  	$(CC) -c $(CCFLAGS) pngtopnm.c
+  
+  pngtopnm: pngtopnm.o
+--- 50,62 ----
+  
+  all: pnmtopng pngtopnm
+  
+! pnmtopng.o: pnmtopng.c version.h
+  	$(CC) -c $(CCFLAGS) pnmtopng.c
+  
+  pnmtopng: pnmtopng.o
+  	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+  
+! pngtopnm.o: pngtopnm.c version.h
+  	$(CC) -c $(CCFLAGS) pngtopnm.c
+  
+  pngtopnm: pngtopnm.o
+diff -c pnmtopng-2.37.3/Makefile.gcc pnmtopng-2.37.4/Makefile.gcc
+*** pnmtopng-2.37.3/Makefile.gcc	Wed Mar 17 11:44:08 1999
+--- pnmtopng-2.37.4/Makefile.gcc	Sun Dec  5 21:21:31 1999
+***************
+*** 36,41 ****
+--- 36,47 ----
+  PBMLIB2 = $(PBMDIR)/pnm/libpnm.a $(PBMDIR)/ppm/libppm.a \
+  	  $(PBMDIR)/pgm/libpgm.a $(PBMDIR)/pbm/libpbm.a
+  
++ ## # GRR 19991205:  use this section instead for the new/coming pbmplus release
++ ## PBMDIR = ../pbmplus-19991128
++ ## PBMINC = -I$(PBMDIR)/inc
++ ## PBMLIB = -L$(PBMDIR)/libpnm -lpnm
++ ## PBMLIB2 = $(PBMDIR)/libpnm/libpnm.a
++ 
+  
+  # where "make install" puts pnmtopng and pngtopnm
+  
+***************
+*** 56,61 ****
+--- 62,70 ----
+  # dependency rules
+  
+  all: $(EXES)
++ 
++ pnmtopng.o:	pnmtopng.c version.h
++ pngtopnm.o:	pngtopnm.c version.h
+  
+  pnmtopng: pnmtopng.o
+  	$(CC) -o $@ pnmtopng.o $(LDFLAGS)
+diff -c pnmtopng-2.37.3/Makefile.std pnmtopng-2.37.4/Makefile.std
+*** pnmtopng-2.37.3/Makefile.std	Sun Mar 29 06:49:34 1998
+--- pnmtopng-2.37.4/Makefile.std	Fri Dec  3 20:58:40 1999
+***************
+*** 47,59 ****
+  
+  all: pnmtopng pngtopnm
+  
+! pnmtopng.o: pnmtopng.c
+  	$(CC) -c $(CCFLAGS) pnmtopng.c
+  
+  pnmtopng: pnmtopng.o
+  	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+  
+! pngtopnm.o: pngtopnm.c
+  	$(CC) -c $(CCFLAGS) pngtopnm.c
+  
+  pngtopnm: pngtopnm.o
+--- 47,59 ----
+  
+  all: pnmtopng pngtopnm
+  
+! pnmtopng.o: pnmtopng.c version.h
+  	$(CC) -c $(CCFLAGS) pnmtopng.c
+  
+  pnmtopng: pnmtopng.o
+  	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+  
+! pngtopnm.o: pngtopnm.c version.h
+  	$(CC) -c $(CCFLAGS) pngtopnm.c
+  
+  pngtopnm: pngtopnm.o

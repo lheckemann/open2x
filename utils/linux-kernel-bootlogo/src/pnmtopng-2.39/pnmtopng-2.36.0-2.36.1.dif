@@ -1,0 +1,856 @@
+This patch to pnmtopng 2.36 does the following:
+
+  pngtopnm.c:
+    - removes about three dozen carriage returns (^M, ASCII 13)
+
+  pnmtopng.c:
+    - fixes scaling bug
+    - fixes out-of-bounds background-color bug
+    - fixes memory leak
+    - adds palette-sorting capability so tRNS size is minimized
+    - adds warning about 16-bit rescaling when data sizes do not permit it
+    - fixes some spelling typos
+    - removes about three dozen carriage returns and a few spurious tabs
+    - modifies verbose image-type message for readability
+    - modifies version message
+
+Greg Roelofs, 15 March 1998
+
+
+diff -c stock/pngtopnm.c ./pngtopnm.c
+*** stock/pngtopnm.c	Thu Aug 14 09:51:01 1997
+--- ./pngtopnm.c	Sat Mar  7 12:56:44 1998
+***************
+*** 255,266 ****
+    }
+  
+    png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
+!   if (png_image == NULL) {
+      png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!     free (png_ptr);
+!     free (info_ptr);
+!     pm_error ("couldn't alloc space for image");
+!   }
+  
+    if (info_ptr->bit_depth == 16)
+      linesize = 2 * info_ptr->width;
+--- 255,266 ----
+    }
+  
+    png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
+!   if (png_image == NULL) {
+      png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!     free (png_ptr);
+!     free (info_ptr);
+!     pm_error ("couldn't alloc space for image");
+!   }
+  
+    if (info_ptr->bit_depth == 16)
+      linesize = 2 * info_ptr->width;
+***************
+*** 278,290 ****
+  
+    for (y = 0 ; y < info_ptr->height ; y++) {
+      png_image[y] = malloc (linesize);
+!     if (png_image[y] == NULL) {
+!       for (x = 0 ; x < y ; x++)
+!         free (png_image[x]);
+!       free (png_image);
+!       png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!       free (png_ptr);
+!       free (info_ptr);
+        pm_error ("couldn't alloc space for image");
+      }
+    }
+--- 278,290 ----
+  
+    for (y = 0 ; y < info_ptr->height ; y++) {
+      png_image[y] = malloc (linesize);
+!     if (png_image[y] == NULL) {
+!       for (x = 0 ; x < y ; x++)
+!         free (png_image[x]);
+!       free (png_image);
+!       png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!       free (png_ptr);
+!       free (info_ptr);
+        pm_error ("couldn't alloc space for image");
+      }
+    }
+***************
+*** 460,473 ****
+    }
+  
+    if ((row = pnm_allocrow (info_ptr->width)) == NULL) {
+!     for (y = 0 ; y < info_ptr->height ; y++)
+!       free (png_image[y]);
+!     free (png_image);
+!     png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!     free (png_ptr);
+!     free (info_ptr);
+!     pm_error ("couldn't alloc space for image");
+!   }
+  
+    if (alpha == alpha_only) {
+      if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
+--- 460,473 ----
+    }
+  
+    if ((row = pnm_allocrow (info_ptr->width)) == NULL) {
+!     for (y = 0 ; y < info_ptr->height ; y++)
+!       free (png_image[y]);
+!     free (png_image);
+!     png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!     free (png_ptr);
+!     free (info_ptr);
+!     pm_error ("couldn't alloc space for image");
+!   }
+  
+    if (alpha == alpha_only) {
+      if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
+***************
+*** 574,586 ****
+            break;
+  
+          default:
+!           pnm_freerow (row);
+!           for (i = 0 ; i < info_ptr->height ; i++)
+!             free (png_image[i]);
+!           free (png_image);
+!           png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!           free (png_ptr);
+!           free (info_ptr);
+            pm_error ("unknown PNG color type");
+        }
+        pnm_pixel++;
+--- 574,586 ----
+            break;
+  
+          default:
+!           pnm_freerow (row);
+!           for (i = 0 ; i < info_ptr->height ; i++)
+!             free (png_image[i]);
+!           free (png_image);
+!           png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+!           free (png_ptr);
+!           free (info_ptr);
+            pm_error ("unknown PNG color type");
+        }
+        pnm_pixel++;
+***************
+*** 588,598 ****
+      pnm_writepnmrow (stdout, row, info_ptr->width, maxval, pnm_type, FALSE);
+    }
+  
+!   fflush(stdout);
+!   pnm_freerow (row);
+!   for (y = 0 ; y < info_ptr->height ; y++)
+!     free (png_image[y]);
+!   free (png_image);
+    png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+  
+    free (png_ptr);
+--- 588,598 ----
+      pnm_writepnmrow (stdout, row, info_ptr->width, maxval, pnm_type, FALSE);
+    }
+  
+!   fflush(stdout);
+!   pnm_freerow (row);
+!   for (y = 0 ; y < info_ptr->height ; y++)
+!     free (png_image[y]);
+!   free (png_image);
+    png_read_destroy (png_ptr, info_ptr, (png_info *)0);
+  
+    free (png_ptr);
+***************
+*** 649,656 ****
+      if (pm_keymatch (argv[argn], "-time", 3)) {
+        mtime = TRUE;
+      } else {
+!       fprintf(stderr,"pngtopnm version %s, compiled with libpng version %s\n",
+!         VERSION, PNG_LIBPNG_VER_STRING);
+        pm_usage (usage);
+      }
+      argn++;
+--- 649,656 ----
+      if (pm_keymatch (argv[argn], "-time", 3)) {
+        mtime = TRUE;
+      } else {
+!       fprintf(stderr,"pngtopnm version %s, compiled with libpng version %s\n",
+!         VERSION, PNG_LIBPNG_VER_STRING);
+        pm_usage (usage);
+      }
+      argn++;
+***************
+*** 672,679 ****
+  
+    convertpng (ifp, tfp);
+  
+!   if (text)
+!     pm_close (tfp);
+  
+    pm_close (ifp);
+    pm_close (stdout);
+--- 672,679 ----
+  
+    convertpng (ifp, tfp);
+  
+!   if (text)
+!     pm_close (tfp);
+  
+    pm_close (ifp);
+    pm_close (stdout);
+diff -c stock/pnmtopng.c ./pnmtopng.c
+*** stock/pnmtopng.c	Thu Aug 14 09:50:55 1997
+--- ./pnmtopng.c	Sun Mar 15 12:00:15 1998
+***************
+*** 1,6 ****
+  /*
+  ** pnmtopng.c -
+! ** read a portable anymap and produce a Portable Networks Graphic file
+  **
+  ** derived from pnmtorast.c (c) 1990,1991 by Jef Poskanzer and some
+  ** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
+--- 1,6 ----
+  /*
+  ** pnmtopng.c -
+! ** read a portable anymap and produce a Portable Network Graphics file
+  **
+  ** derived from pnmtorast.c (c) 1990,1991 by Jef Poskanzer and some
+  ** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
+***************
+*** 18,24 ****
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.36"
+  
+  #include "pnm.h"
+  #include "png.h"
+--- 18,24 ----
+  ** implied warranty.
+  */
+  
+! #define VERSION "2.36.1 of 15 March 1998"
+  
+  #include "pnm.h"
+  #include "png.h"
+***************
+*** 187,193 ****
+    xel p;
+    int rows, cols, format, pnm_type;
+    xelval maxval;
+!   xelval maxmaxval = 255;
+    xelval scaleval;
+    xelval value;
+    pixel transcolor;
+--- 187,193 ----
+    xel p;
+    int rows, cols, format, pnm_type;
+    xelval maxval;
+!   xelval maxmaxval = 255;
+    xelval scaleval;
+    xelval value;
+    pixel transcolor;
+***************
+*** 212,224 ****
+--- 212,227 ----
+    int alpha_cols;
+    int alpha_sbitval;
+    int alpha_trans;
++   int num_alphas_of_color = 0;
+    gray *alphas_of_color[MAXCOLORS];
+    int alphas_of_color_cnt[MAXCOLORS];
+    int alphas_first_index[MAXCOLORS+1];
++   int mapping[MAXCOLORS];
+    int palette_size;
+    colorhist_vector chv;
+    colorhash_table cht;
+    int depth, colors;
++   int fulldepth;
+    int x, y;
+    int i, j;
+  
+***************
+*** 229,235 ****
+      pm_error ("Cannot allocate LIBPNG structures");
+  
+    xels = pnm_readpnm (ifp, &cols, &rows, &maxval, &format);
+!   pnm_type = PNM_FORMAT_TYPE (format);
+  
+    if (verbose) {
+      if (pnm_type == PBM_TYPE)    
+--- 232,238 ----
+      pm_error ("Cannot allocate LIBPNG structures");
+  
+    xels = pnm_readpnm (ifp, &cols, &rows, &maxval, &format);
+!   pnm_type = PNM_FORMAT_TYPE (format);
+  
+    if (verbose) {
+      if (pnm_type == PBM_TYPE)    
+***************
+*** 240,252 ****
+        pm_message ("reading a PPM file (maxval=%d)", maxval);
+    }
+  
+!   if (pnm_type == PGM_TYPE)
+!     maxmaxval = PGM_MAXMAXVAL;
+!   else if (pnm_type == PPM_TYPE)
+!     maxmaxval = PPM_MAXMAXVAL;
+! 
+!   if (transparent > 0)   /* -1 or 1 are the only possibilities so far */
+!     transcolor = ppm_parsecolor (transstring, maxmaxval);
+  
+    if (alpha) {
+      alpha_mask = pgm_readpgm (afp, &alpha_cols, &alpha_rows, &alpha_maxval);
+--- 243,255 ----
+        pm_message ("reading a PPM file (maxval=%d)", maxval);
+    }
+  
+!   if (pnm_type == PGM_TYPE)
+!     maxmaxval = PGM_MAXMAXVAL;
+!   else if (pnm_type == PPM_TYPE)
+!     maxmaxval = PPM_MAXMAXVAL;
+! 
+!   if (transparent > 0)   /* -1 or 1 are the only possibilities so far */
+!     transcolor = ppm_parsecolor (transstring, maxmaxval);
+  
+    if (alpha) {
+      alpha_mask = pgm_readpgm (afp, &alpha_cols, &alpha_rows, &alpha_maxval);
+***************
+*** 295,308 ****
+        }
+      if (alpha_trans && !force) {
+        if (verbose)
+! 	pm_message ("converting alpha mask to transparency index");
+        alpha = FALSE;
+      } else {
+        transparent = -1;
+      }
+    }
+  
+!   if (background > -1)
+      backcolor = ppm_parsecolor (backstring, maxmaxval);
+  
+    /* first of all, check if we have a grayscale image written as PPM */
+--- 298,312 ----
+        }
+      if (alpha_trans && !force) {
+        if (verbose)
+!         pm_message ("converting alpha mask to transparency index");
+        alpha = FALSE;
+      } else {
+        transparent = -1;
+      }
+    }
+  
+!   /* gcc 2.7.0 -fomit-frame-pointer causes stack corruption here */
+!   if (background > -1)  /* scale to maxval later: */
+      backcolor = ppm_parsecolor (backstring, maxmaxval);
+  
+    /* first of all, check if we have a grayscale image written as PPM */
+***************
+*** 345,360 ****
+            pm_message ("rescaling to 8-bit");
+          scaleval = 255;
+        } else {
+!         if (verbose)
+!           pm_message ("rescaling to 16-bit");
+!         scaleval = 65535;
+        }
+        for (y = 0 ; y < rows ; y++)
+          for (x = 0 ; x < cols ; x++) {
+!           xels[y][x] = p;
+            PPM_DEPTH (xels[y][x], p, maxval, scaleval);
+          }
+!       if (transparent == 2) { /* "1" case (-transparent) handled below */
+          PPM_DEPTH (transcolor, transcolor, maxval, scaleval);
+        }
+        maxval = scaleval;
+--- 349,372 ----
+            pm_message ("rescaling to 8-bit");
+          scaleval = 255;
+        } else {
+!         /* GRR BUG:  this will fail in most cases; xels aren't big enough--
+!          * should use some other data type for pixels and maxvals */
+!         if (sizeof(scaleval) < 2) {   /* unsigned char by default */
+!           pm_message ("cannot rescale to 16-bit; rescaling to 8-bit instead (maxval = %d)",
+!             maxval);
+!           scaleval = 255;
+!         } else {
+!           if (verbose)
+!             pm_message ("rescaling to 16-bit");
+!           scaleval = 65535;
+!         }
+        }
+        for (y = 0 ; y < rows ; y++)
+          for (x = 0 ; x < cols ; x++) {
+!           p = xels[y][x];
+            PPM_DEPTH (xels[y][x], p, maxval, scaleval);
+          }
+!       if (transparent == 2) {   /* "1" case (-transparent) handled below */
+          PPM_DEPTH (transcolor, transcolor, maxval, scaleval);
+        }
+        maxval = scaleval;
+***************
+*** 365,379 ****
+  
+    /* now do a real scaling (better than ppm_parsecolor()) */
+  
+!   if (maxval != 65535) {
+!     if (background > -1)
+!       PPM_DEPTH (backcolor, backcolor, maxmaxval, maxval);
+!     if (transparent == 1)   /* "2" case (-alpha) already done */
+!       PPM_DEPTH (transcolor, transcolor, maxmaxval, maxval);
+!   }
+! 
+!   /* check for 16-bit entries which are just scaled 8-bit entries, e.g.
+!      when converting a 8-bit palette TIFF to ppm */
+  
+    if (pnm_type != PBM_TYPE && maxval == 65535 && !force) {
+      mayscale = TRUE;
+--- 377,391 ----
+  
+    /* now do a real scaling (better than ppm_parsecolor()) */
+  
+!   if (maxval != 65535) {
+!     if (background > -1)
+!       PPM_DEPTH (backcolor, backcolor, maxmaxval, maxval);
+!     if (transparent == 1)   /* "2" case (-alpha) already done */
+!       PPM_DEPTH (transcolor, transcolor, maxmaxval, maxval);
+!   }
+! 
+!   /* check for 16-bit entries that are just scaled 8-bit entries, e.g.,
+!      when converting an 8-bit palette TIFF to PPM */
+  
+    if (pnm_type != PBM_TYPE && maxval == 65535 && !force) {
+      mayscale = TRUE;
+***************
+*** 515,520 ****
+--- 527,533 ----
+       we can write a palette file under following conditions:
+       - for pgm files if the number of gray-values is smaller then maxvalue / 2
+       - for alpha grayscale if number of gray/transparency pairs < maxvalue / 2
++          GRR:  why??
+       - for ppm files if we have <= 256 colors
+       - for alpha if we have <= 256 color/transparency pairs
+    */
+***************
+*** 524,531 ****
+    if (pnm_type == PGM_TYPE) {
+      for (y = 0 ; y < rows ; y++)
+        for (x = 0 ; x < cols ; x++) {
+! 	value = PNM_GET1 (xels[y][x]);
+! 	PPM_ASSIGN (xels[y][x], value, value, value);
+        }
+    }
+  
+--- 537,544 ----
+    if (pnm_type == PGM_TYPE) {
+      for (y = 0 ; y < rows ; y++)
+        for (x = 0 ; x < cols ; x++) {
+!         value = PNM_GET1 (xels[y][x]);
+!         PPM_ASSIGN (xels[y][x], value, value, value);
+        }
+    }
+  
+***************
+*** 539,549 ****
+        pm_message ("%d colors found", colors);
+      }
+      if ((chv == (colorhist_vector) 0) ||
+! 	(pnm_type == PGM_TYPE && colors >= (maxval + 1) / 2) ||
+          (pnm_type == PPM_TYPE && maxval > 255)) {
+        chv = NULL;
+        if (verbose) {
+!         pm_message ("too many colors for writing a paletted file");
+        }      
+      }
+  
+--- 552,563 ----
+        pm_message ("%d colors found", colors);
+      }
+      if ((chv == (colorhist_vector) 0) ||
+!         /* GRR: this grayscale test looks like a bug, too */
+!         (pnm_type == PGM_TYPE && colors >= (maxval + 1) / 2) ||
+          (pnm_type == PPM_TYPE && maxval > 255)) {
+        chv = NULL;
+        if (verbose) {
+!         pm_message ("too many colors for writing a colormapped image");
+        }      
+      }
+  
+***************
+*** 551,565 ****
+  
+        if (alpha) {
+          /* now check if there are different alpha values for the same color
+!            and if all pairs still fit into 256 (MAXCOLORS) entries; malloc
+!            one extra for possible background color */
+          cht = ppm_colorhisttocolorhash (chv, colors);
+          for (i = 0 ; i < colors + 1 ; i++) {
+-           /* memory lead, should be freed */
+            if ((alphas_of_color[i] = (gray *)malloc (MAXCOLORS * sizeof (int))) == NULL)
+              pm_error ("out of memory allocating alpha/palette entries");
+            alphas_of_color_cnt[i] = 0;
+          }
+          for (y = 0 ; y < rows ; y++) {
+            for (x = 0 ; x < cols ; x++) {
+              color = ppm_lookupcolor (cht, &xels[y][x]);
+--- 565,579 ----
+  
+        if (alpha) {
+          /* now check if there are different alpha values for the same color
+!            and if all pairs still fit into 256 (MAXCOLORS) entries; malloc
+!            one extra for possible background color */
+          cht = ppm_colorhisttocolorhash (chv, colors);
+          for (i = 0 ; i < colors + 1 ; i++) {
+            if ((alphas_of_color[i] = (gray *)malloc (MAXCOLORS * sizeof (int))) == NULL)
+              pm_error ("out of memory allocating alpha/palette entries");
+            alphas_of_color_cnt[i] = 0;
+          }
++         num_alphas_of_color = colors + 1;
+          for (y = 0 ; y < rows ; y++) {
+            for (x = 0 ; x < cols ; x++) {
+              color = ppm_lookupcolor (cht, &xels[y][x]);
+***************
+*** 572,588 ****
+                alphas_of_color_cnt[color]++;
+              }
+            }
+! 	}
+          alphas_first_index[0] = 0;
+          for (i = 0 ; i < colors ; i++)
+!           alphas_first_index[i+1] = alphas_first_index[i] + alphas_of_color_cnt[i];
+! 	if (verbose)
+! 	  pm_message ("nr of color/transparency pairs is %d", alphas_first_index[colors]);
+          if (alphas_first_index[colors] > MAXCOLORS) {
+            ppm_freecolorhist (chv);
+            chv = NULL;
+! 	  if (verbose)
+!   	    pm_message ("too many color/transparency pairs, writing a non-mapped file");
+          }
+        } /* if alpha */
+  
+--- 586,604 ----
+                alphas_of_color_cnt[color]++;
+              }
+            }
+!         }
+          alphas_first_index[0] = 0;
+          for (i = 0 ; i < colors ; i++)
+!           alphas_first_index[i+1] = alphas_first_index[i] +
+!                                     alphas_of_color_cnt[i];
+!         if (verbose)
+!           pm_message ("number of color/transparency pairs is %d",
+!             alphas_first_index[colors]);
+          if (alphas_first_index[colors] > MAXCOLORS) {
+            ppm_freecolorhist (chv);
+            chv = NULL;
+!           if (verbose)
+!             pm_message ("too many color/transparency pairs, writing a non-mapped file");
+          }
+        } /* if alpha */
+  
+***************
+*** 591,613 ****
+          cht = ppm_colorhisttocolorhash (chv, colors);
+          background = ppm_lookupcolor (cht, &backcolor);
+          if (background == -1) {
+!           if (colors < MAXCOLORS) {
+              background = colors;
+              ppm_addtocolorhist (chv, &colors, MAXCOLORS, &backcolor, colors, colors);
+!             if (alpha) {
+!               alphas_of_color[background][0] = maxval;  /* opaque */
+!               alphas_of_color_cnt[background] = 1;      /* unique */
+!               alphas_first_index[colors] = alphas_first_index[background] + 1;
+!             }
+              if (verbose)
+                pm_message ("added background color to palette");
+            } else {
+              background = closestcolor (backcolor, chv, colors, maxval);
+!             if (verbose)
+!               pm_message ("no room in palette for background color; using closest match instead");
+            }
+          }
+!         ppm_freecolorhash (cht);
+        }
+  
+      }
+--- 607,631 ----
+          cht = ppm_colorhisttocolorhash (chv, colors);
+          background = ppm_lookupcolor (cht, &backcolor);
+          if (background == -1) {
+!           if ((!alpha && colors < MAXCOLORS) ||
+!                (alpha && alphas_first_index[colors] < MAXCOLORS))
+!           {
+              background = colors;
+              ppm_addtocolorhist (chv, &colors, MAXCOLORS, &backcolor, colors, colors);
+!             if (alpha) {
+!               alphas_of_color[background][0] = 255;   /* opaque */
+!               alphas_of_color_cnt[background] = 1;    /* unique */
+!               alphas_first_index[colors] = alphas_first_index[background] + 1;
+!             }
+              if (verbose)
+                pm_message ("added background color to palette");
+            } else {
+              background = closestcolor (backcolor, chv, colors, maxval);
+!             if (verbose)
+!               pm_message ("no room in palette for background color; using closest match instead");
+            }
+          }
+!         ppm_freecolorhash (cht);   /* built again about 110 lines below */
+        }
+  
+      }
+***************
+*** 629,634 ****
+--- 647,653 ----
+        depth = 4;
+      else
+        depth = 8;
++     fulldepth = depth;
+    } else {
+      /* non-mapped color or grayscale */
+  
+***************
+*** 643,659 ****
+      else if (maxval == 1)
+        depth = 1;
+      else
+!       pm_error (" (can't happen) undefined maxvalue");
+    }
+  
+    if (verbose)
+!     pm_message ("writing a %d-bit (per channel) %s%s file%s", depth,
+!                 chv ? "palette" 
+! 		    : (pnm_type == PPM_TYPE ? "RGB" : "gray"),
+!                 alpha ? (chv ? "+transparency" 
+! 		             : (pnm_type == PPM_TYPE ? "A" : "+alpha")) 
+! 		      : "", 
+! 	        interlace ? " (interlaced)" : "");
+  
+    /* now write the file */
+  
+--- 662,684 ----
+      else if (maxval == 1)
+        depth = 1;
+      else
+!       pm_error (" (can't happen) undefined maxval");
+! 
+!     if (alpha) {
+!       if (pnm_type == PPM_TYPE)
+!         fulldepth = 4*depth;
+!       else
+!         fulldepth = 2*depth;
+!     } else if (pnm_type == PPM_TYPE)
+!       fulldepth = 3*depth;
+    }
+  
+    if (verbose)
+!     pm_message ("writing a%s %d-bit %s%s file%s",
+!                 fulldepth == 8? "n" : "", fulldepth,
+!                 chv? "palette": (pnm_type == PPM_TYPE ? "RGB" : "gray"),
+!                 alpha? (chv? "+transparency" : (pnm_type == PPM_TYPE? "A" :
+!                 "+alpha")) : "", interlace? " (interlaced)" : "");
+  
+    /* now write the file */
+  
+***************
+*** 739,757 ****
+        info_ptr->num_trans = 1;
+      }
+  
+!     /* creating PNG palette */
+      if (alpha) {
+        for (i = 0 ; i < colors ; i++) {
+!         for (j = alphas_first_index[i];j < alphas_first_index[i+1] ; j++) {
+!           palette[j].red = PPM_GETR (chv[i].color);
+!           palette[j].green = PPM_GETG (chv[i].color);
+!           palette[j].blue = PPM_GETB (chv[i].color);
+!           trans[j] = alphas_of_color[i][j-alphas_first_index[i]];
+          }
+        }
+        info_ptr->valid |= PNG_INFO_tRNS;
+        info_ptr->trans = trans;
+!       info_ptr->num_trans = palette_size;
+      } else {
+        for (i = 0 ; i < MAXCOLORS ; i++) {
+          palette[i].red = PPM_GETR (chv[i].color);
+--- 764,799 ----
+        info_ptr->num_trans = 1;
+      }
+  
+!     /* creating PNG palette (tRNS *not* yet valid) */
+      if (alpha) {
++       int bot_idx = 0;
++       int top_idx = alphas_first_index[colors] - 1;
++ 
++       /* remap palette indices so opaque entries are last (omittable) */
++       for (i = 0;  i < colors;  ++i) {
++         for (j = alphas_first_index[i];  j < alphas_first_index[i+1];  ++j) {
++           if (alphas_of_color[i][j-alphas_first_index[i]] == 255)
++             mapping[j] = top_idx--;
++           else
++             mapping[j] = bot_idx++;
++         }
++       }
++       /* indices should have just crossed paths */
++       if (bot_idx != top_idx + 1)
++         pm_error ("internal inconsistency: remapped bot_idx = %d, top_idx = %d",
++           bot_idx, top_idx);
+        for (i = 0 ; i < colors ; i++) {
+!         for (j = alphas_first_index[i] ; j < alphas_first_index[i+1] ; j++) {
+!           palette[mapping[j]].red   = PPM_GETR (chv[i].color);
+!           palette[mapping[j]].green = PPM_GETG (chv[i].color);
+!           palette[mapping[j]].blue  = PPM_GETB (chv[i].color);
+!           trans[mapping[j]] = alphas_of_color[i][j-alphas_first_index[i]];
+          }
+        }
+        info_ptr->valid |= PNG_INFO_tRNS;
+        info_ptr->trans = trans;
+!       info_ptr->num_trans = bot_idx;   /* omit opaque values */
+!       pm_message ("writing %d non-opaque transparency values", bot_idx);
+      } else {
+        for (i = 0 ; i < MAXCOLORS ; i++) {
+          palette[i].red = PPM_GETR (chv[i].color);
+***************
+*** 798,804 ****
+      info_ptr->valid |= PNG_INFO_bKGD;
+      if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+        if (alpha)
+!         info_ptr->background.index = alphas_first_index[background];
+        else
+          info_ptr->background.index = background;
+      } else
+--- 840,846 ----
+      info_ptr->valid |= PNG_INFO_bKGD;
+      if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+        if (alpha)
+!         info_ptr->background.index = mapping[alphas_first_index[background]];
+        else
+          info_ptr->background.index = background;
+      } else
+***************
+*** 879,890 ****
+      /* prevent from being written twice with png_write_end */
+      info_ptr->valid &= ~PNG_INFO_tIME;
+  
+!   /* let libpng take care of a.o. bit-depth conversions */
+    png_set_packing (png_ptr);
+  
+    line = malloc (cols*8); /* max: 3 color channels, one alpha channel, 16-bit */
+  
+!   for (pass = 0;pass < png_set_interlace_handling (png_ptr);pass++) {
+      for (y = 0 ; y < rows ; y++) {
+        pp = line;
+        for (x = 0 ; x < cols ; x++) {
+--- 921,932 ----
+      /* prevent from being written twice with png_write_end */
+      info_ptr->valid &= ~PNG_INFO_tIME;
+  
+!   /* let libpng take care of, e.g., bit-depth conversions */
+    png_set_packing (png_ptr);
+  
+    line = malloc (cols*8); /* max: 3 color channels, one alpha channel, 16-bit */
+  
+!   for (pass = 0 ; pass < png_set_interlace_handling (png_ptr) ; pass++) {
+      for (y = 0 ; y < rows ; y++) {
+        pp = line;
+        for (x = 0 ; x < cols ; x++) {
+***************
+*** 899,905 ****
+            if (alpha) {
+              for (i = alphas_first_index[color] ; i < alphas_first_index[color+1] ; i++)
+                if (alpha_mask[y][x] == alphas_of_color[color][i - alphas_first_index[color]]) {
+!                 color = i;
+                  break;
+                }
+            }
+--- 941,947 ----
+            if (alpha) {
+              for (i = alphas_first_index[color] ; i < alphas_first_index[color+1] ; i++)
+                if (alpha_mask[y][x] == alphas_of_color[color][i - alphas_first_index[color]]) {
+!                 color = mapping[i];
+                  break;
+                }
+            }
+***************
+*** 929,939 ****
+    }
+    png_write_end (png_ptr, info_ptr);
+    png_write_destroy (png_ptr);
+!   /* flush first because free(png_ptr) can segfault because of
+!      jmpbuf problems in png_write_destroy */
+    fflush (stdout);
+    free (png_ptr);
+    free (info_ptr);
+  }
+  
+  #ifdef __STDC__
+--- 971,983 ----
+    }
+    png_write_end (png_ptr, info_ptr);
+    png_write_destroy (png_ptr);
+!   /* flush first because free(png_ptr) can segfault due to jmpbuf problems
+!      in png_write_destroy */
+    fflush (stdout);
+    free (png_ptr);
+    free (info_ptr);
++   for (i = 0 ; i < num_alphas_of_color ; i++)
++     free(alphas_of_color[i]);
+  }
+  
+  #ifdef __STDC__
+***************
+*** 1080,1086 ****
+          sscanf (argv[argn], "%d", &filter);
+          if ((filter < 0) || (filter > 4))
+          {
+!   	  pm_message ("filter must be 0 (none), 1 (sub), 2 (up), 3 (avg) or 4 (paeth)");
+            pm_usage (usage);
+          }
+        }
+--- 1124,1130 ----
+          sscanf (argv[argn], "%d", &filter);
+          if ((filter < 0) || (filter > 4))
+          {
+!           pm_message ("filter must be 0 (none), 1 (sub), 2 (up), 3 (avg) or 4 (paeth)");
+            pm_usage (usage);
+          }
+        }
+***************
+*** 1093,1099 ****
+          sscanf (argv[argn], "%d", &compression);
+          if ((compression < 0) || (compression > 9))
+          {
+!   	  pm_message ("zlib compression must be between 0 (none) and 9 (max)");
+            pm_usage (usage);
+          }
+        }
+--- 1137,1143 ----
+          sscanf (argv[argn], "%d", &compression);
+          if ((compression < 0) || (compression > 9))
+          {
+!           pm_message ("zlib compression must be between 0 (none) and 9 (max)");
+            pm_usage (usage);
+          }
+        }
+***************
+*** 1103,1110 ****
+      if (pm_keymatch (argv[argn], "-force", 3)) {
+        force = TRUE;
+      } else {
+!       fprintf(stderr,"pnmtopng version %s, compiled with libpng version %s\n",
+!         VERSION, PNG_LIBPNG_VER_STRING);
+        pm_usage (usage);
+      }
+      argn++;
+--- 1147,1154 ----
+      if (pm_keymatch (argv[argn], "-force", 3)) {
+        force = TRUE;
+      } else {
+!       fprintf(stderr,"pnmtopng version %s, compiled with libpng version %s\n",
+!         VERSION, PNG_LIBPNG_VER_STRING);
+        pm_usage (usage);
+      }
+      argn++;

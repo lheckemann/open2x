@@ -1,0 +1,256 @@
+diff -u pnmtopng-2.37.4/version.h pnmtopng-2.37.5/version.h
+--- pnmtopng-2.37.4/version.h	Sun Dec  5 18:51:42 1999
++++ pnmtopng-2.37.5/version.h	Tue Oct 24 07:07:09 2000
+@@ -1 +1 @@
+-#define VERSION "2.37.4 (5 December 1999)"
++#define VERSION "2.37.5 (24 October 2000)"
+
+
+diff -u pnmtopng-2.37.4/README pnmtopng-2.37.5/README
+--- pnmtopng-2.37.4/README	Sun Dec  5 21:25:55 1999
++++ pnmtopng-2.37.5/README	Tue Oct 24 07:32:07 2000
+@@ -1,5 +1,5 @@
+ ** PNMTOPNG / PNGTOPNM
+-** version 2.37.4 - 5 December 1999
++** version 2.37.5 - 24 October 2000
+ 
+ [This is a semi-official bug-fix and enhancement release; I sort of took over
+  maintenance of this package while Willem was on an extended bike trip, and
+@@ -12,7 +12,10 @@
+  Version 2.37.4 fixes a bug that caused 16-shade grayscale images to be written
+  as 8-bit grayscale instead of (smaller) 4-bit colormapped images (bug report,
+  analysis and fix by Rafal Rzeczkowski), and it supports the new/upcoming
+- pbmplus release.  --Greg Roelofs]
++ pbmplus release.  Version 2.37.5 fixes a bug in -transparent handling (pnmtopng
++ no longer chooses an approximate color if the specified one isn't present) and
++ quiets a gcc warning in the non-16-bit version.
++ --Greg Roelofs]
+ 
+ The utilities pnmtopng and pngtopnm are based on other pbm tools and require
+ the libraries included in the pbmplus/netpbm package. Also required are the
+@@ -23,13 +26,14 @@
+ 	ftp://swrinde.nde.swri.edu/pub/png/src/zlib-*
+ 	ftp://ftp.x.org/contrib/utilities/netpbm-1mar1994*
+ or see
+-	http://www.cdrom.com/pub/png/pngcode.html
+-	http://www.acme.com/software/pbmplus/		[update coming soon!]
++	http://www.libpng.org/pub/png/apps/pnmtopng.html
++	http://netpbm.sourceforge.net/
++	http://www.acme.com/software/pbmplus/		[update coming soon?]
+ 
+ To compile and install a makefile is provided. Do check the directories
+ where you have put the required libraries. Then either accommodate the 
+-makefile or make links from generic names to version specific directories,
+-which is the recommended way.
++makefile or make links from generic names (e.g., zlib) to version-specific
++directories (e.g., zlib-1.1.3), which is the recommended way.
+ 
+ For testing purposes, have a look at the test-set PngSuite.tar.gz, which
+ contains a small test-image for every PNG color type and for most PNG chunk
+@@ -38,8 +42,11 @@
+ 	ftp://swrinde.nde.swri.edu/pub/png/images/suite/
+ 
+ Other web pages with PNG images are at:
+-	http://www.cdrom.com/pub/png/pngpic2.html
+-	http://www.cdrom.com/pub/png/pngs-img.html
++	http://www.libpng.org/pub/png/png-textures.html
++	http://www.libpng.org/pub/png/pngs-img.html
++	http://www.libpng.org/pub/png/pngpic2.html
++	http://www.libpng.org/pub/png/colorcube/
++	http://www.libpng.org/pub/png/pngmisc.html#images
+ 
+ ------
+ Alexander Lehmann <lehmann@usa.net>
+
+
+diff -u pnmtopng-2.37.4/pnmtopng.c pnmtopng-2.37.5/pnmtopng.c
+--- pnmtopng-2.37.4/pnmtopng.c	Sun Dec  5 18:51:35 1999
++++ pnmtopng-2.37.5/pnmtopng.c	Tue Oct 24 07:06:55 2000
+@@ -17,6 +17,15 @@
+ ** implied warranty.
+ */
+ 
++/* GRR 20000930:  fixed bug reported by Steven Grady <grady@xcf.berkeley.edu>:
++ *  if -transparent option given but exact color does not exist (e.g., when
++ *  doing batch conversion of a web site), pnmtopng would pick an approximate
++ *  color instead of ignoring the transparency.  Also added 2 (== warning)
++ *  return code for such cases.  (1 already used by pm_error().) */
++
++/* GRR 20000315:  ifdef'd out a never-reached (for non-PGM_BIGGRAYS) case
++ *  that causes a gcc warning. */
++
+ /* GRR 19991203:  incorporated fix by Rafal Rzeczkowski <rzeczkrg@mcmaster.ca>:
+  *  gray images with exactly 16 shades were being to 8-bit grayscale rather
+  *  than 4-bit palette due to misuse of the pm_maxvaltobits() function.  Also
+@@ -47,11 +56,16 @@
+  */
+ #define GRR_GRAY_PALETTE_FIX
+ 
++#ifndef PNMTOPNG_WARNING_LEVEL
++#  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
++#endif                               /*  2 for warnings (1 == error) */
++
++#include <string.h>	/* strcat() */
+ #include "pnm.h"
+ #include "png.h"	/* includes zlib.h and setjmp.h */
+ #include "version.h"	/* VERSION macro */
+ 
+-#include "ppmcmap.h"
++#include "ppmcmap.h"	/* NOT installed by default with netpbm */
+ 
+ typedef struct _jmpbuf_wrapper {
+   jmp_buf jmpbuf;
+@@ -83,7 +97,7 @@
+                          xelval maxval);
+ static void read_text (png_info *info_ptr, FILE *tfp);
+ static void pnmtopng_error_handler (png_structp png_ptr, png_const_charp msg);
+-static void convertpnm (FILE *ifp, FILE *afp, FILE *tfp);
++static int convertpnm (FILE *ifp, FILE *afp, FILE *tfp);
+ int main (int argc, char *argv[]);
+ #endif
+ 
+@@ -254,12 +268,10 @@
+ }
+ 
+ #ifdef __STDC__
+-static void convertpnm (FILE *ifp, FILE *afp, FILE *tfp)
++  static int convertpnm (FILE *ifp, FILE *afp, FILE *tfp)
+ #else
+-static void convertpnm (ifp, afp, tfp)
+-FILE *ifp;
+-FILE *afp;
+-FILE *tfp;
++  static int convertpnm (ifp, afp, tfp)
++    FILE *ifp, *afp, *tfp;
+ #endif
+ {
+   xel **xels;	/* GRR:  a xel is always a pixel; pixel may be ulg or struct */
+@@ -309,6 +321,7 @@
+   static colorhist_vector chv;
+   static colorhash_table cht;
+   static int depth;
++  static int errorlevel;
+ 
+ 
+   /* these guys are initialized to quiet compiler warnings: */
+@@ -319,6 +332,7 @@
+   palette_size = 0;
+   cht = NULL;
+   depth = 0;
++  errorlevel = 0;
+ 
+   png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
+     &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+@@ -470,10 +484,12 @@
+           pm_message ("cannot rescale to 16-bit; rescaling to 8-bit instead (maxval = %d)",
+             maxval);
+           scaleval = 255;
++#ifdef PGM_BIGGRAYS   /* GRR 20000315:  this avoids a gcc warning */
+         } else {
+           if (verbose)
+             pm_message ("rescaling to 16-bit");
+           scaleval = 65535;
++#endif
+         }
+       }
+       for (y = 0 ; y < rows ; y++)
+@@ -755,6 +771,7 @@
+               pm_message ("added background color to palette");
+           } else {
+             background = closestcolor (backcolor, chv, colors, maxval);
++            errorlevel = PNMTOPNG_WARNING_LEVEL;
+             if (verbose)
+               pm_message ("no room in palette for background color; using closest match instead");
+           }
+@@ -902,25 +919,33 @@
+     if (transparent > 0) {
+       transparent = ppm_lookupcolor (cht, &transcolor);
+       if (transparent == -1) {
++        if (verbose)
++          pm_message ("specified transparent color not present in palette; ignoring -transparent");
++        errorlevel = PNMTOPNG_WARNING_LEVEL;
++        /* BUG:  don't pick an approximate color unless requested to do so
++                 (allow with -force option?  -approx option?)
++                 [reported by Steven Grady, grady@xcf.berkeley.edu, 20000507]
+         transparent = closestcolor (transcolor, chv, colors, maxval);
+         transcolor = chv[transparent].color;
++         */
++      } else {
++        /* now put transparent color in entry 0 by swapping */
++        chv[transparent].color = chv[0].color;
++        chv[0].color = transcolor;
++        /* check if background color was (by bad luck) part of swap */
++        if (background == transparent)
++          background = 0;
++        else if (background == 0)
++          background = transparent;
++        /* rebuild hashtable */
++        ppm_freecolorhash (cht);
++        cht = ppm_colorhisttocolorhash (chv, colors);
++        transparent = 0;
++        trans[0] = 0; /* fully transparent */
++        info_ptr->valid |= PNG_INFO_tRNS;
++        info_ptr->trans = trans;
++        info_ptr->num_trans = 1;
+       }
+-      /* now put transparent color in entry 0 by swapping */
+-      chv[transparent].color = chv[0].color;
+-      chv[0].color = transcolor;
+-      /* check if background color was by bad luck part of swap */
+-      if (background == transparent)
+-        background = 0;
+-      else if (background == 0)
+-        background = transparent;
+-      /* rebuild hashtable */
+-      ppm_freecolorhash (cht);
+-      cht = ppm_colorhisttocolorhash (chv, colors);
+-      transparent = 0;
+-      trans[0] = 0; /* fully transparent */
+-      info_ptr->valid |= PNG_INFO_tRNS;
+-      info_ptr->trans = trans;
+-      info_ptr->num_trans = 1;
+     }
+ 
+     /* creating PNG palette (tRNS *not* yet valid) */
+@@ -1154,18 +1179,20 @@
+   free (info_ptr);
+   for (i = 0 ; i < num_alphas_of_color ; i++)
+     free(alphas_of_color[i]);
++
++  return errorlevel;
+ }
+ 
+ #ifdef __STDC__
+-int main (int argc, char *argv[])
++  int main (int argc, char *argv[])
+ #else
+-int main (argc, argv)
+-int argc;
+-char *argv[];
++  int main (argc, argv)
++    int argc;
++    char *argv[];
+ #endif
+ {
+   FILE *ifp, *tfp, *afp;
+-  int argn;
++  int argn, errorlevel=0;
+ 
+   char *usage = "[-verbose] [-downscale] [-interlace] [-alpha file] ...\n\
+              ... [-transparent color] [-background color] [-gamma value] ...\n\
+@@ -1362,7 +1389,7 @@
+   else
+     tfp = NULL;
+ 
+-  convertpnm (ifp, afp, tfp);
++  errorlevel = convertpnm (ifp, afp, tfp);
+ 
+   if (alpha)
+     pm_closer (afp);
+@@ -1372,5 +1399,5 @@
+   pm_closer (ifp);
+   pm_closew (stdout);
+ 
+-  exit (0);
++  return errorlevel;
+ }

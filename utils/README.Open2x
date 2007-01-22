@@ -1,0 +1,10 @@
+Open2x utilities source trees can be found in this module.
+
+--- roftl ---
+
+Anybody care to add a description of this please.
+
+--- linux-kernel-bootlogo ---
+
+Miscellaneous tools to help modify the PNM loading screen within the Linux kernel. 
+These tools are specifically hacked about for the GP2X and need some cleaning up.

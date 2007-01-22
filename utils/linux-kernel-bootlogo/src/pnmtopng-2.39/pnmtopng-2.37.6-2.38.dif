@@ -1,0 +1,1228 @@
+diff -ru pnmtopng-2.37.6/README pnmtopng-2.38/README
+--- pnmtopng-2.37.6/README	Sat Jul 21 11:03:09 2001
++++ pnmtopng-2.38/README	Sun Jun 16 22:31:34 2002
+@@ -1,22 +1,50 @@
+ ** PNMTOPNG / PNGTOPNM
+-** version 2.37.6 - 21 July 2001
++** version 2.38 - 16 June 2002
++
++This is another in a set of semi-official bug-fix/enhancement releases.
++I sort of took over maintenance of this package while Willem was on an
++extended bike trip several years ago, and for now I'm continuing with
++periodic, small updates.  (The code really should be rewritten to avoid
++directly messing with libpng's internal structures, but I haven't yet
++found time to do that.)
++
++Brief changelog:
++
++  2.37   - (March 1998) never publicly released, partly because Willem had
++           hoped to quiet gcc's "<var> might be clobbered by `longjmp'"
++
++  2.37.2 - fixed gcc "clobber" warnings; under Solaris, they resulted in
++           stack corruption even when there was no error in the image files
++           or libraries
++
++  2.37.3 - fixed a minor bug with respect to error exits; generally cleaner
++           error exits (close files, etc.)
++
++  2.37.4 - fixed a bug that caused 16-shade grayscale images to be written
++           as 8-bit grayscale instead of (smaller) 4-bit colormapped images
++           (bug report, analysis and fix by Rafal Rzeczkowski); added support
++           for the new/upcoming pbmplus release (based on 1999-11-28 beta).
++
++  2.37.5 - fixed a bug in -transparent handling (pnmtopng no longer chooses
++           an approximate color if the specified one isn't present); quieted
++           a gcc warning in the non-16-bit version; added optional support
++           for warning-level return codes (define PNMTOPNG_WARNING_LEVEL 2
++           to enable) to pnmtopng
++
++  2.37.6 - fixed a bug in -background handling for low-bit-depth grayscale
++           images; renamed version.h to pnmtopng_version.h
++
++  2.38   - forced explicit binary mode on stdin/stdout for DOS-like OSes;
++           added same (optional) support for warning-level return codes to
++           pngtopnm (see 2.37.5 above); plugged some memory leaks; documented
++           palette-remapping code better; added support for custom (ordered)
++           palette (new -palette option); added some checks for malloc()
++           failure; extended syntax of text-comment files by allowing blank
++           lines and keywords on separate lines from main text (tenthumbs at
++           cybernex.net); abandoned silly "ultra-minor" version number
++
++                   -- [end of Greg Roelofs commentary] --
+ 
+-[This is a semi-official bug-fix and enhancement release; I sort of took over
+- maintenance of this package while Willem was on an extended bike trip, and
+- for now I'm continuing with periodic, small updates.  Version 2.37 (March
+- 1998) was never publicly released, partly because Willem had hoped to quiet
+- gcc's "<var> might be clobbered by `longjmp'" warnings.  Those are fixed in
+- 2.37.2; under Solaris, they resulted in stack corruption even when there was
+- no error in the image files or libraries.  Version 2.37.3 fixes a minor bug
+- w.r.t. error exits and generally does cleaner error exits (close files, etc.)
+- Version 2.37.4 fixes a bug that caused 16-shade grayscale images to be written
+- as 8-bit grayscale instead of (smaller) 4-bit colormapped images (bug report,
+- analysis and fix by Rafal Rzeczkowski), and it supports the new/upcoming
+- pbmplus release.  Version 2.37.5 fixes a bug in -transparent handling (pnmtopng
+- no longer chooses an approximate color if the specified one isn't present) and
+- quiets a gcc warning in the non-16-bit version.  Version 2.37.6 fixes a bug
+- in -background handling for low-bit-depth grayscale images.
+- --Greg Roelofs]
+ 
+ The utilities pnmtopng and pngtopnm are based on other pbm tools and require
+ the libraries included in the pbmplus/netpbm package. Also required are the
+@@ -31,12 +59,12 @@
+ 	http://www.libpng.org/pub/png/libpng.html
+ 	http://www.zlib.org/
+ 	http://netpbm.sourceforge.net/
+-	http://www.acme.com/software/pbmplus/		[update coming someday?]
++	http://www.acme.com/software/pbmplus/	[update coming someday?]
+ 
+ To compile and install, a makefile is provided. Do check the directories
+ where you have put the required libraries. Then either accommodate the 
+ makefile or make links from generic names (e.g., zlib) to version-specific
+-directories (e.g., zlib-1.1.3), which is the recommended way.
++directories (e.g., zlib-1.1.4), which is the recommended way.
+ 
+ For testing purposes, have a look at the test-set PngSuite.tar.gz, which
+ contains a small test-image for every PNG color type and for most PNG chunk
+diff -ru pnmtopng-2.37.6/pnmtopng_version.h pnmtopng-2.38/pnmtopng_version.h
+--- pnmtopng-2.37.6/pnmtopng_version.h	Sat Jul 21 11:04:12 2001
++++ pnmtopng-2.38/pnmtopng_version.h	Sun Jun 16 17:39:35 2002
+@@ -1 +1 @@
+-#define VERSION "2.37.6 (21 July 2001)"
++#define VERSION "2.38 (16 June 2002)"
+diff -ru pnmtopng-2.37.6/pngtopnm.c pnmtopng-2.38/pngtopnm.c
+--- pnmtopng-2.37.6/pngtopnm.c	Sat Jul 21 10:50:40 2001
++++ pnmtopng-2.38/pngtopnm.c	Sun Jun 16 22:46:49 2002
+@@ -4,7 +4,7 @@
+ **
+ ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+ **                        and Willem van Schaik <willem@schaik.com>
+-** Copyright (C) 1999,2001 by Greg Roelofs <newt@pobox.com>
++** Copyright (C) 1999-2002 by Greg Roelofs <newt@pobox.com>
+ **
+ ** Permission to use, copy, modify, and distribute this software and its
+ ** documentation for any purpose and without fee is hereby granted, provided
+@@ -17,6 +17,15 @@
+ ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+ */
+ 
++/* GRR 20010816:  fixed bug reported by Eric Fu <ericfu@etrieve.com>:
++ *  stdin/stdout must be set to binary mode for DOS-like environments.  (Bug
++ *  report was specifically about NetPBM 9.x version, not this code, but same
++ *  issue applies here.)  Borrowed tried-and-true funzip.c code for maximal
++ *  portability, but note dependency on macros that may need to be defined
++ *  explicitly in makefiles (e.g., HAVE_SETMODE, FLEXOS and RISCOS).  Also
++ *  added optional errorlevel/return-code 2 (see PNMTOPNG_WARNING_LEVEL below)
++ *  for warnings.  (1 already used by pm_error().) */
++
+ /* GRR 20010721:  renamed version.h to less generic pnmtopng_version.h */
+ 
+ /* GRR 19991203:  moved VERSION to new version.h header file */
+@@ -29,6 +38,10 @@
+  *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
+  *  compiled with one size in libpng and another size here).  */
+ 
++#ifndef PNMTOPNG_WARNING_LEVEL
++#  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
++#endif                               /*  2 for warnings (1 == error) */
++
+ #include <math.h>
+ #include "png.h"		/* includes zlib.h and setjmp.h */
+ #include "pnmtopng_version.h"	/* VERSION macro */
+@@ -65,7 +78,7 @@
+ static void save_text (png_info *info_ptr, FILE *tfp);
+ static void show_time (png_info *info_ptr);
+ static void pngtopnm_error_handler (png_structp png_ptr, png_const_charp msg);
+-static void convertpng (FILE *ifp, FILE *tfp);
++static int convertpng (FILE *ifp, FILE *tfp, FILE *ofp);
+ int main (int argc, char *argv[]);
+ #endif
+ 
+@@ -85,14 +98,20 @@
+ static int mtime = FALSE;
+ static jmpbuf_wrapper pngtopnm_jmpbuf_struct;
+ 
++
++
+ #define get_png_val(p) _get_png_val (&(p), info_ptr->bit_depth)
+ 
++/******************/
++/*  _GET_PNG_VAL  */
++/******************/
++
+ #ifdef __STDC__
+ static png_uint_16 _get_png_val (png_byte **pp, int bit_depth)
+ #else
+ static png_uint_16 _get_png_val (pp, bit_depth)
+-png_byte **pp;
+-int bit_depth;
++  png_byte **pp;
++  int bit_depth;
+ #endif
+ {
+   png_uint_16 c = 0;
+@@ -108,12 +127,20 @@
+   return c;
+ }
+ 
++
++
++
++/*****************/
++/*  STORE_PIXEL  */
++/*****************/
++
+ #ifdef __STDC__
+-static void store_pixel (xel *pix, png_uint_16 r, png_uint_16 g, png_uint_16 b, png_uint_16 a)
++static void store_pixel (xel *pix, png_uint_16 r, png_uint_16 g, png_uint_16 b,
++                         png_uint_16 a)
+ #else
+ static void store_pixel (pix, r, g, b, a)
+-xel *pix;
+-png_uint_16 r, g, b, a;
++  xel *pix;
++  png_uint_16 r, g, b, a;
+ #endif
+ {
+   if (alpha == alpha_only) {
+@@ -128,12 +155,19 @@
+   }
+ }
+ 
++
++
++
++/*******************/
++/*  GAMMA_CORRECT  */
++/*******************/
++
+ #ifdef __STDC__
+ static png_uint_16 gamma_correct (png_uint_16 v, float g)
+ #else
+ static png_uint_16 gamma_correct (v, g)
+-png_uint_16 v;
+-float g;
++  png_uint_16 v;
++  float g;
+ #endif
+ {
+   if (g != -1.0)
+@@ -143,22 +177,36 @@
+     return v;
+ }
+ 
++
++
++
++/*************/
++/*  ISCOLOR  */
++/*************/
++
+ #ifdef __STDC__
+ static int iscolor (png_color c)
+ #else
+ static int iscolor (c)
+-png_color c;
++  png_color c;
+ #endif
+ {
+   return c.red != c.green || c.green != c.blue;
+ }
+ 
++
++
++
++/***************/
++/*  SAVE_TEXT  */
++/***************/
++
+ #ifdef __STDC__
+ static void save_text (png_info *info_ptr, FILE *tfp)
+ #else
+ static void save_text (info_ptr, tfp)
+-png_info *info_ptr;
+-FILE *tfp;
++  png_info *info_ptr;
++  FILE *tfp;
+ #endif
+ {
+   int i, j, k;
+@@ -188,11 +236,18 @@
+   }
+ }
+ 
++
++
++
++/***************/
++/*  SHOW_TIME  */
++/***************/
++
+ #ifdef __STDC__
+ static void show_time (png_info *info_ptr)
+ #else
+ static void show_time (info_ptr)
+-png_info *info_ptr;
++  png_info *info_ptr;
+ #endif
+ {
+   static char *month[] =
+@@ -207,12 +262,19 @@
+   }
+ }
+ 
++
++
++
++/****************************/
++/*  PNGTOPNM_ERROR_HANDLER  */
++/****************************/
++
+ #ifdef __STDC__
+ static void pngtopnm_error_handler (png_structp png_ptr, png_const_charp msg)
+ #else
+ static void pngtopnm_error_handler (png_ptr, msg)
+-png_structp png_ptr;
+-png_const_charp msg;
++  png_structp png_ptr;
++  png_const_charp msg;
+ #endif
+ {
+   jmpbuf_wrapper  *jmpbuf_ptr;
+@@ -240,14 +302,20 @@
+   longjmp(jmpbuf_ptr->jmpbuf, 1);
+ }
+ 
++
++
++
+ #define SIG_CHECK_SIZE 4
+ 
++/****************/
++/*  CONVERTPNG  */
++/****************/
++
+ #ifdef __STDC__
+-static void convertpng (FILE *ifp, FILE *tfp)
++static int convertpng (FILE *ifp, FILE *tfp, FILE *ofp)
+ #else
+-static void convertpng (ifp, tfp)
+-FILE *ifp;
+-FILE *tfp;
++static int convertpng (ifp, tfp, ofp)
++  FILE *ifp, *tfp, *ofp;
+ #endif
+ {
+   char sig_buf [SIG_CHECK_SIZE];
+@@ -272,30 +340,32 @@
+    * in the absence of any other error condition) */
+   static char *type_string;
+   static char *alpha_string;
++  static int errorlevel;
+ 
++  errorlevel = 0;
+   type_string = alpha_string = "";
+ 
+   if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE) {
+     pm_closer (ifp);
+-    pm_error ("input file empty or too short");
++    pm_error ("input file is empty or too short");
+   }
+   if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0) {
+     pm_closer (ifp);
+-    pm_error ("input file not a PNG file");
++    pm_error ("input file is not a PNG file");
+   }
+ 
+   png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING,
+     &pngtopnm_jmpbuf_struct, pngtopnm_error_handler, NULL);
+   if (png_ptr == NULL) {
+     pm_closer (ifp);
+-    pm_error ("cannot allocate LIBPNG structure");
++    pm_error ("cannot allocate main libpng structure (png_ptr)");
+   }
+ 
+   info_ptr = png_create_info_struct (png_ptr);
+   if (info_ptr == NULL) {
+     png_destroy_read_struct (&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+     pm_closer (ifp);
+-    pm_error ("cannot allocate LIBPNG structures");
++    pm_error ("cannot allocate libpng info structure (info_ptr)");
+   }
+ 
+   if (setjmp (pngtopnm_jmpbuf_struct.jmpbuf)) {
+@@ -401,11 +471,13 @@
+       if (displaygamma != info_ptr->gamma) {
+         png_set_gamma (png_ptr, displaygamma, info_ptr->gamma);
+ 	totalgamma = (double) info_ptr->gamma * (double) displaygamma;
+-	/* in case of gamma-corrections, sBIT's as in the PNG-file are not valid anymore */
++	/* in case of gamma correction, sBITs as in the PNG-file are not valid
++	 * anymore */
+ 	info_ptr->valid &= ~PNG_INFO_sBIT;
+         if (verbose)
+-          pm_message ("image gamma is %4.2f, converted for display gamma of %4.2f",
+-                    info_ptr->gamma, displaygamma);
++          pm_message (
++            "image gamma is %4.2f, converted for display gamma of %4.2f",
++            info_ptr->gamma, displaygamma);
+       }
+     } else {
+       if (displaygamma != info_ptr->gamma) {
+@@ -413,8 +485,9 @@
+ 	totalgamma = (double) displaygamma;
+ 	info_ptr->valid &= ~PNG_INFO_sBIT;
+ 	if (verbose)
+-	  pm_message ("image gamma assumed 1.0, converted for display gamma of %4.2f",
+-		      displaygamma);
++	  pm_message (
++	    "image gamma assumed 1.0, converted for display gamma of %4.2f",
++	    displaygamma);
+       }
+     }
+   }
+@@ -455,7 +528,9 @@
+              info_ptr->sig_bit.red != info_ptr->sig_bit.blue) &&
+             alpha == none) {
+ 	  pm_message ("different bit depths for color channels not supported");
+-	  pm_message ("writing file with %d bit resolution", info_ptr->bit_depth);
++	  pm_message ("writing file with %d bit resolution",
++	    info_ptr->bit_depth);
++	  errorlevel = PNMTOPNG_WARNING_LEVEL;
+         } else {
+           if ((info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) &&
+ 	      (info_ptr->sig_bit.red < 255)) {
+@@ -561,9 +636,11 @@
+     float r;
+     r = (float)info_ptr->x_pixels_per_unit / info_ptr->y_pixels_per_unit;
+     if (r != 1.0) {
+-      pm_message ("warning - non-square pixels; to fix do a 'pnmscale -%cscale %g'",
+-		    r < 1.0 ? 'x' : 'y',
+-		    r < 1.0 ? 1.0 / r : r );
++      pm_message (
++	"warning - non-square pixels; to fix do a 'pnmscale -%cscale %g'",
++	r < 1.0 ? 'x' : 'y',
++	r < 1.0 ? 1.0 / r : r );
++      errorlevel = PNMTOPNG_WARNING_LEVEL;
+     }
+   }
+ 
+@@ -633,7 +710,7 @@
+                                        "UNKNOWN!", 
+ 		maxmaxval);
+ 
+-  pnm_writepnminit (stdout, info_ptr->width, info_ptr->height, maxval,
++  pnm_writepnminit (ofp, info_ptr->width, info_ptr->height, maxval,
+                     pnm_type, FALSE);
+ 
+   for (y = 0 ; y < info_ptr->height ; y++) {
+@@ -691,27 +768,36 @@
+       }
+       pnm_pixel++;
+     }
+-    pnm_writepnmrow (stdout, row, info_ptr->width, maxval, pnm_type, FALSE);
++    pnm_writepnmrow (ofp, row, info_ptr->width, maxval, pnm_type, FALSE);
+   }
+ 
+-  fflush(stdout);
++  fflush(ofp);
+   pnm_freerow (row);
+   for (y = 0 ; y < info_ptr->height ; y++)
+     free (png_image[y]);
+   free (png_image);
+   png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
++
++  return errorlevel;
+ }
+ 
++
++
++
++/**********/
++/*  MAIN  */
++/**********/
++
+ #ifdef __STDC__
+ int main (int argc, char *argv[])
+ #else
+ int main (argc, argv)
+-int argc;
+-char *argv[];
++  int argc;
++  char *argv[];
+ #endif
+ {
+-  FILE *ifp, *tfp;
+-  int argn;
++  FILE *ifp, *tfp, *ofp;
++  int argn, errorlevel;
+ 
+   char *usage = "[-verbose] [-alpha | -mix] [-background color] ...\n\
+              ... [-gamma value] [-text file] [-time] [pngfile]";
+@@ -763,8 +849,27 @@
+     ifp = pm_openr (argv[argn]);
+     ++argn;
+   } else {
++
++    /* setmode/fdopen code borrowed from Info-ZIP's funzip.c (Mark Adler) */
++    /* [HAVE_SETMODE is same macro used by NetPBM 9.x for Cygwin, etc.] */
++
++#ifdef HAVE_SETMODE   /* DOS, FLEXOS, Human68k, NetWare, OS/2, Win32 */
++# if (defined(__HIGHC__) && !defined(FLEXOS))
++    setmode(stdin, _BINARY);
++# else
++    setmode(0, O_BINARY);   /* some buggy C libraries require BOTH setmode() */
++# endif                     /*  call AND the fdopen() in binary mode :-( */
++#endif
++
++#ifdef RISCOS
+     ifp = stdin;
++#else
++    if ((ifp = fdopen(0, "rb")) == (FILE *)NULL)
++      pm_error ("cannot find stdin");
++#endif
++
+   }
++
+   if (argn != argc)
+     pm_usage (usage);
+ 
+@@ -773,12 +878,30 @@
+   else
+     tfp = NULL;
+ 
+-  convertpng (ifp, tfp);
++  /* output always goes to stdout */
++
++#ifdef HAVE_SETMODE   /* DOS, FLEXOS, Human68k, NetWare, OS/2, Win32 */
++# if (defined(__HIGHC__) && !defined(FLEXOS))
++  setmode(stdout, _BINARY);
++# else
++  setmode(1, O_BINARY);
++# endif
++#endif
++
++#ifdef RISCOS
++  ofp = stdout;
++#else
++  if ((ofp = fdopen(1, "wb")) == (FILE *)NULL)
++    pm_error ("cannot write to stdout");
++#endif
++
++  errorlevel = convertpng (ifp, tfp, ofp);
+ 
+   if (text)
+     pm_closew (tfp);
+ 
+   pm_closer (ifp);
+-  pm_closew (stdout);
+-  exit (0);
++  pm_closew (ofp);
++
++  return errorlevel;
+ }
+diff -ru pnmtopng-2.37.6/pnmtopng.c pnmtopng-2.38/pnmtopng.c
+--- pnmtopng-2.37.6/pnmtopng.c	Sat Jul 21 10:58:55 2001
++++ pnmtopng-2.38/pnmtopng.c	Sun Jun 16 17:38:48 2002
+@@ -6,8 +6,8 @@
+ ** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
+ **
+ ** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+-**                        and Willem van Schaik <willem@schaik.com>
+-** Copyright (C) 1998-2001 by Greg Roelofs <newt@pobox.com>
++**                         and Willem van Schaik <willem@schaik.com>
++** Copyright (C) 1998-2002 by Greg Roelofs <newt@pobox.com>
+ **
+ ** Permission to use, copy, modify, and distribute this software and its
+ ** documentation for any purpose and without fee is hereby granted, provided
+@@ -17,6 +17,33 @@
+ ** implied warranty.
+ */
+ 
++/* GRR 20020616:  fixed assumption in read_text() that malloc() always
++ *  returns successfully; applied TenThumbs' enhancement patch of 20010808:
++ *
++ *    The problem is the keyword on a line by itself. The read_text
++ *    function sees the keyword and replaces the first non-text character
++ *    with '\0'. In this case that's a newline. The function then tries
++ *    to copy the rest of the line as text but it only looks for space,
++ *    tab, and newline which don't exist so it keeps looking and copying
++ *    until it finds something. Buffer overrun time!
++ *
++ *    When I fixed that I found that pnmtopng treats blank lines as a
++ *    text chunk and libpng complains about zero length keywords. That
++ *    seems silly.
++ *
++ *    Here's a patch to fix all of this. */
++
++/* GRR 20020408:  plugged some memory leaks; improved documentation of
++ *  palette-remapping code; added support for custom (ordered) palette
++ *  (new -palette option). */
++
++/* GRR 20010816:  fixed bug reported by Eric Fu <ericfu@etrieve.com>:
++ *  stdin/stdout must be set to binary mode for DOS-like environments.  (Bug
++ *  report was specifically about NetPBM 9.x version, not this code, but same
++ *  issue applies here.)  Borrowed tried-and-true funzip.c code for maximal
++ *  portability, but note dependency on macros that may need to be defined
++ *  explicitly in makefiles (e.g., HAVE_SETMODE, FLEXOS and RISCOS). */
++
+ /* GRR 20010721:  fixed bug reported by Werner Lemberg <wl@gnu.org>:
+  *  bKGD value not scaled properly in sub-8-bit grayscale images (should
+  *  be scaled identically to tRNS value).  Also renamed version.h to
+@@ -26,8 +53,9 @@
+ /* GRR 20000930:  fixed bug reported by Steven Grady <grady@xcf.berkeley.edu>:
+  *  if -transparent option given but exact color does not exist (e.g., when
+  *  doing batch conversion of a web site), pnmtopng would pick an approximate
+- *  color instead of ignoring the transparency.  Also added return code 2
+- *  (== warning) for such cases.  (1 already used by pm_error().) */
++ *  color instead of ignoring the transparency.  Also added optional errorlevel
++ *  and return-code 2 (== warning; see PNMTOPNG_WARNING_LEVEL below) for such
++ *  cases.  (1 already used by pm_error().) */
+ 
+ /* GRR 20000315:  ifdef'd out a never-reached (for non-PGM_BIGGRAYS) case
+  *  that causes a gcc warning. */
+@@ -69,6 +97,10 @@
+ #include <pnm.h>
+ #include <ppmcmap.h>		/* NOT installed by default with netpbm */
+ 
++typedef unsigned char   uch;
++typedef unsigned short  ush;
++typedef unsigned long   ulg;
++
+ typedef struct _jmpbuf_wrapper {
+   jmp_buf jmpbuf;
+ } jmpbuf_wrapper;
+@@ -99,7 +131,7 @@
+                          xelval maxval);
+ static void read_text (png_info *info_ptr, FILE *tfp);
+ static void pnmtopng_error_handler (png_structp png_ptr, png_const_charp msg);
+-static int convertpnm (FILE *ifp, FILE *afp, FILE *tfp);
++static int convertpnm (FILE *ifp, FILE *afp, FILE *pfp, FILE *tfp, FILE *ofp);
+ int main (int argc, char *argv[]);
+ #endif
+ 
+@@ -125,6 +157,8 @@
+ static int phys_x = -1.0;
+ static int phys_y = -1.0;
+ static int phys_unit = -1.0;
++static int have_ordered_palette = FALSE;
++static char *palette_file;
+ static int text = FALSE;
+ static int ztxt = FALSE;
+ static char *text_file;
+@@ -137,14 +171,22 @@
+ static int force = FALSE;
+ static jmpbuf_wrapper pnmtopng_jmpbuf_struct;
+ 
++
++
++
++/******************/
++/*  CLOSESTCOLOR  */
++/******************/
++
+ #ifdef __STDC__
+-static int closestcolor (pixel color, colorhist_vector chv, int colors, xelval maxval)
++static int closestcolor (pixel color, colorhist_vector chv, int colors,
++                         xelval maxval)
+ #else
+ static int closestcolor (color, chv, colors, maxval)
+-pixel color;
+-colorhist_vector chv;
+-int colors;
+-xelval maxval;
++  pixel color;
++  colorhist_vector chv;
++  int colors;
++  xelval maxval;
+ #endif
+ {
+   int i, r, g, b, d;
+@@ -168,22 +210,33 @@
+   return imin;
+ }
+ 
++
++
++
++/***************/
++/*  READ_TEXT  */
++/***************/
++
+ #ifdef __STDC__
+ static void read_text (png_info *info_ptr, FILE *tfp)
+ #else
+ static void read_text (info_ptr, tfp)
+-png_info *info_ptr;
+-FILE *tfp;
++  png_info *info_ptr;
++  FILE *tfp;
+ #endif
+ {
+   char textline[256];
+   int textpos;
+   int i, j;
+   int c;
+-  char *cp;
++  char *cp, *texterr = "pnmtopng:  unable to allocate memory for text chunks\n";
+ 
+-  /* GRR:  need to check for malloc failure here */
+   info_ptr->text = (png_text *)malloc (MAXCOMMENTS * sizeof (png_text));
++  if (!info_ptr->text) {
++    fprintf(stderr, texterr);
++    fflush(stderr);
++    return;   /* not much else can do */
++  }
+   j = 0;
+   textpos = 0;
+   while ((c = getc (tfp)) != EOF) {
+@@ -191,6 +244,10 @@
+       textline[textpos++] = c;
+     } else {
+       textline[textpos++] = '\0';
++      if (textline[0] == '\0') {   /* check for keyword-on-own-line case */
++        textpos = 0;
++        continue;
++      }
+       if ((textline[0] != ' ') && (textline[0] != '\t')) {
+         /* the following is a not that accurate check on Author or Title */
+         if ((!ztxt) || (textline[0] == 'A') || (textline[0] == 'T'))
+@@ -198,19 +255,31 @@
+         else
+           info_ptr->text[j].compression = 0;
+         cp = malloc (textpos);
++        if (!cp) {
++          fprintf(stderr, texterr);
++          fflush(stderr);
++          return;   /* not much else can do */
++        }
+         info_ptr->text[j].key = cp;
+         i = 0;
+         if (textline[0] == '"') {
+           i++;
+-          while (textline[i] != '"' && textline[i] != '\n')
++          while (textline[i] != '"' && textline[i] != '\n' &&
++                 textline[i] != '\0')
+             *(cp++) = textline[i++];
+           i++;
+         } else {
+-          while (textline[i] != ' ' && textline[i] != '\t' && textline[i] != '\n')
++          while (textline[i] != ' '  && textline[i] != '\t' &&
++                 textline[i] != '\n' && textline[i] != '\0')
+             *(cp++) = textline[i++];
+         }
+         *(cp++) = '\0';
+         cp = malloc (textpos);
++        if (!cp) {
++          fprintf(stderr, texterr);
++          fflush(stderr);
++          return;   /* not much else can do */
++        }
+         info_ptr->text[j].text = cp;
+         while (textline[i] == ' ' || textline[i] == '\t')
+           i++;
+@@ -220,6 +289,11 @@
+       } else {
+         j--;
+         cp = malloc (info_ptr->text[j].text_length + textpos);
++        if (!cp) {
++          fprintf(stderr, texterr);
++          fflush(stderr);
++          return;   /* not much else can do */
++        }
+         strcpy (cp, info_ptr->text[j].text);
+         strcat (cp, "\n");
+         info_ptr->text[j].text = cp;
+@@ -236,12 +310,19 @@
+   info_ptr->num_text = j;
+ }
+ 
++
++
++
++/****************************/
++/*  PNMTOPNG_ERROR_HANDLER  */
++/****************************/
++
+ #ifdef __STDC__
+ static void pnmtopng_error_handler (png_structp png_ptr, png_const_charp msg)
+ #else
+ static void pnmtopng_error_handler (png_ptr, msg)
+-png_structp png_ptr;
+-png_const_charp msg;
++  png_structp png_ptr;
++  png_const_charp msg;
+ #endif
+ {
+   jmpbuf_wrapper  *jmpbuf_ptr;
+@@ -269,11 +350,18 @@
+   longjmp(jmpbuf_ptr->jmpbuf, 1);
+ }
+ 
++
++
++
++/****************/
++/*  CONVERTPNM  */
++/****************/
++
+ #ifdef __STDC__
+-  static int convertpnm (FILE *ifp, FILE *afp, FILE *tfp)
++  static int convertpnm (FILE *ifp, FILE *afp, FILE *pfp, FILE *tfp, FILE *ofp)
+ #else
+-  static int convertpnm (ifp, afp, tfp)
+-    FILE *ifp, *afp, *tfp;
++  static int convertpnm (ifp, afp, pfp, tfp, ofp)
++    FILE *ifp, *afp, *pfp, *tfp, *ofp;
+ #endif
+ {
+   xel **xels;	/* GRR:  a xel is always a pixel; pixel may be ulg or struct */
+@@ -290,6 +378,7 @@
+   png_info *info_ptr;
+ 
+   png_color palette[MAXCOLORS];
++  png_color ordered_palette[MAXCOLORS];
+   png_byte trans[MAXCOLORS];
+   png_uint_16 histogram[MAXCOLORS];
+   png_byte *line;
+@@ -303,7 +392,7 @@
+   gray *alphas_of_color[MAXCOLORS];
+   int alphas_of_color_cnt[MAXCOLORS];
+   int alphas_first_index[MAXCOLORS+1];
+-  int mapping[MAXCOLORS];
++  int mapping[MAXCOLORS];	/* mapping[old_index] = new_index */
+   int colors;
+   int fulldepth;
+   int x, y;
+@@ -320,6 +409,7 @@
+   static int alpha_sbitval;
+   static int num_alphas_of_color;
+   static int palette_size;
++  static int ordered_palette_size;
+   static colorhist_vector chv;
+   static colorhash_table cht;
+   static int depth;
+@@ -332,6 +422,7 @@
+   alpha_mask = NULL;
+   alpha_sbitval = 0;
+   palette_size = 0;
++  chv = NULL;
+   cht = NULL;
+   depth = 0;
+   errorlevel = 0;
+@@ -340,14 +431,14 @@
+     &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
+   if (png_ptr == NULL) {
+     pm_closer (ifp);
+-    pm_error ("cannot allocate LIBPNG structure");
++    pm_error ("cannot allocate main libpng structure (png_ptr)");
+   }
+ 
+   info_ptr = png_create_info_struct (png_ptr);
+   if (info_ptr == NULL) {
+     png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
+     pm_closer (ifp);
+-    pm_error ("cannot allocate LIBPNG structures");
++    pm_error ("cannot allocate libpng info structure (info_ptr)");
+   }
+ 
+   if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+@@ -356,6 +447,49 @@
+     pm_error ("setjmp returns error condition (1)");
+   }
+ 
++  /* handle ordered palette first so we can reuse common variables: */
++  if (have_ordered_palette) {
++    if (verbose)
++      pm_message ("reading ordered palette (colormap)...");
++    xels = pnm_readpnm (pfp, &cols, &rows, &maxval, &format);
++
++    pnm_type = PNM_FORMAT_TYPE (format);
++    if (pnm_type != PPM_TYPE) {
++      png_destroy_write_struct (&png_ptr, &info_ptr);
++      pm_closer (ifp);
++      pm_closer (pfp);
++      pnm_freearray (xels, rows);
++      xels = NULL;
++      pm_error ("ordered palette must be a PPM file (P3 or P6)");
++    }
++
++    ordered_palette_size = rows * cols;
++    if (ordered_palette_size > MAXCOLORS) {
++      png_destroy_write_struct (&png_ptr, &info_ptr);
++      pm_closer (ifp);
++      pm_closer (pfp);
++      pnm_freearray (xels, rows);
++      xels = NULL;
++      pm_error("ordered-palette image can contain no more than 256 RGB pixels");
++    }
++    if (verbose)
++      pm_message ("%d colors found", ordered_palette_size);
++
++    j = 0;
++    for (y = 0 ; y < rows ; y++) {
++      for (x = 0 ; x < cols ; x++) {
++        p = xels[y][x];
++        ordered_palette[j].red   = PPM_GETR (p);
++        ordered_palette[j].green = PPM_GETG (p);
++        ordered_palette[j].blue  = PPM_GETB (p);
++        ++j;
++      }
++    }
++    pnm_freearray (xels, rows);
++    xels = NULL;
++    /* now ordered_palette[] and ordered_palette_size are valid */
++  }
++
+   xels = pnm_readpnm (ifp, &cols, &rows, &maxval, &format);
+   pnm_type = PNM_FORMAT_TYPE (format);
+ 
+@@ -377,12 +511,16 @@
+     transcolor = ppm_parsecolor (transstring, maxmaxval);
+ 
+   if (alpha) {
++    if (verbose)
++      pm_message ("reading alpha-channel image...");
+     alpha_mask = pgm_readpgm (afp, &alpha_cols, &alpha_rows, &alpha_maxval);
++
+     if (alpha_cols != cols || alpha_rows != rows) {
+       png_destroy_write_struct (&png_ptr, &info_ptr);
+       pm_closer (ifp);
+       pm_error ("dimensions for image and alpha mask do not agree");
+     }
++
+     /* check if the alpha mask can be represented by a single transparency
+        value (i.e. all colors fully opaque except one fully transparent;
+        the transparent color may not also occur as fully opaque.
+@@ -697,11 +835,14 @@
+       pm_message ("%d colors found", colors);
+     }
+     /* GRR:  note that if colors == 16, maxval == 15 (i.e., range == 0-15) */
+-    if ((chv == (colorhist_vector) NULL) ||    /* GRR:      v-- was `=' here */
++    if ((chv == (colorhist_vector) NULL) ||    /* GRR:     v-- was `>=' here */
+         (pnm_type == PGM_TYPE && pm_maxvaltobits(colors-1) > 
+                                 (pm_maxvaltobits(maxval) / 2)) ||
+         (pnm_type == PPM_TYPE && maxval > 255)) {
+-      chv = NULL;
++      if (chv) {
++        ppm_freecolorhist (chv);
++        chv = NULL;
++      }
+       if (verbose) {
+         pm_message ("too many colors for writing a colormapped image");
+       }      
+@@ -713,6 +854,7 @@
+         /* now check if there are different alpha values for the same color
+            and if all pairs still fit into 256 (MAXCOLORS) entries; malloc
+            one extra for possible background color */
++        /* GRR:  BUG? this doesn't check whether cht is NULL before using it: */
+         cht = ppm_colorhisttocolorhash (chv, colors);
+         for (i = 0 ; i < colors + 1 ; i++) {
+           if ((alphas_of_color[i] = (gray *)malloc (MAXCOLORS * sizeof (int)))
+@@ -738,6 +880,8 @@
+             }
+           }
+         }
++        ppm_freecolorhash (cht);
++        cht = NULL;
+         alphas_first_index[0] = 0;
+         for (i = 0 ; i < colors ; i++)
+           alphas_first_index[i+1] = alphas_first_index[i] +
+@@ -755,7 +899,7 @@
+       } /* if alpha */
+ 
+       /* add possible background color to palette */
+-      /* GRR:  BUG? this doesn't check whether chv is NULL (previous block): */
++      /* GRR:  BUG: this doesn't check whether chv is NULL (previous block): */
+       if (background > -1) {
+         cht = ppm_colorhisttocolorhash (chv, colors);
+         background = ppm_lookupcolor (cht, &backcolor);
+@@ -781,6 +925,7 @@
+           }
+         }
+         ppm_freecolorhash (cht);   /* built again about 110 lines below */
++        cht = NULL;
+       }
+ 
+     }
+@@ -867,7 +1012,7 @@
+   }
+ 
+   /* GRR:  all of this needs to be rewritten to avoid direct struct access */
+-  png_init_io (png_ptr, stdout);
++  png_init_io (png_ptr, ofp);
+   info_ptr->width = cols;
+   info_ptr->height = rows;
+   info_ptr->bit_depth = depth;
+@@ -912,7 +1057,7 @@
+   }
+ 
+   /* PLTE chunk */
+-  if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
++  if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) { /* i.e., chv != NULL) */
+     cht = ppm_colorhisttocolorhash (chv, colors);
+     /* before creating palette figure out the transparent color */
+     if (transparent > 0) {
+@@ -952,7 +1097,25 @@
+       int bot_idx = 0;
+       int top_idx = alphas_first_index[colors] - 1;
+ 
+-      /* remap palette indices so opaque entries are last (omittable) */
++      /*
++       * same color     same color (c2),
++       * (c0), four     five different  +-- single color/alpha entry
++       * alpha vals.    alpha values    |   (c3, alphas_of_color[3][0])
++       * ===========    ==============  |
++       *  0  1  2  3  4  5  6  7  8  9 10 ...
++       * c0 c0 c0 c0 c1 c2 c2 c2 c2 c2 c3 ...
++       *  |           |  |              |
++       *  |           |  |              +-- alphas_first_index[3] = 10
++       *  |           |  +----------------- alphas_first_index[2] =  5
++       *  |           +-------------------- alphas_first_index[1] =  4
++       *  +-------------------------------- alphas_first_index[0] =  0
++       *
++       * remap palette indices so opaque entries are last (omittable):  for
++       * each color (i), loop over all the alpha values for that color (j) and
++       * check for opaque ones, moving them to the end (counting down from
++       * above since we don't yet know the relative numbers of opaque and
++       * partially transparent entries).  mapping[old_index] = new_index.
++       */
+       for (i = 0;  i < colors;  ++i) {
+         for (j = alphas_first_index[i];  j < alphas_first_index[i+1];  ++j) {
+           if (alphas_of_color[i][j-alphas_first_index[i]] == 255)
+@@ -980,6 +1143,44 @@
+       info_ptr->trans = trans;
+       info_ptr->num_trans = bot_idx;   /* omit opaque values */
+       pm_message ("writing %d non-opaque transparency values", bot_idx);
++
++    } else if (have_ordered_palette) {
++      /* GRR BUG:  this is explicitly NOT compatible with RGBA palettes */
++      if (colors != ordered_palette_size) {
++        png_destroy_write_struct (&png_ptr, &info_ptr);
++        pm_closer (ifp);
++        pm_error (
++          "sizes of ordered palette (%d) and existing palette (%d) differ",
++          ordered_palette_size, colors);
++      }
++      for (i = 0 ; i < colors ; i++) {
++        int red   = PPM_GETR (chv[i].color);
++        int green = PPM_GETG (chv[i].color);
++        int blue  = PPM_GETB (chv[i].color);
++
++        mapping[i] = -1;
++        for (j = 0 ; j < ordered_palette_size ; j++) {
++          if (ordered_palette[j].red   == red   &&
++              ordered_palette[j].green == green &&
++              ordered_palette[j].blue  == blue)
++          {
++            /* mapping[old_index] = new_index */
++            mapping[i] = j;
++            break;
++          }
++        }
++        if (mapping[i] == -1) {
++          png_destroy_write_struct (&png_ptr, &info_ptr);
++          pm_closer (ifp);
++          pm_error ("failed to find ordered-palette match for existing color "
++            "(%d,%d,%d)", red, green, blue);
++        }
++        palette[mapping[i]].red   = red;
++        palette[mapping[i]].green = green;
++        palette[mapping[i]].blue  = blue;
++      }
++      palette_size = ordered_palette_size;
++
+     } else {
+       for (i = 0 ; i < MAXCOLORS ; i++) {
+         palette[i].red = PPM_GETR (chv[i].color);
+@@ -1031,6 +1232,8 @@
+     if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+       if (alpha)
+         info_ptr->background.index = mapping[alphas_first_index[background]];
++      else if (have_ordered_palette)
++        info_ptr->background.index = mapping[background];
+       else
+         info_ptr->background.index = background;
+     } else if (info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
+@@ -1142,7 +1345,8 @@
+                 color = mapping[i];
+                 break;
+               }
+-          }
++          } else if (have_ordered_palette)
++            color = mapping[color];
+           *pp++ = color;
+         } else if (info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
+                    info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
+@@ -1171,14 +1375,39 @@
+   }
+   png_write_end (png_ptr, info_ptr);
+   /* flush first in case freeing png_ptr segfaults due to jmpbuf problems */
+-  fflush (stdout);
++  fflush (ofp);
+   png_destroy_write_struct(&png_ptr, &info_ptr);
+-  for (i = 0 ; i < num_alphas_of_color ; i++)
++
++  /* num_alphas_of_color is non-zero iff alphas_of_color[] were successfully
++   * allocated, so no need to test for NULL */
++  for (i = 0 ; i < num_alphas_of_color ; i++) {
+     free(alphas_of_color[i]);
++    alphas_of_color[i] = NULL;
++  }
++  /* note that chv was already freed at end of PNG_COLOR_TYPE_PALETTE block */
++  if (cht) {
++    ppm_freecolorhash (cht);
++    cht = NULL;
++  }
++  if (alpha_mask) {
++    pgm_freearray (alpha_mask, alpha_rows);
++    alpha_mask = NULL;
++  }
++  if (xels) {
++    pnm_freearray (xels, rows);
++    xels = NULL;
++  }
+ 
+   return errorlevel;
+ }
+ 
++
++
++
++/**********/
++/*  MAIN  */
++/**********/
++
+ #ifdef __STDC__
+   int main (int argc, char *argv[])
+ #else
+@@ -1187,14 +1416,14 @@
+     char *argv[];
+ #endif
+ {
+-  FILE *ifp, *tfp, *afp;
+-  int argn, errorlevel=0;
++  FILE *ifp, *afp, *pfp, *tfp, *ofp;
++  int argn, errorlevel;
+ 
+-  char *usage = "[-verbose] [-downscale] [-interlace] [-alpha file] ...\n\
++  char *usage = "[-verbose] [-downscale] [-interlace] [-force] [-alpha file] ...\n\
+              ... [-transparent color] [-background color] [-gamma value] ...\n\
+              ... [-hist] [-chroma wx wy rx ry gx gy bx by] [-phys x y unit] ...\n\
+              ... [-text file] [-ztxt file] [-time [yy]yy-mm-dd hh:mm:ss] ...\n\
+-             ... [-filter 0..4] [-compression 0..9] [-force] [pnmfile]";
++             ... [-palette file] [-filter 0..4] [-compression 0..9] [pnmfile]";
+ 
+   pnm_init (&argc, argv);
+   argn = 1;
+@@ -1212,6 +1441,8 @@
+     if (pm_keymatch (argv[argn], "-alpha", 2)) {
+       if (transparent > 0)
+         pm_error ("-alpha and -transparent are mutually exclusive");
++      if (have_ordered_palette)
++        pm_error ("-alpha and -palette are mutually exclusive");
+       alpha = TRUE;
+       if (++argn < argc)
+         alpha_file = argv[argn];
+@@ -1221,6 +1452,8 @@
+     if (pm_keymatch (argv[argn], "-transparent", 3)) {
+       if (alpha)
+         pm_error ("-alpha and -transparent are mutually exclusive");
++      if (have_ordered_palette)
++        pm_error ("-transparent and -palette are (currently) mutually exclusive");
+       transparent = 1;
+       if (++argn < argc)
+         transstring = argv[argn];
+@@ -1317,6 +1550,17 @@
+         pm_usage (usage);
+       }
+     } else 
++    if (pm_keymatch (argv[argn], "-palette", 3)) {
++      if (alpha)
++        pm_error ("-alpha and -palette are mutually exclusive");
++      if (transparent > 0)
++        pm_error ("-transparent and -palette are (currently) mutually exclusive");
++      have_ordered_palette = TRUE;
++      if (++argn < argc)
++        palette_file = argv[argn];
++      else
++        pm_usage (usage);
++    } else
+     if (pm_keymatch (argv[argn], "-filter", 3)) {
+       if (++argn < argc)
+       {
+@@ -1370,8 +1614,27 @@
+     ifp = pm_openr (argv[argn]);
+     ++argn;
+   } else {
++
++    /* setmode/fdopen code borrowed from Info-ZIP's funzip.c (Mark Adler) */
++    /* [HAVE_SETMODE is same macro used by NetPBM 9.x for Cygwin, etc.] */
++
++#ifdef HAVE_SETMODE   /* DOS, FLEXOS, Human68k, NetWare, OS/2, Win32 */
++# if (defined(__HIGHC__) && !defined(FLEXOS))
++    setmode(stdin, _BINARY);
++# else
++    setmode(0, O_BINARY);   /* some buggy C libraries require BOTH setmode() */
++# endif                     /*  call AND the fdopen() in binary mode :-( */
++#endif
++
++#ifdef RISCOS
+     ifp = stdin;
++#else
++    if ((ifp = fdopen(0, "rb")) == (FILE *)NULL)
++      pm_error ("cannot find stdin");
++#endif
++
+   }
++
+   if (argn != argc)
+     pm_usage (usage);
+ 
+@@ -1380,20 +1643,44 @@
+   else
+     afp = NULL;
+ 
++  if (have_ordered_palette)
++    pfp = pm_openr (palette_file);
++  else
++    pfp = NULL;
++
+   if ((text) || (ztxt))
+     tfp = pm_openr (text_file);
+   else
+     tfp = NULL;
+ 
+-  errorlevel = convertpnm (ifp, afp, tfp);
++  /* output always goes to stdout */
++
++#ifdef HAVE_SETMODE   /* DOS, FLEXOS, Human68k, NetWare, OS/2, Win32 */
++# if (defined(__HIGHC__) && !defined(FLEXOS))
++  setmode(stdout, _BINARY);
++# else
++  setmode(1, O_BINARY);
++# endif
++#endif
++
++#ifdef RISCOS
++  ofp = stdout;
++#else
++  if ((ofp = fdopen(1, "wb")) == (FILE *)NULL)
++    pm_error ("cannot write to stdout");
++#endif
++
++  errorlevel = convertpnm (ifp, afp, pfp, tfp, ofp);
+ 
+   if (alpha)
+     pm_closer (afp);
++  if (have_ordered_palette)
++    pm_closer (pfp);
+   if ((text) || (ztxt))
+     pm_closer (tfp);
+ 
+   pm_closer (ifp);
+-  pm_closew (stdout);
++  pm_closew (ofp);
+ 
+   return errorlevel;
+ }
+

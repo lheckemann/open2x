@@ -1,0 +1,120 @@
+# Makefile for pnmtopng/pngtopnm
+# Copyright (C) 1995-1998 Willem van Schaik
+# Copyright (C) 1998-2005 Greg Roelofs
+
+CC = gcc
+CP = cp
+RM = rm
+MKDIR = mkdir -p
+
+# Change to match your directories.
+#
+# It is suggested that you place things like libpng and zlib in
+# version-specific directories like ../zlib-1.2.3 and that you make a
+# symbolic link like "ln -s zlib-1.2.3 zlib" in the parent directory.
+# Preinstalled versions are often found in /usr/local/{include,lib}
+# or /usr/{include,lib}.
+
+PNGDIR = ../libpng
+LIBPNG_INC = -I$(PNGDIR)
+LIBPNG_LIB = -L$(PNGDIR) -lpng
+LIBPNG_SLIB = $(PNGDIR)/libpng.a
+#LIBPNG_INC = -I/usr/local/include
+#LIBPNG_LIB = -L/usr/local/lib -lpng
+#LIBPNG_SLIB = /usr/local/lib/libpng.a
+
+ZDIR = ../zlib
+ZLIB_INC = -I$(ZDIR)
+ZLIB_LIB = -L$(ZDIR) -lz
+ZLIB_SLIB = $(ZDIR)/libz.a
+#ZLIB_INC = -I/usr/local/include
+#ZLIB_LIB = -L/usr/local/lib -lz
+#ZLIB_SLIB = /usr/local/lib/libz.a
+
+# Use one of the following three sections:
+
+# Old-style PBMPLUS/NetPBM directory containing individual subdirs pnm/ ppm/
+# pgm/ and pbm/ .
+#
+PBMDIR = ../netpbm
+PBM_INC = -I$(PBMDIR)/pnm -I$(PBMDIR)/ppm -I$(PBMDIR)/pgm -I$(PBMDIR)/pbm
+PBM_LIB = -L$(PBMDIR)/pnm -L$(PBMDIR)/ppm -L$(PBMDIR)/pgm -L$(PBMDIR)/pbm \
+	-lpnm -lppm -lpgm -lpbm
+PBM_SLIB = $(PBMDIR)/pnm/libpnm.a $(PBMDIR)/ppm/libppm.a \
+	$(PBMDIR)/pgm/libpgm.a $(PBMDIR)/pbm/libpbm.a
+
+# "Beta-style" PBMPLUS directory containing 1999 beta release, in which
+# everything is merged into a single libpnm.
+#
+#PBMDIR = ../pbmplus-19991128-glibc
+#PBM_INC = -I$(PBMDIR)/inc
+#PBM_LIB = -L$(PBMDIR)/libpnm -lpnm
+#PBM_SLIB = $(PBMDIR)/libpnm/libpnm.a
+
+# Newer NetPBM directory (e.g., version 10.x), in which everything is
+# merged into a single libnetpbm.
+#PBMDIR = /usr/local/lib
+#PBM_INC = -I/usr/local/include
+#PBM_LIB = -L$(PBMDIR) -lnetpbm
+#PBM_SLIB = $(PBMDIR)/libnetpbm.a
+
+# base level below which "make install" puts binaries and man pages
+#INSTDIR = $(PBMDIR)/pnm
+INSTDIR = /usr/local
+
+
+CFLAGS = \
+	-g \
+	-Wall \
+	-O3 \
+	$(LIBPNG_INC) \
+	$(ZLIB_INC) \
+	$(PBM_INC)
+
+LDFLAGS = \
+	$(LIBPNG_LIB) \
+	$(ZLIB_LIB) \
+	$(PBM_LIB) \
+	-lm
+
+SLDFLAGS = \
+	$(LIBPNG_SLIB) \
+	$(ZLIB_SLIB) \
+	$(PBM_SLIB) \
+	-lm
+
+SRCS = pnmtopng.c pngtopnm.c
+MANS = $(SRCS:.c=.1)
+OBJS = $(SRCS:.c=.o)
+EXES = $(SRCS:.c=) $(SRCS:.c=-static)
+
+
+# dependency rules
+
+all: $(EXES)
+
+pnmtopng.o:	pnmtopng.c pnmtopng_version.h
+pngtopnm.o:	pngtopnm.c pnmtopng_version.h
+
+pnmtopng: pnmtopng.o
+	$(CC) -o $@ pnmtopng.o $(LDFLAGS)
+
+pngtopnm: pngtopnm.o
+	$(CC) -o $@ pngtopnm.o $(LDFLAGS)
+
+pnmtopng-static: pnmtopng.o
+	$(CC) -o $@ pnmtopng.o $(SLDFLAGS)
+
+pngtopnm-static: pngtopnm.o
+	$(CC) -o $@ pngtopnm.o $(SLDFLAGS)
+
+install: all
+	$(MKDIR) $(INSTDIR)/bin $(INSTDIR)/man/man1
+	$(CP) $(EXES) $(INSTDIR)/bin/.
+	$(CP) $(MANS) $(INSTDIR)/man/man1/.
+
+clean:
+	$(RM) -f $(OBJS) $(EXES)
+
+
+# end of Makefile.gcc

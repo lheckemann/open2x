@@ -1,0 +1,1242 @@
+Only in pnmtopng-2.38: Makefile.NeXT
+diff -ru pnmtopng-2.38/Makefile.gcc pnmtopng-2.39/Makefile.gcc
+--- pnmtopng-2.38/Makefile.gcc	2001-07-21 11:05:06.000000000 -0700
++++ pnmtopng-2.39/Makefile.gcc	2005-11-12 22:53:56.000000000 -0800
+@@ -1,66 +1,92 @@
+-# Makefile for pnmtopng/pngtopnm for gcc 2.7 or later (Linux, Solaris, etc.)
++# Makefile for pnmtopng/pngtopnm
+ # Copyright (C) 1995-1998 Willem van Schaik
++# Copyright (C) 1998-2005 Greg Roelofs
+ 
+ CC = gcc
+ CP = cp
+ RM = rm
++MKDIR = mkdir -p
+ 
+-# change to match your directories
++# Change to match your directories.
+ #
+-# it is suggested that you place things like libpng and zlib in 
+-# version-specific directories like ../zlib-1.0 and that you make a 
+-# symbolic link like "ln -s zlib-1.0 zlib" in the .. directory 
+-#
+-# if the libraries and header files are already installed in /usr/lib and 
+-# /usr/include, just set the "INC" and "LIB" variables to empty strings and
+-# set the "LIB2" variables to /usr/lib/lib<whatever>.a
++# It is suggested that you place things like libpng and zlib in
++# version-specific directories like ../zlib-1.2.3 and that you make a
++# symbolic link like "ln -s zlib-1.2.3 zlib" in the parent directory.
++# Preinstalled versions are often found in /usr/local/{include,lib}
++# or /usr/{include,lib}.
+ 
+-#PNGDIR = ../libgr2/png
+ PNGDIR = ../libpng
+-#PNGDIR = /usr/local/lib
+-PNGINC = -I$(PNGDIR)
+-#PNGINC = -I/usr/local/include
+-PNGLIB = -L$(PNGDIR) -lpng
+-PNGLIB2 = $(PNGDIR)/libpng.a
++LIBPNG_INC = -I$(PNGDIR)
++LIBPNG_LIB = -L$(PNGDIR) -lpng
++LIBPNG_SLIB = $(PNGDIR)/libpng.a
++#LIBPNG_INC = -I/usr/local/include
++#LIBPNG_LIB = -L/usr/local/lib -lpng
++#LIBPNG_SLIB = /usr/local/lib/libpng.a
+ 
+-#ZDIR = ../libgr2/zlib
+ ZDIR = ../zlib
+-#ZDIR = /usr/local/lib
+-ZINC = -I$(ZDIR)
+-#ZINC = -I/usr/local/include
+-ZLIB = -L$(ZDIR) -lz
+-ZLIB2 = $(ZDIR)/libz.a
++ZLIB_INC = -I$(ZDIR)
++ZLIB_LIB = -L$(ZDIR) -lz
++ZLIB_SLIB = $(ZDIR)/libz.a
++#ZLIB_INC = -I/usr/local/include
++#ZLIB_LIB = -L/usr/local/lib -lz
++#ZLIB_SLIB = /usr/local/lib/libz.a
+ 
+-#PBMDIR = /usr/local/netpbm
+-#PBMDIR = ../libgr2
+-PBMDIR = ../netpbm
+-PBMINC = -I$(PBMDIR)/pnm -I$(PBMDIR)/ppm -I$(PBMDIR)/pgm -I$(PBMDIR)/pbm
+-PBMLIB = -L$(PBMDIR)/pnm -L$(PBMDIR)/ppm -L$(PBMDIR)/pgm -L$(PBMDIR)/pbm \
+-	 -lpnm -lppm -lpgm -lpbm
+-PBMLIB2 = $(PBMDIR)/pnm/libpnm.a $(PBMDIR)/ppm/libppm.a \
+-	  $(PBMDIR)/pgm/libpgm.a $(PBMDIR)/pbm/libpbm.a
+-
+-## # GRR 19991205:  use this section instead for the new/coming pbmplus release
+-## PBMDIR = ../pbmplus-19991128-glibc
+-## PBMINC = -I$(PBMDIR)/inc
+-## PBMLIB = -L$(PBMDIR)/libpnm -lpnm
+-## PBMLIB2 = $(PBMDIR)/libpnm/libpnm.a
++# Use one of the following three sections:
+ 
++# Old-style PBMPLUS/NetPBM directory containing individual subdirs pnm/ ppm/
++# pgm/ and pbm/ .
++#
++PBMDIR = ../netpbm
++PBM_INC = -I$(PBMDIR)/pnm -I$(PBMDIR)/ppm -I$(PBMDIR)/pgm -I$(PBMDIR)/pbm
++PBM_LIB = -L$(PBMDIR)/pnm -L$(PBMDIR)/ppm -L$(PBMDIR)/pgm -L$(PBMDIR)/pbm \
++	-lpnm -lppm -lpgm -lpbm
++PBM_SLIB = $(PBMDIR)/pnm/libpnm.a $(PBMDIR)/ppm/libppm.a \
++	$(PBMDIR)/pgm/libpgm.a $(PBMDIR)/pbm/libpbm.a
+ 
+-# where "make install" puts pnmtopng and pngtopnm
++# "Beta-style" PBMPLUS directory containing 1999 beta release, in which
++# everything is merged into a single libpnm.
++#
++#PBMDIR = ../pbmplus-19991128-glibc
++#PBM_INC = -I$(PBMDIR)/inc
++#PBM_LIB = -L$(PBMDIR)/libpnm -lpnm
++#PBM_SLIB = $(PBMDIR)/libpnm/libpnm.a
++
++# Newer NetPBM directory (e.g., version 10.x), in which everything is
++# merged into a single libnetpbm.
++#PBMDIR = /usr/local/lib
++#PBM_INC = -I/usr/local/include
++#PBM_LIB = -L$(PBMDIR) -lnetpbm
++#PBM_SLIB = $(PBMDIR)/libnetpbm.a
+ 
++# base level below which "make install" puts binaries and man pages
+ #INSTDIR = $(PBMDIR)/pnm
+ INSTDIR = /usr/local
+ 
+ 
+-CFLAGS = -O3 -Wall -D_BSD_SOURCE $(PNGINC) $(ZINC) $(PBMINC)
+-LDFLAGS = $(PNGLIB) $(ZLIB) $(PBMLIB) -lm
+-LDFLAGS2 = $(PNGLIB2) $(ZLIB2) $(PBMLIB2) -lm
++CFLAGS = \
++	-g \
++	-Wall \
++	-O3 \
++	$(LIBPNG_INC) \
++	$(ZLIB_INC) \
++	$(PBM_INC)
++
++LDFLAGS = \
++	$(LIBPNG_LIB) \
++	$(ZLIB_LIB) \
++	$(PBM_LIB) \
++	-lm
++
++SLDFLAGS = \
++	$(LIBPNG_SLIB) \
++	$(ZLIB_SLIB) \
++	$(PBM_SLIB) \
++	-lm
+ 
+-MANS = pnmtopng.1 pngtopnm.1
+ SRCS = pnmtopng.c pngtopnm.c
+-OBJS = pnmtopng.o pngtopnm.o
+-EXES = pnmtopng pngtopnm pnmtopng-static pngtopnm-static
++MANS = $(SRCS:.c=.1)
++OBJS = $(SRCS:.c=.o)
++EXES = $(SRCS:.c=) $(SRCS:.c=-static)
+ 
+ 
+ # dependency rules
+@@ -77,14 +103,15 @@
+ 	$(CC) -o $@ pngtopnm.o $(LDFLAGS)
+ 
+ pnmtopng-static: pnmtopng.o
+-	$(CC) -o $@ pnmtopng.o $(LDFLAGS2)
++	$(CC) -o $@ pnmtopng.o $(SLDFLAGS)
+ 
+ pngtopnm-static: pngtopnm.o
+-	$(CC) -o $@ pngtopnm.o $(LDFLAGS2)
++	$(CC) -o $@ pngtopnm.o $(SLDFLAGS)
+ 
+ install: all
+-	$(CP) $(EXES) $(INSTDIR)/bin
+-	$(CP) $(MANS) $(INSTDIR)/man/man1
++	$(MKDIR) $(INSTDIR)/bin $(INSTDIR)/man/man1
++	$(CP) $(EXES) $(INSTDIR)/bin/.
++	$(CP) $(MANS) $(INSTDIR)/man/man1/.
+ 
+ clean:
+ 	$(RM) -f $(OBJS) $(EXES)
+diff -ru pnmtopng-2.38/Makefile.std pnmtopng-2.39/Makefile.std
+--- pnmtopng-2.38/Makefile.std	2001-07-21 11:05:23.000000000 -0700
++++ pnmtopng-2.39/Makefile.std	2005-11-12 12:58:37.000000000 -0800
+@@ -1,71 +1,118 @@
+ # Makefile for pnmtopng/pngtopnm
+ # Copyright (C) 1995-1998 Willem van Schaik
++# Copyright (C) 1998-2005 Greg Roelofs
+ 
+-CC = cc -O -Wall
++CC = cc
+ CP = cp
+ RM = rm
++MKDIR = mkdir -p
+ 
+-# change to match your directories
+-# it is suggested that you place things like libpng and zlib in 
+-# version-specific directories like ../zlib-1.0 and that you make a 
+-# symbolic link like "ln -s zlib-1.0 zlib" in the .. directory 
+-
+-LIBPNG = ../libpng
+-ZLIB = ../zlib
+-NETPBM = ../netpbm
+-#NETPBM = /usr/local/netpbm
+-
+-# where "make install" puts pnmtopng and pngtopnm
+-
+-INSTDIR = $(NETPBM)/pnm
+-#INSTDIR = /usr/local
+-
+-CCFLAGS = \
+-	-I$(LIBPNG) \
+-	-I$(ZLIB) \
+-	-I$(NETPBM) \
+-	-I$(NETPBM)/pnm \
+-	-I$(NETPBM)/ppm \
+-	-I$(NETPBM)/pgm \
+-	-I$(NETPBM)/pbm
++# Change to match your directories.
++#
++# It is suggested that you place things like libpng and zlib in
++# version-specific directories like ../zlib-1.2.3 and that you make a
++# symbolic link like "ln -s zlib-1.2.3 zlib" in the parent directory.
++# Preinstalled versions are often found in /usr/local/{include,lib}
++# or /usr/{include,lib}.
++
++PNGDIR = ../libpng
++LIBPNG_INC = -I$(PNGDIR)
++LIBPNG_LIB = -L$(PNGDIR) -lpng
++LIBPNG_SLIB = $(PNGDIR)/libpng.a
++#LIBPNG_INC = -I/usr/local/include
++#LIBPNG_LIB = -L/usr/local/lib -lpng
++#LIBPNG_SLIB = /usr/local/lib/libpng.a
++
++ZDIR = ../zlib
++ZLIB_INC = -I$(ZDIR)
++ZLIB_LIB = -L$(ZDIR) -lz
++ZLIB_SLIB = $(ZDIR)/libz.a
++#ZLIB_INC = -I/usr/local/include
++#ZLIB_LIB = -L/usr/local/lib -lz
++#ZLIB_SLIB = /usr/local/lib/libz.a
++
++# Use one of the following three sections:
++
++# Old-style PBMPLUS/NetPBM directory containing individual subdirs pnm/ ppm/
++# pgm/ and pbm/ .
++#
++PBMDIR = ../netpbm
++PBM_INC = -I$(PBMDIR)/pnm -I$(PBMDIR)/ppm -I$(PBMDIR)/pgm -I$(PBMDIR)/pbm
++PBM_LIB = -L$(PBMDIR)/pnm -L$(PBMDIR)/ppm -L$(PBMDIR)/pgm -L$(PBMDIR)/pbm \
++	-lpnm -lppm -lpgm -lpbm
++PBM_SLIB = $(PBMDIR)/pnm/libpnm.a $(PBMDIR)/ppm/libppm.a \
++	$(PBMDIR)/pgm/libpgm.a $(PBMDIR)/pbm/libpbm.a
++
++# "Beta-style" PBMPLUS directory containing 1999 beta release, in which
++# everything is merged into a single libpnm.
++#
++#PBMDIR = ../pbmplus-19991128-glibc
++#PBM_INC = -I$(PBMDIR)/inc
++#PBM_LIB = -L$(PBMDIR)/libpnm -lpnm
++#PBM_SLIB = $(PBMDIR)/libpnm/libpnm.a
++
++# Newer NetPBM directory (e.g., version 10.x), in which everything is
++# merged into a single libnetpbm.
++#PBMDIR = /usr/local/lib
++#PBM_INC = -I/usr/local/include
++#PBM_LIB = -L$(PBMDIR) -lnetpbm
++#PBM_SLIB = $(PBMDIR)/libnetpbm.a
++
++# base level below which "make install" puts binaries and man pages
++#INSTDIR = $(PBMDIR)/pnm
++INSTDIR = /usr/local
++
++
++CFLAGS = \
++	-O \
++	$(LIBPNG_INC) \
++	$(ZLIB_INC) \
++	$(PBM_INC)
+ 
+ LDFLAGS = \
+-	-L. \
+-	-L$(LIBPNG) \
+-	-L$(ZLIB) \
+-	-L$(NETPBM)/pnm \
+-	-L$(NETPBM)/ppm \
+-	-L$(NETPBM)/pgm \
+-	-L$(NETPBM)/pbm
++	$(LIBPNG_LIB) \
++	$(ZLIB_LIB) \
++	$(PBM_LIB) \
++	-lm
++
++SLDFLAGS = \
++	$(LIBPNG_SLIB) \
++	$(ZLIB_SLIB) \
++	$(PBM_SLIB) \
++	-lm
+ 
+ SRCS = pnmtopng.c pngtopnm.c
+-OBJS = pnmtopng.o pngtopnm.o
+-LIBS = -lpng -lz -lpnm -lppm -lpgm -lpbm -lm
+-EXES = pnmtopng pngtopnm
++MANS = $(SRCS:.c=.1)
++OBJS = $(SRCS:.c=.o)
++EXES = $(SRCS:.c=) $(SRCS:.c=-static)
++
+ 
+ # dependency rules
+ 
+-all: pnmtopng pngtopnm
++all: $(EXES)
+ 
+-pnmtopng.o: pnmtopng.c pnmtopng_version.h
+-	$(CC) -c $(CCFLAGS) pnmtopng.c
++pnmtopng.o:	pnmtopng.c pnmtopng_version.h
++pngtopnm.o:	pngtopnm.c pnmtopng_version.h
+ 
+ pnmtopng: pnmtopng.o
+-	$(CC) $(LDFLAGS) -o pnmtopng pnmtopng.o $(LIBS) 
+-
+-pngtopnm.o: pngtopnm.c pnmtopng_version.h
+-	$(CC) -c $(CCFLAGS) pngtopnm.c
++	$(CC) -o $@ pnmtopng.o $(LDFLAGS)
+ 
+ pngtopnm: pngtopnm.o
+-	$(CC) $(LDFLAGS) -o pngtopnm pngtopnm.o $(LIBS) 
++	$(CC) -o $@ pngtopnm.o $(LDFLAGS)
++
++pnmtopng-static: pnmtopng.o
++	$(CC) -o $@ pnmtopng.o $(SLDFLAGS)
++
++pngtopnm-static: pngtopnm.o
++	$(CC) -o $@ pngtopnm.o $(SLDFLAGS)
+ 
+ install: all
+-	$(CP) pnmtopng $(INSTDIR)/bin
+-	$(CP) pnmtopng.1 $(INSTDIR)/man/man1
+-	$(CP) pngtopnm $(INSTDIR)/bin
+-	$(CP) pngtopnm.1 $(INSTDIR)/man/man1
++	$(MKDIR) $(INSTDIR)/bin $(INSTDIR)/man/man1
++	$(CP) $(EXES) $(INSTDIR)/bin/.
++	$(CP) $(MANS) $(INSTDIR)/man/man1/.
+ 
+ clean:
+-	$(RM) -f *.o pnmtopng pngtopnm
++	$(RM) -f $(OBJS) $(EXES)
++
+ 
+-# end of makefile
++# end of Makefile.std
+diff -ru pnmtopng-2.38/README pnmtopng-2.39/README
+--- pnmtopng-2.38/README	2002-06-16 22:31:34.000000000 -0700
++++ pnmtopng-2.39/README	2005-11-12 22:57:05.000000000 -0800
+@@ -1,7 +1,9 @@
+ ** PNMTOPNG / PNGTOPNM
+-** version 2.38 - 16 June 2002
++** version 2.39 - 12 November 2005
+ 
+-This is another in a set of semi-official bug-fix/enhancement releases.
++                  -- [start of Greg Roelofs commentary] --
++
++This is another in a set of "official" bug-fix/enhancement releases.
+ I sort of took over maintenance of this package while Willem was on an
+ extended bike trip several years ago, and for now I'm continuing with
+ periodic, small updates.  (The code really should be rewritten to avoid
+@@ -10,20 +12,25 @@
+ 
+ Brief changelog:
+ 
+-  2.37   - (March 1998) never publicly released, partly because Willem had
+-           hoped to quiet gcc's "<var> might be clobbered by `longjmp'"
+-
+-  2.37.2 - fixed gcc "clobber" warnings; under Solaris, they resulted in
+-           stack corruption even when there was no error in the image files
+-           or libraries
++  2.39   - fixed alphas_of_color[] buffer-overrun bug; incorporated Makefile
++           patch from Martin Mokrejs and updated or removed other makefiles;
++           incorporated zlib-strategy patch from Cosmin Truta; incorporated
++           significant-bits patch from Sascha Demetrio; cleaned up read_text()
++           function and fixed memleak; fixed several potential allocation-
++           overflow bugs (based on Debian/Alan Cox security patch); updated
++           man pages
+ 
+-  2.37.3 - fixed a minor bug with respect to error exits; generally cleaner
+-           error exits (close files, etc.)
++  2.38   - forced explicit binary mode on stdin/stdout for DOS-like OSes;
++           added same (optional) support for warning-level return codes to
++           pngtopnm (see 2.37.5 above); plugged some memory leaks; documented
++           palette-remapping code better; added support for custom (ordered)
++           palette (new -palette option); added some checks for malloc()
++           failure; extended syntax of text-comment files by allowing blank
++           lines and keywords on separate lines from main text (tenthumbs at
++           cybernex.net); abandoned silly "ultra-minor" version number
+ 
+-  2.37.4 - fixed a bug that caused 16-shade grayscale images to be written
+-           as 8-bit grayscale instead of (smaller) 4-bit colormapped images
+-           (bug report, analysis and fix by Rafal Rzeczkowski); added support
+-           for the new/upcoming pbmplus release (based on 1999-11-28 beta).
++  2.37.6 - fixed a bug in -background handling for low-bit-depth grayscale
++           images; renamed version.h to pnmtopng_version.h
+ 
+   2.37.5 - fixed a bug in -transparent handling (pnmtopng no longer chooses
+            an approximate color if the specified one isn't present); quieted
+@@ -31,17 +38,23 @@
+            for warning-level return codes (define PNMTOPNG_WARNING_LEVEL 2
+            to enable) to pnmtopng
+ 
+-  2.37.6 - fixed a bug in -background handling for low-bit-depth grayscale
+-           images; renamed version.h to pnmtopng_version.h
++  2.37.4 - fixed a bug that caused 16-shade grayscale images to be written
++           as 8-bit grayscale instead of (smaller) 4-bit colormapped images
++           (bug report, analysis and fix by Rafal Rzeczkowski); added support
++           for the new/upcoming pbmplus release (based on 1999-11-28 beta).
+ 
+-  2.38   - forced explicit binary mode on stdin/stdout for DOS-like OSes;
+-           added same (optional) support for warning-level return codes to
+-           pngtopnm (see 2.37.5 above); plugged some memory leaks; documented
+-           palette-remapping code better; added support for custom (ordered)
+-           palette (new -palette option); added some checks for malloc()
+-           failure; extended syntax of text-comment files by allowing blank
+-           lines and keywords on separate lines from main text (tenthumbs at
+-           cybernex.net); abandoned silly "ultra-minor" version number
++  2.37.3 - fixed a minor bug with respect to error exits; generally cleaner
++           error exits (close files, etc.)
++
++  2.37.2 - fixed gcc "clobber" warnings; under Solaris, they resulted in
++           stack corruption even when there was no error in the image files
++           or libraries
++
++  2.37.1 - fixed rescaling bug with grayscale palettes; cleaned up Linux
++           makefile; cleaned up uninitialized-variable warnings
++
++  2.37   - (March 1998) never publicly released, partly because Willem had
++           hoped to quiet gcc's "<var> might be clobbered by `longjmp'"
+ 
+                    -- [end of Greg Roelofs commentary] --
+ 
+@@ -51,35 +64,37 @@
+ png library and the zlib compression library.
+ 
+ These can be found at:
+-	ftp://swrinde.nde.swri.edu/pub/png/src/libpng-*
+-	ftp://swrinde.nde.swri.edu/pub/png/src/zlib-*
++	ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng-*
++	ftp://ftp.simplesystems.org/pub/libpng/png/src/zlib-*
+ 	ftp://ftp.x.org/contrib/utilities/netpbm-1mar1994*
+ or see
+ 	http://www.libpng.org/pub/png/apps/pnmtopng.html
+ 	http://www.libpng.org/pub/png/libpng.html
+-	http://www.zlib.org/
++	http://zlib.net/
+ 	http://netpbm.sourceforge.net/
+ 	http://www.acme.com/software/pbmplus/	[update coming someday?]
+ 
+ To compile and install, a makefile is provided. Do check the directories
+ where you have put the required libraries. Then either accommodate the 
+ makefile or make links from generic names (e.g., zlib) to version-specific
+-directories (e.g., zlib-1.1.4), which is the recommended way.
++directories (e.g., zlib-1.2.3), which is the recommended way.
+ 
+ For testing purposes, have a look at the test-set PngSuite.tar.gz, which
+ contains a small test-image for every PNG color type and for most PNG chunk
+ types. It can be found at:
+ 	http://www.schaik.com/pngsuite/pngsuite.html
+-	ftp://swrinde.nde.swri.edu/pub/png/images/suite/
++	ftp://ftp.simplesystems.org/pub/libpng/png/images/suite/
+ 
+ Other web pages with PNG images are at:
+ 	http://www.libpng.org/pub/png/png-textures.html
+ 	http://www.libpng.org/pub/png/pngs-img.html
++	http://www.libpng.org/pub/png/png-rgba32.html
+ 	http://www.libpng.org/pub/png/pngpic2.html
+-	http://www.libpng.org/pub/png/colorcube/
++	http://www.libpng.org/pub/png/png-gammatest.html
++	http://www.libpng.org/pub/png/png-colortest.html
+ 	http://www.libpng.org/pub/png/pngmisc.html#images
+ 
+ ------
+-Alexander Lehmann <lehmann@usa.net>
+-Willem van Schaik <willem@schaik.com>
+-Greg Roelofs <newt@pobox.com>
++Alexander Lehmann <lehmann|usa.net>
++Willem van Schaik <willem|schaik.com>
++Greg Roelofs <newt|pobox.com>
+diff -ru pnmtopng-2.38/pngtopnm.1 pnmtopng-2.39/pngtopnm.1
+--- pnmtopng-2.38/pngtopnm.1	1997-05-27 04:54:38.000000000 -0700
++++ pnmtopng-2.39/pngtopnm.1	2005-11-12 19:44:34.000000000 -0800
+@@ -1,4 +1,4 @@
+-.TH pngtopnm 1 "6 January 1997"
++.TH pngtopnm 1 "12 November 2005"
+ .IX pngtopnm
+ .SH NAME
+ pngtopnm - convert a Portable Network Graphics file into a portable anymap
+@@ -84,18 +84,21 @@
+ pnmtopng(1), ptot(1), pnmgamma(1), pnm(5)
+ .SH NOTE
+ Instead of pngtopnm|pnmtoxxx, a specific converter should be used, if
+-available. E.g.
++available. For example,
+ .I ptot
+ (PNG to TIFF conversion), etc.
+ .SH BUGS
+ There could be an option to read the comment text from pnm comments instead
+ of a separate file.
+ .PP
+-The program could be much faster, with a bit of code optimizing.
++The program could be much faster, with a bit of code optimizing.  See also
++the forked version distributed with the (new) NetPBM suite.
+ .SH AUTHORS
+-Copyright (C) 1995-1997 by Alexander Lehmann
++Copyright (C) 1995-1998 by Alexander Lehmann
+ .br
+                         and Willem van Schaik.
++.br
++Copyright (C) 1999-2005 by Greg Roelofs.
+ .\" Permission to use, copy, modify, and distribute this software and its
+ .\" documentation for any purpose and without fee is hereby granted, provided
+ .\" that the above copyright notice appear in all copies and that both that
+diff -ru pnmtopng-2.38/pngtopnm.c pnmtopng-2.39/pngtopnm.c
+--- pnmtopng-2.38/pngtopnm.c	2002-06-16 22:46:49.000000000 -0700
++++ pnmtopng-2.39/pngtopnm.c	2005-11-12 19:41:04.000000000 -0800
+@@ -2,9 +2,9 @@
+ ** pngtopnm.c -
+ ** read a Portable Network Graphics file and produce a portable anymap
+ **
+-** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+-**                        and Willem van Schaik <willem@schaik.com>
+-** Copyright (C) 1999-2002 by Greg Roelofs <newt@pobox.com>
++** Copyright (C) 1995,1998 by Alexander Lehmann <alex|hal.rhein-main.de>
++**                        and Willem van Schaik <willem|schaik.com>
++** Copyright (C) 1999-2005 by Greg Roelofs <newt|pobox.com>
+ **
+ ** Permission to use, copy, modify, and distribute this software and its
+ ** documentation for any purpose and without fee is hereby granted, provided
+@@ -17,7 +17,13 @@
+ ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
+ */
+ 
+-/* GRR 20010816:  fixed bug reported by Eric Fu <ericfu@etrieve.com>:
++/* GRR 20051112:  adapted 2002 Debian/Alan Cox patch to fix several potential
++ *  allocation-overflow bugs (added new grr_overflow2() function as aid). */
++
++/* GRR 20051102:  ifdef'd out some impossible code (maxval = unsigned short
++ *  at most, so testing for > P?M_MAXVAL is pointless). */
++
++/* GRR 20010816:  fixed bug reported by Eric Fu <ericfu|etrieve.com>:
+  *  stdin/stdout must be set to binary mode for DOS-like environments.  (Bug
+  *  report was specifically about NetPBM 9.x version, not this code, but same
+  *  issue applies here.)  Borrowed tried-and-true funzip.c code for maximal
+@@ -47,6 +53,8 @@
+ #include "pnmtopng_version.h"	/* VERSION macro */
+ #include <pnm.h>
+ 
++#include "pnmtopng_overflow.h"  /* grr_overflow2() function (clone) */
++
+ typedef struct _jmpbuf_wrapper {
+   jmp_buf jmpbuf;
+ } jmpbuf_wrapper;
+@@ -318,7 +326,7 @@
+   FILE *ifp, *tfp, *ofp;
+ #endif
+ {
+-  char sig_buf [SIG_CHECK_SIZE];
++  png_byte sig_buf[SIG_CHECK_SIZE];
+   png_struct *png_ptr;
+   png_info *info_ptr;
+   pixel *row;
+@@ -347,7 +355,7 @@
+ 
+   if (fread (sig_buf, 1, SIG_CHECK_SIZE, ifp) != SIG_CHECK_SIZE) {
+     pm_closer (ifp);
+-    pm_error ("input file is empty or too short");
++    pm_error ("input file is empty or truncated");
+   }
+   if (png_sig_cmp (sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE) != 0) {
+     pm_closer (ifp);
+@@ -423,6 +431,7 @@
+ 		  info_ptr->interlace_type ? ", Adam7 interlaced" : "");
+   }
+ 
++  grr_overflow2 (info_ptr->height, (int)sizeof(png_byte*));
+   png_image = (png_byte **)malloc (info_ptr->height * sizeof (png_byte*));
+   if (png_image == NULL) {
+     png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+@@ -430,19 +439,25 @@
+     pm_error ("couldn't allocate space for image");
+   }
+ 
+-  if (info_ptr->bit_depth == 16)
++  if (info_ptr->bit_depth == 16) {
++    grr_overflow2 (2, info_ptr->width);
+     linesize = 2 * info_ptr->width;
+-  else
++  } else {
+     linesize = info_ptr->width;
++  }
+ 
+-  if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
++  if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
++    grr_overflow2 (2, linesize);
+     linesize *= 2;
+-  else
+-  if (info_ptr->color_type == PNG_COLOR_TYPE_RGB)
++  } else
++  if (info_ptr->color_type == PNG_COLOR_TYPE_RGB) {
++    grr_overflow2 (3, linesize);
+     linesize *= 3;
+-  else
+-  if (info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
++  } else
++  if (info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
++    grr_overflow2 (4, linesize);
+     linesize *= 4;
++  }
+ 
+   for (y = 0 ; y < info_ptr->height ; y++) {
+     png_image[y] = malloc (linesize);
+@@ -696,11 +711,14 @@
+     }
+   }
+ 
++#if 0   /* GRR 20051102:  pointless since maxval is <= unsigned short */
+   if ((pnm_type == PGM_TYPE) && (maxval > PGM_MAXMAXVAL))
+     maxmaxval = PGM_MAXMAXVAL;
+   else if ((pnm_type == PPM_TYPE) && (maxval > PPM_MAXMAXVAL))
+     maxmaxval = PPM_MAXMAXVAL;
+-  else maxmaxval = maxval;
++  else
++#endif
++  maxmaxval = maxval;
+ 
+   if (verbose)
+     pm_message ("writing a %s file (maxval=%u)",
+@@ -838,8 +856,12 @@
+     if (pm_keymatch (argv[argn], "-time", 3)) {
+       mtime = TRUE;
+     } else {
+-      fprintf(stderr,"pngtopnm version %s, compiled with libpng version %s\n",
+-        VERSION, PNG_LIBPNG_VER_STRING);
++      fprintf(stderr,"pngtopnm version %s.\n", VERSION);
++      fprintf(stderr, "   Compiled with libpng %s; using libpng %s.\n",
++        PNG_LIBPNG_VER_STRING, png_libpng_ver);
++      fprintf(stderr, "   Compiled with zlib %s; using zlib %s.\n",
++        ZLIB_VERSION, zlib_version);
++      fprintf(stderr, "\n");
+       pm_usage (usage);
+     }
+     argn++;
+diff -ru pnmtopng-2.38/pnmtopng.1 pnmtopng-2.39/pnmtopng.1
+--- pnmtopng-2.38/pnmtopng.1	1997-05-27 04:54:38.000000000 -0700
++++ pnmtopng-2.39/pnmtopng.1	2005-11-12 19:43:13.000000000 -0800
+@@ -1,4 +1,4 @@
+-.TH pnmtopng 1 "6 January 1997"
++.TH pnmtopng 1 "12 November 2005"
+ .IX pnmtopng
+ .SH NAME
+ pnmtopng - convert a portable anymap into a Portable Network Graphics file
+@@ -7,6 +7,7 @@
+ .RB [-verbose]
+ [-downscale]
+ [-interlace]
++[-force]
+ [-alpha file]
+ .br
+ [-transparent color]
+@@ -23,7 +24,10 @@
+ .br
+ [-filter type]
+ [-compression level]
+-[-force]
++[-strategy type]
++.br
++[-palette file]
++[-sbit s1[,s2[,s3[,s4]]]]
+ .RI [ pnmfile ]
+ .SH DESCRIPTION
+ Reads a portable pixmap as input.
+@@ -49,6 +53,12 @@
+ .B -interlace
+ Creates an interlaced PNG file (Adam7).
+ .TP
++.B -force
++When set, -force limits the optimizations of pnmtopng. A png-file similar
++to the pnm-input is as much as possible enforced. For example no paletted
++files will be created and alpha-channel images will not be converted to
++images with a transparency chunck.
++.TP
+ .B -alpha file
+ The alpha channel of pixel (or image) specifies the transparency of a pixel.
+ To create this fourth pixel value a separate
+@@ -56,7 +66,7 @@
+ or
+ .I .pgm-file
+ is needed. In this file black (0) stands for fully transparant and white (1) 
+-will become opaque. The sizes of both pbm/pgm/ppm-files must be the same.
++will become opaque. The dimensions of both pbm/pgm/ppm-files must be the same.
+ If the information contained in the alpha mask can also be represented as
+ a transparency index, it will be used, since this should result in a smaller
+ image file.
+@@ -67,7 +77,7 @@
+ particular color fully transparent. The format to specify the color is either
+ (when for example orange) "1.0,0.5,0.0", where the values are floats between 
+ zero and one, or with the syntax "#RGB", "#RRGGBB" or "#RRRRGGGGBBBB" where 
+-R, G and B are hexa-decimal numbers.
++R, G and B are hexadecimal numbers.
+ .TP
+ .B -background color
+ To create a background color chunck in the 
+@@ -135,23 +145,37 @@
+ The same as -text, but now the text will be compressed.
+ .TP
+ .B -time yy-mm-dd hh:mm:ss or -time yyyy-mm-dd hh:mm:ss
+-This option allows you to specify the (modification)time. The year parameter 
+-can be given as a two- or a four-digit value.
++This option allows you to specify the (modification) time. The year parameter 
++can be given as a two- or four-digit value.
+ .TP
+ .B -filter type
+-When the types of filters must be restricted you can specify here
++When the types of filters must be restricted, you can specify here
+ which filter you want to use. Allowed values are: 0 (none), 1 (sub), 
+-2 (up), 3 (avg) and 4 (paeth).
++2 (up), 3 (avg), and 4 (paeth).
+ .TP
+ .B -compression level
+-To explicitly set the compression level of zlib use this parameter. Select
++To explicitly set the compression level of zlib, use this parameter. Select
+ a level between 0 for no compression (max speed) and 9 for maximum compression.
+ .TP
+-.B -force
+-When set, -force limits the optimizations of pnmtopng. A png-file similar
+-to the pnm-input is as much as possible enforced. For example no paletted
+-files will be created and alpha-channel images will not be converted to
+-images with a transparency chunck.
++.B -strategy type
++To explicitly set the compression strategy of zlib, use this parameter. Choices
++are 0 for the default strategy, 1 for filtered (optimized for PNG filter types
++other than ``none''), 2 for Huffman-only, or 3 for run-length encoding (fast
++but rarely useful other than for bilevel images).
++.TP
++.B -palette file
++To specify the precise order of colors in a colormapped (palette-based) image,
++use this option to provide the name of a PPM file containing up to 256 RGB
++pixels.  The order of the pixels will define the order of colors in the
++palette.  Note that the colors must be consistent with those of the (main)
++input image.
++.TP
++.B -sbit s1[,s2[,s3[,s4]]]
++Specify the number of significant bits per channel. The bit counts are
++specified in the order R,G,B[,A] or GRAY[,A].  For example, for an image
++derived from a 16-bit RGB image, specify '-sbit 5,6,5'.  If fewer bit
++counts are specified than there are channels in the image, the default
++value (based on maxval) will be used for the remaining channels.
+ .PP
+ All flags can be abbreviated to their shortest unique prefix.
+ .SH "SEE ALSO"
+@@ -166,11 +190,14 @@
+ There could be an option to read the comment text from pnm comments instead
+ of a separate file.
+ .PP
+-The program could be much faster, with a bit of code optimizing.
++The program could be much faster, with a bit of code optimizing.  See also
++the forked version distributed with the (new) NetPBM suite.
+ .SH AUTHORS
+-Copyright (C) 1995-1997 by Alexander Lehmann
++Copyright (C) 1995-1998 by Alexander Lehmann
+ .br
+                         and Willem van Schaik.
++.br
++Copyright (C) 1999-2005 by Greg Roelofs.
+ .\" Permission to use, copy, modify, and distribute this software and its
+ .\" documentation for any purpose and without fee is hereby granted, provided
+ .\" that the above copyright notice appear in all copies and that both that
+diff -ru pnmtopng-2.38/pnmtopng.c pnmtopng-2.39/pnmtopng.c
+--- pnmtopng-2.38/pnmtopng.c	2002-06-16 17:38:48.000000000 -0700
++++ pnmtopng-2.39/pnmtopng.c	2005-11-12 19:40:45.000000000 -0800
+@@ -3,11 +3,11 @@
+ ** read a portable anymap and produce a Portable Network Graphics file
+ **
+ ** derived from pnmtorast.c (c) 1990,1991 by Jef Poskanzer and some
+-** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
++** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra|fwi.uva.nl>
+ **
+-** Copyright (C) 1995-1998 by Alexander Lehmann <alex@hal.rhein-main.de>
+-**                         and Willem van Schaik <willem@schaik.com>
+-** Copyright (C) 1998-2002 by Greg Roelofs <newt@pobox.com>
++** Copyright (C) 1995-1998 by Alexander Lehmann <alex|hal.rhein-main.de>
++**                         and Willem van Schaik <willem|schaik.com>
++** Copyright (C) 1998-2005 by Greg Roelofs <newt|pobox.com>
+ **
+ ** Permission to use, copy, modify, and distribute this software and its
+ ** documentation for any purpose and without fee is hereby granted, provided
+@@ -17,6 +17,17 @@
+ ** implied warranty.
+ */
+ 
++/* GRR 20051112:  applied Cosmin Truta's zlib-strategy patch (new -strategy
++ *  option); applied Sascha Demetrio's significant-bits patch (new -sbit
++ *  option); cleaned up read_text() function and fixed a memleak; adapted
++ *  2002 Debian/Alan Cox patch to fix several potential allocation-overflow
++ *  bugs (added new grr_overflow2() function as aid). */
++
++/* GRR 20051102:  ifdef'd out some impossible code (maxval = unsigned short
++ *  at most, so testing for > 65535 is pointless). */
++
++/* GRR 20051023:  fixed buffer overrun in RGBA-palette calculations. */
++
+ /* GRR 20020616:  fixed assumption in read_text() that malloc() always
+  *  returns successfully; applied TenThumbs' enhancement patch of 20010808:
+  *
+@@ -37,20 +48,20 @@
+  *  palette-remapping code; added support for custom (ordered) palette
+  *  (new -palette option). */
+ 
+-/* GRR 20010816:  fixed bug reported by Eric Fu <ericfu@etrieve.com>:
++/* GRR 20010816:  fixed bug reported by Eric Fu <ericfu|etrieve.com>:
+  *  stdin/stdout must be set to binary mode for DOS-like environments.  (Bug
+  *  report was specifically about NetPBM 9.x version, not this code, but same
+  *  issue applies here.)  Borrowed tried-and-true funzip.c code for maximal
+  *  portability, but note dependency on macros that may need to be defined
+  *  explicitly in makefiles (e.g., HAVE_SETMODE, FLEXOS and RISCOS). */
+ 
+-/* GRR 20010721:  fixed bug reported by Werner Lemberg <wl@gnu.org>:
++/* GRR 20010721:  fixed bug reported by Werner Lemberg <wl|gnu.org>:
+  *  bKGD value not scaled properly in sub-8-bit grayscale images (should
+  *  be scaled identically to tRNS value).  Also renamed version.h to
+  *  less generic pnmtopng_version.h and replaced one last (deprecated)
+  *  png_write_destroy() call. */
+ 
+-/* GRR 20000930:  fixed bug reported by Steven Grady <grady@xcf.berkeley.edu>:
++/* GRR 20000930:  fixed bug reported by Steven Grady <grady|xcf.berkeley.edu>:
+  *  if -transparent option given but exact color does not exist (e.g., when
+  *  doing batch conversion of a web site), pnmtopng would pick an approximate
+  *  color instead of ignoring the transparency.  Also added optional errorlevel
+@@ -60,7 +71,7 @@
+ /* GRR 20000315:  ifdef'd out a never-reached (for non-PGM_BIGGRAYS) case
+  *  that causes a gcc warning. */
+ 
+-/* GRR 19991203:  incorporated fix by Rafal Rzeczkowski <rzeczkrg@mcmaster.ca>:
++/* GRR 19991203:  incorporated fix by Rafal Rzeczkowski <rzeczkrg|mcmaster.ca>:
+  *  gray images with exactly 16 shades were being promoted to 8-bit grayscale
+  *  rather than 4-bit palette due to misuse of the pm_maxvaltobits() function.
+  *  Also moved VERSION to new version.h header file. */
+@@ -95,7 +106,11 @@
+ #include <png.h>		/* includes zlib.h and setjmp.h */
+ #include "pnmtopng_version.h"	/* VERSION macro */
+ #include <pnm.h>
+-#include <ppmcmap.h>		/* NOT installed by default with netpbm */
++#ifndef PPM_STDSORT /* defined in newer ppmcmap.h, which newer pnm.h includes */
++#  include <ppmcmap.h>		/* NOT installed by default with older netpbm */
++#endif
++
++#include "pnmtopng_overflow.h"  /* grr_overflow2() function (clone) */
+ 
+ typedef unsigned char   uch;
+ typedef unsigned short  ush;
+@@ -166,8 +181,11 @@
+ static char *date_string;
+ static char *time_string;
+ static struct tm time_struct;
++static int sbit_n = 0;
++static int sbit[4] = { 0, 0, 0, 0 };
+ static int filter = -1;
+ static int compression = -1;
++static int strategy = -1;
+ static int force = FALSE;
+ static jmpbuf_wrapper pnmtopng_jmpbuf_struct;
+ 
+@@ -225,12 +243,14 @@
+   FILE *tfp;
+ #endif
+ {
+-  char textline[256];
++# define TEXTLINE_MAX 1024  /* some URLs are > 256 chars long */
++  char textline[TEXTLINE_MAX];
+   int textpos;
+   int i, j;
+-  int c;
++  int ch;
+   char *cp, *texterr = "pnmtopng:  unable to allocate memory for text chunks\n";
+ 
++  grr_overflow2 (MAXCOMMENTS, (int)sizeof(png_text));
+   info_ptr->text = (png_text *)malloc (MAXCOMMENTS * sizeof (png_text));
+   if (!info_ptr->text) {
+     fprintf(stderr, texterr);
+@@ -239,9 +259,12 @@
+   }
+   j = 0;
+   textpos = 0;
+-  while ((c = getc (tfp)) != EOF) {
+-    if (c != '\n' && c != EOF) {
+-      textline[textpos++] = c;
++  /* loop over bytes in text file until hit EOF */
++  do {
++    /* any line >= TEXTLINE_MAX bytes long: truncate and treat as EOF */
++    ch = (textpos < TEXTLINE_MAX)? getc(tfp) : EOF;
++    if (ch != '\n' && ch != EOF) {
++      textline[textpos++] = ch;
+     } else {
+       textline[textpos++] = '\0';
+       if (textline[0] == '\0') {   /* check for keyword-on-own-line case */
+@@ -249,18 +272,17 @@
+         continue;
+       }
+       if ((textline[0] != ' ') && (textline[0] != '\t')) {
+-        /* the following is a not that accurate check on Author or Title */
++        /* the following is an inaccurate check for Author or Title */
+         if ((!ztxt) || (textline[0] == 'A') || (textline[0] == 'T'))
+           info_ptr->text[j].compression = -1;
+         else
+           info_ptr->text[j].compression = 0;
+-        cp = malloc (textpos);
++        info_ptr->text[j].key = cp = malloc (textpos);
+         if (!cp) {
+           fprintf(stderr, texterr);
+           fflush(stderr);
+           return;   /* not much else can do */
+         }
+-        info_ptr->text[j].key = cp;
+         i = 0;
+         if (textline[0] == '"') {
+           i++;
+@@ -273,21 +295,28 @@
+                  textline[i] != '\n' && textline[i] != '\0')
+             *(cp++) = textline[i++];
+         }
+-        *(cp++) = '\0';
+-        cp = malloc (textpos);
++        *cp = '\0';  /* end of info_ptr->text[j].key */
++        info_ptr->text[j].text = cp = malloc (textpos);
+         if (!cp) {
+           fprintf(stderr, texterr);
+           fflush(stderr);
+           return;   /* not much else can do */
+         }
+-        info_ptr->text[j].text = cp;
+         while (textline[i] == ' ' || textline[i] == '\t')
+           i++;
+         strcpy (cp, &textline[i]);
+         info_ptr->text[j].text_length = strlen (cp);
+         j++;
+       } else {
+-        j--;
++        --j;
++        if (info_ptr->text[j].text_length + textpos <= 0) {
++          /* malloc() would overflow:  terminate now; lose comment */
++          fprintf(stderr, texterr);
++          fflush(stderr);
++          ch = EOF;
++          break;
++        }
++        /* FIXME: should just use realloc() here */
+         cp = malloc (info_ptr->text[j].text_length + textpos);
+         if (!cp) {
+           fprintf(stderr, texterr);
+@@ -295,18 +324,19 @@
+           return;   /* not much else can do */
+         }
+         strcpy (cp, info_ptr->text[j].text);
+-        strcat (cp, "\n");
+-        info_ptr->text[j].text = cp;
++        cp[ info_ptr->text[j].text_length ] = '\n';
+         i = 0;
+         while (textline[i] == ' ' || textline[i] == '\t')
+-        i++;
+-        strcat (cp, &textline[i]);
++          ++i;
++        strcpy (cp + info_ptr->text[j].text_length + 1, &textline[i]);
++        free (info_ptr->text[j].text); /* FIXME: see realloc() comment above */
++        info_ptr->text[j].text = cp;
+         info_ptr->text[j].text_length = strlen (cp);
+-        j++;
++        ++j;
+       }
+       textpos = 0;
+     }
+-  } /* end while */
++  } while (ch != EOF);
+   info_ptr->num_text = j;
+ }
+ 
+@@ -368,7 +398,7 @@
+   xel p;	/*        (pnm.h)                  (ppm.h)  */
+   int rows, cols, format;
+   xelval maxval;
+-  xelval scaleval;
++  xelval scaleval = 255;
+   xelval value;
+   pixel transcolor;
+   int mayscale;
+@@ -389,8 +419,8 @@
+   int alpha_rows;
+   int alpha_cols;
+   int alpha_trans;
+-  gray *alphas_of_color[MAXCOLORS];
+-  int alphas_of_color_cnt[MAXCOLORS];
++  gray *alphas_of_color[MAXCOLORS+1];
++  int alphas_of_color_cnt[MAXCOLORS+1];
+   int alphas_first_index[MAXCOLORS+1];
+   int mapping[MAXCOLORS];	/* mapping[old_index] = new_index */
+   int colors;
+@@ -495,11 +525,11 @@
+ 
+   if (verbose) {
+     if (pnm_type == PBM_TYPE)    
+-      pm_message ("reading a PBM file (maxval=%d)", maxval);
++      pm_message ("reading a PBM file (maxval=%u)", maxval);
+     else if (pnm_type == PGM_TYPE)    
+-      pm_message ("reading a PGM file (maxval=%d)", maxval);
++      pm_message ("reading a PGM file (maxval=%u)", maxval);
+     else if (pnm_type == PPM_TYPE)    
+-      pm_message ("reading a PPM file (maxval=%d)", maxval);
++      pm_message ("reading a PPM file (maxval=%u)", maxval);
+   }
+ 
+   if (pnm_type == PGM_TYPE)
+@@ -593,13 +623,16 @@
+ 
+   sbitval = 0;
+   if (pnm_type != PBM_TYPE || alpha) {
++#if 0   /* GRR 20051102:  pointless since maxval is unsigned char or short */
+     if (maxval > 65535 && !downscale) {
+       png_destroy_write_struct (&png_ptr, &info_ptr);
+       pm_closer (ifp);
+-      pm_error ("can only handle files up to 16-bit (use -downscale to override");
++      pm_error ("can handle files only up to 16-bit (use -downscale to override");
+     }
+ 
+-    if (maxval < 65536) {
++    if (maxval < 65536)
++#endif /* 0 */
++    {
+       sbitval = pm_maxvaltobits (maxval);
+       if (maxval != pm_bitstomaxval (sbitval))
+         sbitval = 0;
+@@ -711,12 +744,16 @@
+   /* scale alpha mask to match bit depth of image */
+ 
+   if (alpha) {
+-    if (alpha_maxval < 65536) {
++#if 0   /* GRR:  pointless since alpha_maxval is unsigned char or short */
++    if (alpha_maxval > 65535)
++      alpha_sbitval = 0;
++    else
++#endif
++    {
+       alpha_sbitval = pm_maxvaltobits (alpha_maxval);
+       if (alpha_maxval != pm_bitstomaxval (alpha_sbitval))
+         alpha_sbitval = 0;
+-    } else
+-      alpha_sbitval = 0;
++    }
+ 
+     if (alpha_maxval != maxval) {
+       if (verbose)
+@@ -857,6 +894,7 @@
+         /* GRR:  BUG? this doesn't check whether cht is NULL before using it: */
+         cht = ppm_colorhisttocolorhash (chv, colors);
+         for (i = 0 ; i < colors + 1 ; i++) {
++          grr_overflow2 (MAXCOLORS, (int)sizeof(int));
+           if ((alphas_of_color[i] = (gray *)malloc (MAXCOLORS * sizeof (int)))
+               == NULL)
+           {
+@@ -1068,7 +1106,7 @@
+         errorlevel = PNMTOPNG_WARNING_LEVEL;
+         /* BUG:  don't pick an approximate color unless requested to do so
+                  (allow with -force option?  -approx option?)
+-                 [reported by Steven Grady, grady@xcf.berkeley.edu, 20000507]
++                 [reported by Steven Grady, grady|xcf.berkeley.edu, 20000507]
+         transparent = closestcolor (transcolor, chv, colors, maxval);
+         transcolor = chv[transparent].color;
+          */
+@@ -1249,7 +1287,7 @@
+   }
+ 
+   /* sBIT chunk */
+-  if ((sbitval != 0) || (alpha && (alpha_sbitval != 0))) {
++  if ((sbitval != 0) || (alpha && (alpha_sbitval != 0)) || sbit_n > 0) {
+     info_ptr->valid |= PNG_INFO_sBIT;
+ 
+     if (sbitval == 0)
+@@ -1258,15 +1296,17 @@
+       alpha_sbitval = pm_maxvaltobits (maxval);
+ 
+     if (info_ptr->color_type & PNG_COLOR_MASK_COLOR) {
+-      info_ptr->sig_bit.red   = sbitval;
+-      info_ptr->sig_bit.green = sbitval;
+-      info_ptr->sig_bit.blue  = sbitval;
+-    } else {
+-      info_ptr->sig_bit.gray = sbitval;
+-    }
+-
+-    if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA) {
+-      info_ptr->sig_bit.alpha = alpha_sbitval;
++      info_ptr->sig_bit.red   = (sbit_n > 0)? sbit[0] : sbitval;
++      info_ptr->sig_bit.green = (sbit_n > 1)? sbit[1] : sbitval;
++      info_ptr->sig_bit.blue  = (sbit_n > 2)? sbit[2] : sbitval;
++      if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA) {
++        info_ptr->sig_bit.alpha = (sbit_n > 3)? sbit[3] : alpha_sbitval;
++      }
++    } else /* grayscale */ {
++      info_ptr->sig_bit.gray = (sbit_n > 0)? sbit[0] : sbitval;
++      if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA) {
++        info_ptr->sig_bit.alpha = (sbit_n > 1)? sbit[1] : alpha_sbitval;
++      }
+     }
+   }
+ 
+@@ -1283,25 +1323,31 @@
+                                      &time_struct.tm_mday);
+     if (time_struct.tm_year > 1900)
+       time_struct.tm_year -= 1900;
+-    time_struct.tm_mon--; /* tm has monthes 0..11 */
++    time_struct.tm_mon--; /* tm has months 0..11 */
+     sscanf (time_string, "%d:%d:%d", &time_struct.tm_hour,
+                                      &time_struct.tm_min,
+                                      &time_struct.tm_sec);
+     png_convert_from_struct_tm (&info_ptr->mod_time, &time_struct);
+   }
+ 
+-  /* explicit filter-type (or none) required */
++  /* explicit filter-type (or none) */
+   if ((filter >= 0) && (filter <= 4))
+   {
+     png_set_filter (png_ptr, 0, filter);
+   }
+ 
+-  /* zlib compression-level (or none) required */
++  /* zlib compression-level (or none) */
+   if ((compression >= 0) && (compression <= 9))
+   {
+     png_set_compression_level (png_ptr, compression);
+   }
+ 
++  /* zlib compression-strategy (or none) */
++  if ((strategy >= 0) && (strategy <= 3))
++  {
++    png_set_compression_strategy(png_ptr, strategy);
++  }
++
+   /* write the png-info struct */
+   png_write_info (png_ptr, info_ptr);
+ 
+@@ -1317,6 +1363,7 @@
+   png_set_packing (png_ptr);
+ 
+   /* max: 3 color channels, one alpha channel, 16-bit */
++  grr_overflow2 (cols, 8);
+   if ((line = (png_byte *) malloc (cols*8)) == NULL)
+   {
+     png_destroy_write_struct (&png_ptr, &info_ptr);
+@@ -1419,11 +1466,12 @@
+   FILE *ifp, *afp, *pfp, *tfp, *ofp;
+   int argn, errorlevel;
+ 
+-  char *usage = "[-verbose] [-downscale] [-interlace] [-force] [-alpha file] ...\n\
+-             ... [-transparent color] [-background color] [-gamma value] ...\n\
+-             ... [-hist] [-chroma wx wy rx ry gx gy bx by] [-phys x y unit] ...\n\
+-             ... [-text file] [-ztxt file] [-time [yy]yy-mm-dd hh:mm:ss] ...\n\
+-             ... [-palette file] [-filter 0..4] [-compression 0..9] [pnmfile]";
++  char *usage = "[-verbose] [-downscale] [-interlace] [-force] [-alpha file] ...\n"
++"             ... [-transparent color] [-background color] [-gamma value] ...\n"
++"             ... [-hist] [-chroma wx wy rx ry gx gy bx by] [-phys x y unit] ...\n"
++"             ... [-text file] [-ztxt file] [-time [yy]yy-mm-dd hh:mm:ss] ...\n"
++"             ... [-filter 0..4] [-compression 0..9] [-strategy 0..3] ...\n"
++"             ... [-palette file] [-sbit s1[,s2[,s3[,s4]]]] [pnmfile]";
+ 
+   pnm_init (&argc, argv);
+   argn = 1;
+@@ -1562,13 +1610,11 @@
+         pm_usage (usage);
+     } else
+     if (pm_keymatch (argv[argn], "-filter", 3)) {
+-      if (++argn < argc)
+-      {
++      if (++argn < argc) {
+         sscanf (argv[argn], "%d", &filter);
+-        if ((filter < 0) || (filter > 4))
+-        {
++        if ((filter < 0) || (filter > 4)) {
+           pm_message
+-            ("filter must be 0 (none), 1 (sub), 2 (up), 3 (avg) or 4 (paeth)");
++            ("filter must be 0 (none), 1 (sub), 2 (up), 3 (avg), or 4 (paeth)");
+           pm_usage (usage);
+         }
+       }
+@@ -1576,11 +1622,9 @@
+         pm_usage (usage);
+     } else
+     if (pm_keymatch (argv[argn], "-compression", 3)) {
+-      if (++argn < argc)
+-      {
++      if (++argn < argc) {
+         sscanf (argv[argn], "%d", &compression);
+-        if ((compression < 0) || (compression > 9))
+-        {
++        if ((compression < 0) || (compression > 9)) {
+           pm_message ("zlib compression must be between 0 (none) and 9 (max)");
+           pm_usage (usage);
+         }
+@@ -1588,6 +1632,40 @@
+       else
+         pm_usage (usage);
+     } else
++    if (pm_keymatch (argv[argn], "-strategy", 3)) {
++      if (++argn < argc) {
++        sscanf (argv[argn], "%d", &strategy);
++        if ((strategy < 0) || (strategy > 3)) {
++          pm_message ("zlib strategy must be 0 (default), 1 (filtered), "
++            "2 (Huffman), or 3 (RLE)");
++          pm_usage (usage);
++        }
++      }
++      else
++        pm_usage (usage);
++    } else
++    if (pm_keymatch (argv[argn], "-sbit", 2)) {
++      if (++argn < argc)
++      {
++        sbit_n = sscanf (argv[argn], "%i,%i,%i,%i", &sbit[0], &sbit[1],
++          &sbit[2], &sbit[3]);
++        if (sbit_n == 0 || sbit_n == EOF)
++          pm_usage (usage);
++        else {
++          int j; 
++          for (j = 0; j < sbit_n; ++j) {
++            if (sbit[j] < 1 || sbit[j] > 16) {
++              pm_message
++                ("number of significant bits must be between 1 and 16");
++              pm_usage (usage);
++              break;
++            }
++          }
++        }
++      }
++      else
++        pm_usage (usage);
++    } else
+     if (pm_keymatch (argv[argn], "-force", 3)) {
+       force = TRUE;
+     } else {
+diff -ru pnmtopng-2.38/pnmtopng_version.h pnmtopng-2.39/pnmtopng_version.h
+--- pnmtopng-2.38/pnmtopng_version.h	2002-06-16 17:39:35.000000000 -0700
++++ pnmtopng-2.39/pnmtopng_version.h	2005-11-12 12:46:03.000000000 -0800
+@@ -1 +1 @@
+-#define VERSION "2.38 (16 June 2002)"
++#define VERSION "2.39 (12 November 2005)"
+diff -ruN pnmtopng-2.38/pnmtopng_overflow.h pnmtopng-2.39/pnmtopng_overflow.h
+--- pnmtopng-2.38/pnmtopng_overflow.h	1969-12-31 16:00:00.000000000 -0800
++++ pnmtopng-2.39/pnmtopng_overflow.h	2005-11-12 18:57:32.000000000 -0800
+@@ -0,0 +1,12 @@
++/* Wild guess/reimplementation/adaptation of Alan Cox's (presumed) overflow-
++ * protection function (seen used in http://security.debian.org/pool/updates/
++ * main/n/netpbm-free/netpbm-free_9.20-8.4.diff.gz).  Greg Roelofs, 20051112 */
++
++static void grr_overflow2(int mult1, int mult2)
++{
++  int product = mult1 * mult2;
++
++  if (mult1 <= 0 || mult2 <= 0 || product/mult1 < mult2) {
++    pm_error ("dimensions would overflow memory allocation");
++  }
++}

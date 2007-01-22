@@ -1,0 +1,39 @@
+png2linuxlogo, version 1.02, 9 June 2002
+
+This simple utility converts a PNG image of appropriate size and type to
+the "full-color" logo format used by the Linux kernel.  That is, it takes
+an 80x80 palette PNG with 223 or fewer colors as input, and it creates a
+replacement linux_logo.h file on stdout--but with only the linux_logo[]
+data changed; the linux_logo_bw[] and linux_logo16[] data from the stock
+logo header are used unchanged.  The sample image is from my "pengbrew12"
+virtual-beer logo submission of many years ago (in case it matters).
+
+Changelog:
+
+ 1.00 - 22 Sep 2001 - initial release
+ 1.01 - 26 Sep 2001 - fixed to emit correct header file (asm/linux_logo.h,
+                      not linux/linux_logo.h, oops); added 214-color-special-
+                      case workaround
+ 1.02 -  9 Jun 2002 - fixed to define __HAVE_ARCH_LINUX_LOGO (post-2.4.14
+                      change; required at least as of 2.4.18); fixed typo in
+                      usage screen and extended slightly
+
+This program is too trivial and special-purpose to deserve a real makefile,
+so just read the comments at the top of png2linuxlogo.c and edit one of
+the compile lines to taste.  Or use one of the included Linux/x86/glibc
+binaries.
+
+Web pages:
+
+	http://www.libpng.org/pub/png/apps/png2linuxlogo.html
+	http://www.libpng.org/pub/png/libpng.html
+	http://www.zlib.org/
+
+I don't really have any plans to develop this further, so don't expect
+much in the way of support.  (In particular, I will *not* be adding any
+new image formats--that's what PBMPLUS/NetPBM are for.)
+
+Go forth and...you know.  Or not.  Whatever.  It's all good.
+
+Greg Roelofs
+newt@pobox.com
