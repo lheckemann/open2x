@@ -8,3 +8,8 @@ Anybody care to add a description of this please.
 
 Miscellaneous tools to help modify the PNM loading screen within the Linux kernel. 
 These tools are specifically hacked about for the GP2X and need some cleaning up.
+
+--- jtag-gp2x ---
+
+Contains code (currently not that cross-platform) for jtag reflashing/debugging on the GP2X.
+Also consists of suitable NAND flash code that can be run from a jTAG session.
