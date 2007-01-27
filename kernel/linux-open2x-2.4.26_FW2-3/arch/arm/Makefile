@@ -50,8 +50,8 @@ tune-$(CONFIG_CPU_ARM926T)	:=-mtune=arm9tdmi
 tune-$(CONFIG_CPU_SA110)	:=-mtune=strongarm110
 tune-$(CONFIG_CPU_SA1100)	:=-mtune=strongarm1100
 
-CFLAGS_BOOT	:=$(apcs-y) $(arch-y) $(tune-y) -mshort-load-bytes -msoft-float -Uarm
-CFLAGS		+=$(apcs-y) $(arch-y) $(tune-y) -mshort-load-bytes -msoft-float -Uarm
+CFLAGS_BOOT	:=$(apcs-y) $(arch-y) $(tune-y) -msoft-float -Uarm
+CFLAGS		+=$(apcs-y) $(arch-y) $(tune-y) -msoft-float -Uarm
 AFLAGS		+=$(apcs-y) $(arch-y) -msoft-float
 
 ifeq ($(CONFIG_CPU_26),y)
