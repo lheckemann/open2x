@@ -409,7 +409,7 @@ kbd_processkeycode(unsigned char keycode, char up_flag, int autorepeat)
 		}
 	}
 	rep = 0;
-out:
+out:;
 }
 
 /*

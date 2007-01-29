@@ -58,6 +58,8 @@
 
 #define CODEC_ID_BUFSZ 14
 
+static void ac97_set_hw_eq(struct ac97_codec *codec,unsigned int Mode );
+
 static int ac97_read_mixer(struct ac97_codec *codec, int oss_channel);
 static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 			     unsigned int left, unsigned int right);
