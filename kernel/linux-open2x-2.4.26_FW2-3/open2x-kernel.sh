@@ -45,7 +45,7 @@ read -p "Press return to continue." first
 echo
 
 make clean
-rm -f $WORK_DIR/zImage.gx
+rm -f $WORK_DIR/zImage.gz
 rm -f $WORK_DIR/gp2xkernel.img
 clear
 
