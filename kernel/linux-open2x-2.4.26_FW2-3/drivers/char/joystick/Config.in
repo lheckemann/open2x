@@ -27,6 +27,7 @@ if [ "$CONFIG_INPUT" != "n" ]; then
    dep_tristate '  Assasin 3D and MadCatz Panther devices' CONFIG_INPUT_A3D $CONFIG_INPUT $CONFIG_INPUT_GAMEPORT
    dep_tristate '  Logitech ADI digital joysticks and gamepads' CONFIG_INPUT_ADI $CONFIG_INPUT $CONFIG_INPUT_GAMEPORT
    dep_tristate '  Creative Labs Blaster Cobra gamepad' CONFIG_INPUT_COBRA $CONFIG_INPUT $CONFIG_INPUT_GAMEPORT
+   dep_tristate '  Gamepark Holding GP2X-F100 gamepad' CONFIG_INPUT_GP2X $CONFIG_ARCH_MMSP2 $CONFIG_INPUT 
    dep_tristate '  Genius Flight2000 Digital joysticks and gamepads' CONFIG_INPUT_GF2K $CONFIG_INPUT $CONFIG_INPUT_GAMEPORT
    dep_tristate '  Gravis GrIP joysticks and gamepads' CONFIG_INPUT_GRIP $CONFIG_INPUT $CONFIG_INPUT_GAMEPORT
    dep_tristate '  InterAct digital joysticks and gamepads' CONFIG_INPUT_INTERACT $CONFIG_INPUT $CONFIG_INPUT_GAMEPORT
