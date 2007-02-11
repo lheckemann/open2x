@@ -59,7 +59,7 @@ $(GZIP_TARGET_BINARY): $(GZIP_BINARY)
 	ln -snf zgrep zegrep; \
 	ln -snf zgrep zfgrep;)
 
-gzip: uclibc $(GZIP_TARGET_BINARY)
+gzip: $(GZIP_TARGET_BINARY)
 
 gzip-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(GZIP_DIR) uninstall

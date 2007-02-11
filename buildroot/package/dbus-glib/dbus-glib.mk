@@ -61,7 +61,7 @@ $(TARGET_DIR)/$(DBUS_GLIB_TARGET_BINARY): $(STAGING_DIR)/usr/lib/libdbus-glib-1.
 	cp -a $(DBUS_GLIB_DIR)/dbus/.libs/dbus-binding-tool $(TARGET_DIR)/usr/bin
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/usr/lib/libdbus-glib-1.so.2.0.0
 
-dbus-glib: uclibc dbus libglib2 $(TARGET_DIR)/$(DBUS_GLIB_TARGET_BINARY)
+dbus-glib: dbus libglib2 $(TARGET_DIR)/$(DBUS_GLIB_TARGET_BINARY)
 
 dbus-glib-clean:
 	rm -f $(TARGET_DIR)/usr/lib/libdbus-glib-1.so.2*

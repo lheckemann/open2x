@@ -45,7 +45,7 @@ $(LZMA_HOST_DIR)/src/lzma/lzma: $(LZMA_HOST_DIR)/.configured
 $(STAGING_DIR)/bin/lzma: $(LZMA_HOST_DIR)/src/lzma/lzma
 	$(MAKE) DESTDIR=$(STAGING_DIR) -C $(LZMA_HOST_DIR) install
 
-lzma-host: uclibc $(STAGING_DIR)/bin/lzma
+lzma-host: $(STAGING_DIR)/bin/lzma
 
 ######################################################################
 #
@@ -88,7 +88,7 @@ $(TARGET_DIR)/usr/bin/lzma: $(LZMA_TARGET_DIR)/src/lzma/lzma
 
 #lzma-headers: $(TARGET_DIR)/bin/lzma
 
-lzma-target: uclibc $(TARGET_DIR)/usr/bin/lzma
+lzma-target: $(TARGET_DIR)/usr/bin/lzma
 
 lzma-source: $(DL_DIR)/$(LZMA_SOURCE)
 

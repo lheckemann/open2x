@@ -63,7 +63,7 @@ $(TARGET_DIR)/usr/lib/libz.a: $(STAGING_DIR)/lib/libz.so.$(ZLIB_VER)
 
 zlib-headers: $(TARGET_DIR)/usr/lib/libz.a
 
-zlib: uclibc $(TARGET_DIR)/lib/libz.so.$(ZLIB_VER)
+zlib: $(TARGET_DIR)/lib/libz.so.$(ZLIB_VER)
 
 zlib-source: $(DL_DIR)/$(ZLIB_SOURCE)
 

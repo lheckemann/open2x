@@ -1,0 +1,5 @@
+config BR2_PACKAGE_JOE
+	bool "joe"
+	default n
+	help
+	  Joe's Own Editor

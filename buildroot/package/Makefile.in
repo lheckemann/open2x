@@ -1,5 +1,6 @@
 MAKE1=make
 MAKE=make -j$(BR2_JLEVEL)
+TARGET_CROSS:=arm-open2x-linux
 
 # Strip off the annoying quoting
 ARCH:=$(strip $(subst ",, $(BR2_ARCH)))
@@ -53,13 +54,13 @@ STAGING_DIR:=$(strip $(subst ",, $(BR2_STAGING_DIR)))
 TARGET_PATH="$(STAGING_DIR)/bin:$(TOOL_BUILD_DIR)/bin:$(PATH)"
 IMAGE:=$(BASE_DIR)/rootfs.$(ARCH)$(ARCH_FPU_SUFFIX)
 REAL_GNU_TARGET_NAME=$(OPTIMIZE_FOR_CPU)$(GNU_TARGET_SUFFIX)
-GNU_TARGET_NAME=$(OPTIMIZE_FOR_CPU)-linux
+GNU_TARGET_NAME=arm-linux
 KERNEL_CROSS=$(STAGING_DIR)/bin/$(OPTIMIZE_FOR_CPU)$(GNU_TARGET_SUFFIX)-
 TARGET_CROSS=$(STAGING_DIR)/bin/$(OPTIMIZE_FOR_CPU)$(GNU_TARGET_SUFFIX)-
-TARGET_CC=$(TARGET_CROSS)gcc
-TARGET_CXX=$(TARGET_CROSS)g++
-TARGET_RANLIB=$(TARGET_CROSS)ranlib
-STRIP=$(TARGET_CROSS)strip --remove-section=.comment --remove-section=.note
+TARGET_CC=arm-open2x-linux-gcc
+TARGET_CXX=arm-open2x-linux-g++
+TARGET_RANLIB=arm-open2x-linux-ranlib
+STRIP=arm-open2x-linux-strip --remove-section=.comment --remove-section=.note
 INSTALL=/usr/bin/install
 
 
@@ -78,17 +79,17 @@ HOST_ARCH:=$(shell $(HOSTCC) -dumpmachine | sed -e s'/-.*//' \
 GNU_HOST_NAME:=$(HOST_ARCH)-$(subst ",,$(BR2_GNU_BUILD_SUFFIX))
 #")
 TARGET_CONFIGURE_OPTS=PATH=$(TARGET_PATH) \
-		AR=$(TARGET_CROSS)ar \
-		AS=$(TARGET_CROSS)as \
-		LD=$(TARGET_CROSS)ld \
-		NM=$(TARGET_CROSS)nm \
-		CC=$(TARGET_CROSS)gcc \
-		GCC=$(TARGET_CROSS)gcc \
-		CXX=$(TARGET_CROSS)g++ \
-		CPP=$(TARGET_CROSS)cpp \
-		RANLIB=$(TARGET_CROSS)ranlib \
-		STRIP=$(TARGET_CROSS)strip \
-		OBJCOPY=$(TARGET_CROSS)objcopy \
+		AR=arm-open2x-linux-ar \
+		AS=arm-open2x-linux-as \
+		LD=arm-open2x-linux-ld \
+		NM=arm-open2x-linux-nm \
+		CC=arm-open2x-linux-gcc \
+		GCC=arm-open2x-linux-gcc \
+		CXX=arm-open2x-linux-g++ \
+		CPP=arm-open2x-linux-cpp \
+		RANLIB=arm-open2x-linux-ranlib \
+		STRIP=arm-open2x-linux-strip \
+		OBJCOPY=arm-open2x-linux-objcopy \
 		CC_FOR_BUILD="$(HOSTCC)" \
 		PKG_CONFIG_SYSROOT=$(STAGING_DIR) \
 		PKG_CONFIG=$(STAGING_DIR)/usr/bin/pkg-config

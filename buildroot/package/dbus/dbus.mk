@@ -71,7 +71,7 @@ $(TARGET_DIR)/$(DBUS_TARGET_BINARY): $(STAGING_DIR)/usr/lib/libdbus-1.so
 	rmdir --ignore-fail-on-non-empty $(TARGET_DIR)/usr/share
 	rm -rf $(TARGET_DIR)/etc/rc.d
 
-dbus: uclibc expat $(TARGET_DIR)/$(DBUS_TARGET_BINARY)
+dbus: expat $(TARGET_DIR)/$(DBUS_TARGET_BINARY)
 
 dbus-clean:
 	rm -f $(TARGET_DIR)/etc/dbus-1/session.conf

@@ -1,8 +1,0 @@
-config BR2_PACKAGE_CVS
-	bool "cvs"
-	default n
-	select BR2_PACKAGE_NCURSES
-	help
-	  Concurrent Versions System - source code revision control tools.
-
-	  http://www.cvshome.org/

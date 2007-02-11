@@ -249,7 +249,7 @@ $(QTOPIA4_STAGING_DIR)/lib/libQtCore.so.$(QTOPIA4_VER): $(QTOPIA4_HOST_DIR)/lib/
 	$(MAKE) $(TARGET_CONFIGURE_OPTS) \
 		-C $(QTOPIA4_HOST_DIR) install
 
-qtopia4: uclibc zlib $(QTOPIA4_TSLIB_DEP) \
+qtopia4: zlib $(QTOPIA4_TSLIB_DEP) \
 		$(QTOPIA4_STAGING_DIR)/lib/libQtCore.so.$(QTOPIA4_VER) \
 		$(TARGET_DIR)/usr/lib/libQtCore.so.$(QTOPIA4_VER)
 

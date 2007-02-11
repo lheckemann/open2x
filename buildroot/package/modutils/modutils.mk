@@ -50,7 +50,7 @@ $(TARGET_DIR)/$(MODUTILS_TARGET_BINARY): $(MODUTILS_DIR1)/$(MODUTILS_BINARY)
 	rm -Rf $(TARGET_DIR)/usr/man
 	touch -c $(TARGET_DIR)/$(MODUTILS_TARGET_BINARY)
 
-modutils: uclibc $(TARGET_DIR)/$(MODUTILS_TARGET_BINARY)
+modutils: $(TARGET_DIR)/$(MODUTILS_TARGET_BINARY)
 
 modutils-source: $(DL_DIR)/$(MODUTILS_SOURCE)
 
@@ -100,7 +100,7 @@ $(STAGING_DIR)/bin/$(GNU_TARGET_NAME)-depmod: $(MODUTILS_DIR2)/$(MODUTILS_BINARY
 	cp $(MODUTILS_DIR2)/$(MODUTILS_BINARY) $(STAGING_DIR)/bin/$(GNU_TARGET_NAME)-depmod
 	touch -c $(STAGING_DIR)/bin/$(GNU_TARGET_NAME)-depmod
 
-cross-depmod: uclibc $(STAGING_DIR)/bin/$(GNU_TARGET_NAME)-depmod
+cross-depmod: $(STAGING_DIR)/bin/$(GNU_TARGET_NAME)-depmod
 
 cross-depmod-source: $(DL_DIR)/$(MODUTILS_SOURCE)
 

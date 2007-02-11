@@ -9,7 +9,10 @@ endif
 
 SDL_CAT:=$(ZCAT)
 SDL_DIR:=$(BUILD_DIR)/SDL-$(SDL_VERSION)
+
+ifneq ($(BR2_PACKAGE_SDL_VERSION), "")
 include package/sdl/sdl-$(SDL_VERSION).makefile
+endif
 
 SDL sdl: $(SDL_DIR)/.installed
 

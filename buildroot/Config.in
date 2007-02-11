@@ -7,13 +7,11 @@ config BR2_HAVE_DOT_CONFIG
 	default y
 
 choice
-	prompt "Target Architecture"
+	prompt "Target Device"
 	default BR2_gp2x
 	help
 	  Stuff
 
-config BR2_arm
-	bool "arm"
 config BR2_gp2x
 	bool "gp2x"
 endchoice
@@ -24,65 +22,6 @@ endchoice
 # things kept down to a _sensible_ number of target variants. No such
 # luck for sh..
 #
-choice
-	prompt "Target Architecture Variant"
-	depends BR2_arm
-	default BR2_generic_arm
-config BR2_generic_arm
-	bool "generic_arm"
-config BR2_arm610
-	bool "arm610"
-config BR2_arm710
-	bool "arm710"
-config BR2_arm720t
-	bool "arm720t"
-config BR2_arm920t
-	bool "arm920t"
-config BR2_arm922t
-	bool "arm922t"
-config BR2_arm926t
-	bool "arm926t"
-config BR2_arm1136jf_s
-	bool "arm1136jf_s"
-config BR2_sa110
-	bool "sa110"
-config BR2_sa1100
-	bool "sa1100"
-config BR2_xscale
-	bool "xscale"
-endchoice
-
-config BR2_ARM_TYPE
-	string
-	default ARM610		if BR2_arm610
-	default ARM710		if BR2_arm710
-	default ARM720T		if BR2_arm720t
-	default ARM920T		if BR2_arm920t || BR2_gp2x
-	default ARM922T		if BR2_arm922t
-	default ARM926T		if BR2_arm926t
-	default ARM1136JF_S 	if BR2_arm1136jf_s
-	default ARM_SA110	if BR2_sa110
-	default ARM_SA1100	if BR2_sa1100
-	default ARM_XSCALE	if BR2_xscale
-	default GENERIC_ARM	if BR2_generic_arm
-
-choice
-	prompt "Target ABI"
-	depends BR2_arm || BR2_armeb
-	default BR2_ARM_OABI
-config BR2_ARM_OABI
-	bool "OABI"
-config BR2_ARM_EABI
-	bool "EABI"
-endchoice
-
-config BR2_ARCH
-	string
-	default "arm"		if BR2_arm || BR2_gp2x
-
-config BR2_ENDIAN
-	string
-	default "LITTLE" if BR2_arm || BR2_gp2x
 menu "Build options"
 
 config BR2_WGET
@@ -141,64 +80,47 @@ config BR2_SOURCEFORGE_MIRROR
 
 config BR2_STAGING_DIR
 	string "Toolchain and header file location?"
-	default "$(BUILD_DIR)/staging_dir"
+	default /opt/open2x/gcc-3.4.4-glibc-2.3.6
 	help
-	    This is the location where the toolchain will be installed.  The
-	    toolchain will not work if it is moved from this location.
-	    Therefore, if you wish to package up a uClibc toolchain, it is
-	    important that is is set to the final location where the toolchain
-	    will be used.
+	    This is the location where the toolchain are installed.
 
-	    Most people will leave this set to the default value of
-	    "$(BUILD_DIR)/staging_dir".
-
-config BR2_TOPDIR_PREFIX
-	string "Custom build dir prefix"
-	default ""
-	help
-	    Add a custom string to the beginning of the build directories.
-
-	    build_ARCH -> [PREFIX]_build_ARCH
-	    toolchain_build_ARCH -> [PREFIX]_toolchain_build_ARCH
-
-config BR2_TOPDIR_SUFFIX
-	string "Custom build dir suffix"
-	default ""
-	help
-	    Add a custom string to the end of the build directories.
-
-	    build_ARCH -> build_ARCH_[SUFFIX]
-	    toolchain_build_ARCH -> toolchain_build_ARCH_[SUFFIX] 
-
-config BR2_GNU_BUILD_SUFFIX
-	string "GNU build hostname suffix"
+config BR2_GNU_BUILD
+	string "GNU build hostname"
 	default "pc-linux-gnu"
 	help
 	    The string used to pass to configure scripts via the
-	    --build= option.  Just specify the suffix here, the leading
-	    arch will be filled in automatically.
+	    --build= option.
 
 	    Here's some copy and paste build host options for you:
 	      linux:   pc-linux-gnu
 	      cygwin:  pc-cygwin
 	      os x:    apple-darwin7 / apple-darwin8
 
-config BR2_GNU_TARGET_SUFFIX
-	string "GNU target suffix"
-	default "linux-uclibcgnueabi" if BR2_ARM_EABI
-	default "linux-uclibc"
+config BR2_GNU_TARGET
+	string "GNU target"
+	default arm-open2x-linux
 	help
 	    The string used to pass to configure scripts via the
-	    --target= option.  Just specify the suffix here, the leading
-	    arch will be filled in automatically.
+	    --target= option.
 
 	    Most users will want to stick with the default setting, though
 	    other users (most notably ARM EABI) like to add on to this in
 	    order to stay in line with gcc conventions.
 
-	    Default options are:
-	      linux-uclibcgnueabi for ARM EABI
-	      linux-uclibc for the rest
+	    Default is:
+	      arm-open2x-linux
+
+config BR2_TARGET_CC
+	string "Target compiler"
+	default arm-open2x-linux-gcc
+
+config BR2_TARGET_CFLAGS
+	string "CFLAGS"
+	default "-mtune=arm920t -march=armv4t -O3 -ffast-math -fomit-frame-pointer -msoft-float"
+
+config TARGET_CROSS
+	string "Cross compiler target"
+	default "arm-open2x-linux"
 
 config BR2_JLEVEL
 	int "Number of jobs to run simultaneously"
@@ -207,8 +129,6 @@ config BR2_JLEVEL
 	    Number of jobs to run simultaneously
 
 endmenu
-
-source "toolchain/Config.in"
 
 source "package/Config.in"
 

@@ -30,7 +30,7 @@ $(GNUTAR_DIR)/.configured: $(GNUTAR_DIR)/.unpacked
 		./configure \
 		--target=$(GNU_TARGET_NAME) \
 		--host=$(GNU_TARGET_NAME) \
-		--build=$(GNU_HOST_NAME) \
+		--build=`uname -m` \
 		--prefix=/usr \
 		--exec-prefix=/usr \
 		--bindir=/usr/bin \
@@ -60,7 +60,7 @@ tar-target_binary: $(GNUTAR_DIR)/$(GNUTAR_BINARY)
 	    rm -f $(TARGET_DIR)/$(GNUTAR_TARGET_BINARY); \
 	    cp -a $(GNUTAR_DIR)/$(GNUTAR_BINARY) $(TARGET_DIR)/$(GNUTAR_TARGET_BINARY); fi ;
 
-tar: uclibc tar-target_binary
+tar: tar-target_binary
 
 tar-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) -C $(GNUTAR_DIR) uninstall

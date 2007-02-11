@@ -84,8 +84,8 @@ endif
 	$(STRIP) --strip-unneeded $(TARGET_DIR)/lib/libgmp.so* \
 		$(TARGET_DIR)/lib/libgmp.a
 
-libgmp: uclibc $(TARGET_DIR)/lib/libgmp.so.$(GMP_LIBVERSION)
-libgmp-stage: uclibc $(STAGING_DIR)/lib/$(GMP_BINARY)
+libgmp: $(TARGET_DIR)/lib/libgmp.so.$(GMP_LIBVERSION)
+libgmp-stage: $(STAGING_DIR)/lib/$(GMP_BINARY)
 
 libgmp-clean:
 	rm -f $(TARGET_DIR)/lib/$(GMP_BINARY) $(TARGET_DIR)/lib/libgmp.so* \

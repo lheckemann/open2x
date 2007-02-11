@@ -57,7 +57,7 @@ $(TARGET_DIR)/lib/libexpat.so.1: $(STAGING_DIR)/lib/libexpat.so.1
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/lib/libexpat.so.0.5.0
 	touch -c $(TARGET_DIR)/lib/libexpat.so.1
 
-expat: uclibc pkgconfig $(TARGET_DIR)/lib/libexpat.so.1
+expat: pkgconfig $(TARGET_DIR)/lib/libexpat.so.1
 
 expat-clean:
 	rm -f $(EXPAT_DIR)/.configured

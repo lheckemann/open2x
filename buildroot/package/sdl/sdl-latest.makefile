@@ -52,6 +52,7 @@ $(SDL_DIR)/.compiled: $(SDL_DIR)/.configured
 
 $(SDL_DIR)/.installed: $(SDL_DIR)/.compiled
 	$(MAKE) DESTDIR=$(STAGING_DIR) -C $(SDL_DIR) install;
+	ln -s $(STAGING_DIR)/include/SDL* $(STAGING_DIR)/include
 	touch -c $(STAGING_DIR)/usr/lib/libSDL.so
 	cp -dpf $(STAGING_DIR)/usr/lib/libSDL*.so* $(TARGET_DIR)/usr/lib/
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/usr/lib/libSDL.so

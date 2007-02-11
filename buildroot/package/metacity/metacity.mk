@@ -124,7 +124,7 @@ $(TARGET_DIR)/lib/*metacity*.so: $(STAGING_DIR)/lib/*metacity*.so
 	cp -a $(STAGING_DIR)/usr/share/themes/* $(TARGET_DIR)/usr/share/themes/
 	cp -a package/metacity/Xsession $(TARGET_DIR)/etc/X11/
 
-metacity: uclibc zlib xorg libgtk2 $(TARGET_DIR)/lib/*metacity*.so
+metacity: zlib tinyx libgtk2 $(TARGET_DIR)/lib/*metacity*.so
 
 metacity-clean:
 	-$(MAKE) -C $(METACITY_DIR) clean

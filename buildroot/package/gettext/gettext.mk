@@ -116,7 +116,7 @@ $(STAGING_DIR)/$(GETTEXT_TARGET_BINARY): $(GETTEXT_DIR)/$(GETTEXT_BINARY)
 	rm -f $(STAGING_DIR)/bin/msg* $(STAGING_DIR)/bin/?gettext
 	touch -c $(STAGING_DIR)/$(GETTEXT_TARGET_BINARY)
 
-gettext: uclibc pkgconfig $(STAGING_DIR)/$(GETTEXT_TARGET_BINARY)
+gettext: pkgconfig $(STAGING_DIR)/$(GETTEXT_TARGET_BINARY)
 
 gettext-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(GETTEXT_DIR) uninstall

@@ -91,8 +91,8 @@ endif
 	$(STRIP) --strip-unneeded $(TARGET_DIR)/lib/libmpfr.so* \
 		$(TARGET_DIR)/lib/libmpfr.a
 
-libmpfr: uclibc libgmp $(TARGET_DIR)/lib/libmpfr.so.$(MPFR_LIBVERSION)
-libmpfr-stage: uclibc $(STAGING_DIR)/lib/$(MPFR_BINARY)
+libmpfr: libgmp $(TARGET_DIR)/lib/libmpfr.so.$(MPFR_LIBVERSION)
+libmpfr-stage: $(STAGING_DIR)/lib/$(MPFR_BINARY)
 
 libmpfr-clean:
 	rm -f $(TARGET_DIR)/lib/$(MPFR_BINARY) $(TARGET_DIR)/lib/libmpfr.so* \

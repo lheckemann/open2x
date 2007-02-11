@@ -98,7 +98,7 @@ $(TARGET_DIR)/$(SAMBA_TARGET_BINARY): $(SAMBA_DIR)/$(SAMBA_BINARY)
 	rm -rf $(TARGET_DIR)/var/cache/samba
 	rm -rf $(TARGET_DIR)/var/lib/samba
 
-samba: uclibc $(TARGET_DIR)/$(SAMBA_TARGET_BINARY)
+samba: $(TARGET_DIR)/$(SAMBA_TARGET_BINARY)
 
 samba-clean:
 	rm -f $(TARGET_DIR)/$(SAMBA_TARGET_BINARY)

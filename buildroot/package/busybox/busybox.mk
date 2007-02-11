@@ -55,7 +55,7 @@ endif
 $(BUSYBOX_DIR)/.configured: $(BUSYBOX_DIR)/.unpacked $(BUSYBOX_CONFIG_FILE)
 	cp $(BUSYBOX_CONFIG_FILE) $(BUSYBOX_DIR)/.config
 ifeq ($(strip $(BR2_BUSYBOX_VERSION_1_0_1)),y)
-	$(SED) "s,^CROSS.*,CROSS=$(TARGET_CROSS)\n\PREFIX=$(TARGET_DIR),;" \
+	$(SED) "s,^CROSS.*,CROSS=$(arm-open2x-linux)\n\PREFIX=$(TARGET_DIR),;" \
 		$(BUSYBOX_DIR)/Rules.mak ;
 endif
 ifeq ($(strip $(BR2_BUSYBOX_VERSION_1_1_3)),y)
@@ -65,17 +65,17 @@ ifeq ($(strip $(BR2_BUSYBOX_VERSION_1_1_3)),y)
 		$(BUSYBOX_DIR)/.config ;
 endif
 ifeq ($(strip $(BR2_BUSYBOX_VERSION_1_2_2_1)),y)
-	$(SED) s,^CROSS_COMPILER_PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(TARGET_CROSS)\", \
+	$(SED) s,^CROSS_COMPILER_PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(arm-open2x-linux)\", \
 		$(BUSYBOX_DIR)/.config ;
-	$(SED) s,^PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(TARGET_CROSS)\", \
+	$(SED) s,^PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(arm-open2x-linux)\", \
 		$(BUSYBOX_DIR)/.config ;
 endif
 ifeq ($(strip $(BR2_PACKAGE_BUSYBOX_SNAPSHOT)),y)
 	$(SED) s,^CONFIG_PREFIX=.*,CONFIG_PREFIX=\"$(TARGET_DIR)\", \
 		$(BUSYBOX_DIR)/.config ;
-	$(SED) s,^CROSS_COMPILER_PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(TARGET_CROSS)\", \
+	$(SED) s,^CROSS_COMPILER_PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(arm-open2x-linux)\", \
 		$(BUSYBOX_DIR)/.config ;
-	$(SED) s,^PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(TARGET_CROSS)\", \
+	$(SED) s,^PREFIX=.*,CROSS_COMPILER_PREFIX=\"$(arm-open2x-linux)\", \
 		$(BUSYBOX_DIR)/.config ;
 endif
 ifeq ($(BR2_LARGEFILE),y)
@@ -84,21 +84,24 @@ else
 	$(SED) "s/^.*CONFIG_LFS.*/CONFIG_LFS=n/;" $(BUSYBOX_DIR)/.config
 	$(SED) "s/^.*FDISK_SUPPORT_LARGE_DISKS.*/FDISK_SUPPORT_LARGE_DISKS=n/;" $(BUSYBOX_DIR)/.config
 endif
-	yes "" | $(MAKE) CC=$(TARGET_CC) CROSS_COMPILE="$(TARGET_CROSS)" \
-		CROSS="$(TARGET_CROSS)" -C $(BUSYBOX_DIR) oldconfig
+	yes "" | $(MAKE) CC=$(TARGET_CC) CROSS_COMPILE="$(arm-open2x-linux)" \
+		CROSS="$(arm-open2x-linux)" -C $(BUSYBOX_DIR) oldconfig
 	touch $(BUSYBOX_DIR)/.configured
 
 
 $(BUSYBOX_DIR)/busybox: $(BUSYBOX_DIR)/.configured
-	$(MAKE) CC=$(TARGET_CC) CROSS_COMPILE="$(TARGET_CROSS)" \
-		CROSS="$(TARGET_CROSS)" PREFIX="$(TARGET_DIR)" \
+	sed '/$(do_strip)/d' Makefile > Makefile.temp
+	mv Makefile.temp Makefile
+	$(MAKE) CC=$(TARGET_CC) CROSS_COMPILE="$(arm-open2x-linux)" \
+		CROSS="$(arm-open2x-linux)" PREFIX="$(TARGET_DIR)" \
 		ARCH=$(KERNEL_ARCH) \
 		EXTRA_CFLAGS="$(TARGET_CFLAGS)" -C $(BUSYBOX_DIR)
 
 $(TARGET_DIR)/bin/busybox: $(BUSYBOX_DIR)/busybox
 ifeq ($(BR2_PACKAGE_BUSYBOX_INSTALL_SYMLINKS),y)
-	$(MAKE) CC=$(TARGET_CC) CROSS_COMPILE="$(TARGET_CROSS)" \
-		CROSS="$(TARGET_CROSS)" PREFIX="$(TARGET_DIR)" \
+	$(STRIP) $(BUSYBOX_DIR)/busybox
+	$(MAKE) CC=$(TARGET_CC) CROSS_COMPILE="$(arm-open2x-linux)" \
+		CROSS="$(arm-open2x-linux)" PREFIX="$(TARGET_DIR)" \
 		ARCH=$(KERNEL_ARCH) \
 		EXTRA_CFLAGS="$(TARGET_CFLAGS)" -C $(BUSYBOX_DIR) install
 else
@@ -107,7 +110,7 @@ endif
 	# Just in case
 	-chmod a+x $(TARGET_DIR)/usr/share/udhcpc/default.script
 
-busybox: uclibc $(TARGET_DIR)/bin/busybox
+busybox: $(TARGET_DIR)/bin/busybox
 
 busybox-menuconfig: busybox-source $(BUSYBOX_DIR)/.configured
 	$(MAKE) __TARGET_ARCH=$(ARCH) -C $(BUSYBOX_DIR) menuconfig

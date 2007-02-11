@@ -44,8 +44,8 @@ ifeq ($(strip $(BR2_HAVE_DOT_CONFIG)),y)
 # along with the packages to build for the target.
 #
 ##############################################################
-TARGETS:=uclibc-configured binutils gcc uclibc-target-utils
-include toolchain/Makefile.in
+#TARGETS:=uclibc-configured binutils gcc uclibc-target-utils
+#include toolchain/Makefile.in
 include package/Makefile.in
 
 #############################################################
@@ -65,7 +65,7 @@ include .config.cmd
 # We also need the various per-package makefiles, which also add
 # each selected package to TARGETS if that package was selected
 # in the .config file.
-include toolchain/*/*.mk
+#include toolchain/*/*.mk
 include package/*/*.mk
 include target/*/*.mk
 

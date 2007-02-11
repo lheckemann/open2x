@@ -60,7 +60,7 @@ $(TARGET_DIR)/lib/libfreetype.so: $(STAGING_DIR)/lib/libfreetype.so
 	cp -dpf $(STAGING_DIR)/lib/libfreetype.so* $(TARGET_DIR)/lib/
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/lib/libfreetype.so
 
-freetype: uclibc pkgconfig $(TARGET_DIR)/lib/libfreetype.so
+freetype: pkgconfig $(TARGET_DIR)/lib/libfreetype.so
 
 freetype-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(FREETYPE_DIR) uninstall

@@ -1,3 +1,0 @@
-X86_I386_PATH=target/device/x86/i386
-
-TARGETS+=linux26

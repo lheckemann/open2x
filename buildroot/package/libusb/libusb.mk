@@ -50,7 +50,7 @@ $(TARGET_DIR)/$(LIBUSB_TARGET_BINARY): $(LIBUSB_DIR)/$(LIBUSB_BINARY)
 	make -C $(LIBUSB_DIR) DESTDIR=$(TARGET_DIR) install
 	rm -f $(TARGET_DIR)/usr/lib/libusb*.a $(TARGET_DIR)/usr/lib/libusb*.la
 
-libusb: uclibc $(TARGET_DIR)/$(LIBUSB_TARGET_BINARY)
+libusb: $(TARGET_DIR)/$(LIBUSB_TARGET_BINARY)
 
 libusb-clean:
 	rm -f $(TARGET_DIR)/$(LIBUSB_TARGET_BINARY)

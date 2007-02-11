@@ -80,7 +80,7 @@ $(TARGET_DIR)/usr/lib/libssl.a: $(STAGING_DIR)/lib/libcrypto.a
 
 openssl-headers: $(TARGET_DIR)/usr/lib/libssl.a
 
-openssl: uclibc $(TARGET_DIR)/usr/lib/libcrypto.so.0.9.7
+openssl: $(TARGET_DIR)/usr/lib/libcrypto.so.0.9.7
 
 openssl-source: $(DL_DIR)/$(OPENSSL_SOURCE)
 

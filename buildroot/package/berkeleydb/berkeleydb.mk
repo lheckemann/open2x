@@ -82,7 +82,7 @@ berkeleydb-clean:
 berkeleydb-dirclean:
 	rm -rf $(DB_DIR)
 
-berkeleydb: uclibc $(TARGET_DIR)/lib/$(DB_SHARLIB)
+berkeleydb: $(TARGET_DIR)/lib/$(DB_SHARLIB)
 
 #############################################################
 #

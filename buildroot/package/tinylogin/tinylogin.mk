@@ -43,7 +43,7 @@ $(TARGET_DIR)/bin/tinylogin: $(TINYLOGIN_DIR)/tinylogin
 		PREFIX="$(TARGET_DIR)" -C $(TINYLOGIN_DIR) \
 		CFLAGS_EXTRA="$(TARGET_CFLAGS)" install
 
-tinylogin: uclibc $(TARGET_DIR)/bin/tinylogin
+tinylogin: $(TARGET_DIR)/bin/tinylogin
 
 tinylogin-clean:
 	rm -f $(TARGET_DIR)/bin/tinylogin

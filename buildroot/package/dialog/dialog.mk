@@ -45,7 +45,7 @@ $(TARGET_DIR)/$(DIALOG_TARGET_BINARY): $(DIALOG_DIR)/$(DIALOG_BINARY)
 	$(MAKE) prefix=$(TARGET_DIR)/usr -C $(DIALOG_DIR) install
 	rm -Rf $(TARGET_DIR)/usr/man
 
-dialog: uclibc ncurses $(TARGET_DIR)/$(DIALOG_TARGET_BINARY)
+dialog: ncurses $(TARGET_DIR)/$(DIALOG_TARGET_BINARY)
 
 dialog-source: $(DL_DIR)/$(DIALOG_SOURCE)
 

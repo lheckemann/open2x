@@ -63,7 +63,7 @@ $(TARGET_DIR)/lib/libtiff.so.$(TIFF_VER): $(STAGING_DIR)/lib/libtiff.so.$(TIFF_V
 	cp -dpf $(STAGING_DIR)/lib/libtiff.so* $(TARGET_DIR)/lib/
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/lib/libtiff.so.$(TIFF_VER)
 
-tiff: uclibc zlib jpeg $(TARGET_DIR)/lib/libtiff.so.$(TIFF_VER)
+tiff: zlib jpeg $(TARGET_DIR)/lib/libtiff.so.$(TIFF_VER)
 
 tiff-clean:
 	-$(MAKE) -C $(TIFF_DIR) clean

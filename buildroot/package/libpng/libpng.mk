@@ -85,7 +85,7 @@ $(TARGET_DIR)/usr/lib/libpng.so: $(STAGING_DIR)/lib/libpng.so
 	cp -dpf $(STAGING_DIR)/lib/libpng*.so* $(TARGET_DIR)/usr/lib/
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/usr/lib/libpng.so
 
-png libpng: uclibc zlib pkgconfig $(TARGET_DIR)/usr/lib/libpng.so
+png libpng: zlib pkgconfig $(TARGET_DIR)/usr/lib/libpng.so
 
 libpng-clean:
 	-$(MAKE) -C $(LIBPNG_DIR) clean

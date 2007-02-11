@@ -1,7 +1,0 @@
-config BR2_PACKAGE_WHICH
-	bool "which"
-	default n
-	help
-	  The standard 'which' utility.
-
-	  http://www.xs4all.nl/~carlo17/which/

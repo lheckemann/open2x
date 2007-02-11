@@ -58,7 +58,7 @@ $(TARGET_DIR)/$(GAWK_TARGET_BINARY): $(GAWK_DIR)/$(GAWK_BINARY)
 	rm -rf $(TARGET_DIR)/share/locale $(TARGET_DIR)/usr/info \
 		$(TARGET_DIR)/usr/man $(TARGET_DIR)/usr/share/doc
 
-gawk: uclibc $(TARGET_DIR)/$(GAWK_TARGET_BINARY)
+gawk: $(TARGET_DIR)/$(GAWK_TARGET_BINARY)
 
 gawk-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(GAWK_DIR) uninstall

@@ -81,7 +81,7 @@ $(TARGET_DIR)/lib/libglib-1.2.so.0.0.10: $(STAGING_DIR)/lib/$(LIBGLIB12_BINARY)
 	$(STRIP) --strip-unneeded $(TARGET_DIR)/lib/libglib-1.2.so.0.0.10
 	$(STRIP) --strip-unneeded $(TARGET_DIR)/lib/libgmodule-1.2.so.0.0.10
 
-libglib12: uclibc $(TARGET_DIR)/lib/libglib-1.2.so.0.0.10
+libglib12: $(TARGET_DIR)/lib/libglib-1.2.so.0.0.10
 
 libglib12-clean:
 	rm -f $(TARGET_DIR)/lib/$(LIBGLIB12_BINARY)

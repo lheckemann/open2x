@@ -139,7 +139,7 @@ sed-target_binary: $(SED_DIR2)/$(SED_BINARY)
 	    rm -rf $(TARGET_DIR)/share/locale $(TARGET_DIR)/usr/info \
 		    $(TARGET_DIR)/usr/man $(TARGET_DIR)/usr/share/doc; fi
 
-sed: uclibc sed-target_binary
+sed: sed-target_binary
 
 sed-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(SED_DIR2) uninstall

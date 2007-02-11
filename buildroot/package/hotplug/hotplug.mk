@@ -23,7 +23,7 @@ $(TARGET_DIR)/sbin/hotplug: $(HOTPLUG_DIR)/hotplug
 	cp $(HOTPLUG_DIR)/hotplug $(TARGET_DIR)/sbin/hotplug;
 	touch -c $(TARGET_DIR)/sbin/hotplug
 
-hotplug: uclibc $(TARGET_DIR)/sbin/hotplug
+hotplug: $(TARGET_DIR)/sbin/hotplug
 
 hotplug-source: $(DL_DIR)/$(HOTPLUG_SOURCE)
 

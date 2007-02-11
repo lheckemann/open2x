@@ -79,7 +79,7 @@ $(TARGET_DIR)/usr/lib/libbz2.a: $(STAGING_DIR)/lib/libbz2.a
 
 bzip2-headers: $(TARGET_DIR)/usr/lib/libbz2.a
 
-bzip2: uclibc $(BZIP2_TARGET_BINARY)
+bzip2: $(BZIP2_TARGET_BINARY)
 
 bzip2-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(BZIP2_DIR) uninstall

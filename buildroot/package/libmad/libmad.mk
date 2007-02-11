@@ -39,7 +39,7 @@ $(LIBMAD_WORKDIR)/.installed: $(LIBMAD_WORKDIR)/libmad.la
 	$(MAKE) prefix=$(TARGET_DIR)/usr -C $(LIBMAD_WORKDIR) install
 	touch $(LIBMAD_WORKDIR)/.installed
 
-libmad:	uclibc $(LIBMAD_WORKDIR)/.installed
+libmad: $(LIBMAD_WORKDIR)/.installed
 
 libmad-source: $(DL_DIR)/$(LIBMAD_SOURCE)
 

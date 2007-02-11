@@ -60,7 +60,7 @@ $(TARGET_DIR)/$(KEXEC_TARGET_BINARY): $(KEXEC_DIR)/$(KEXEC_BINARY)
 		$(KEXEC_DIR)/objdir-$(GNU_TARGET_NAME)/build/sbin/kdump \
 		$(TARGET_DIR)/sbin/
 
-kexec: uclibc $(TARGET_DIR)/$(KEXEC_TARGET_BINARY)
+kexec: $(TARGET_DIR)/$(KEXEC_TARGET_BINARY)
 
 kexec-clean:
 	-$(MAKE) -C $(KEXEC_DIR) clean

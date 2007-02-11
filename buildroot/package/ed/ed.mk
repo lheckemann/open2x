@@ -4,7 +4,7 @@
 #
 #############################################################
 ED_SOURCE:=ed_0.2.orig.tar.gz
-ED_PATCH:=ed_0.2-19.diff.gz
+ED_PATCH:=ed_0.2-20.diff.gz
 ED_SITE:=http://ftp.debian.org/debian/pool/main/e/ed
 ED_CAT:=$(ZCAT)
 ED_DIR:=$(BUILD_DIR)/ed-0.2
@@ -46,7 +46,7 @@ $(ED_DIR)/$(ED_BINARY): $(ED_DIR)/.configured
 $(TARGET_DIR)/$(ED_TARGET_BINARY): $(ED_DIR)/$(ED_BINARY)
 	cp -a $(ED_DIR)/$(ED_BINARY) $(TARGET_DIR)/$(ED_TARGET_BINARY)
 
-ed: uclibc $(TARGET_DIR)/$(ED_TARGET_BINARY)
+ed: $(TARGET_DIR)/$(ED_TARGET_BINARY)
 
 ed-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(ED_DIR) uninstall

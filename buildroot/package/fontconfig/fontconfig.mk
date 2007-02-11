@@ -66,7 +66,7 @@ $(TARGET_DIR)/lib/libfontconfig.so: $(STAGING_DIR)/lib/libfontconfig.so
 	cp -a $(STAGING_DIR)/usr/bin/fc-list $(TARGET_DIR)/usr/bin/
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/usr/bin/fc-list
 
-fontconfig: uclibc freetype $(TARGET_DIR)/lib/libfontconfig.so
+fontconfig: freetype $(TARGET_DIR)/lib/libfontconfig.so
 
 fontconfig-clean:
 	$(MAKE) DESTDIR=$(TARGET_DIR) CC=$(TARGET_CC) -C $(FONTCONFIG_DIR) uninstall
