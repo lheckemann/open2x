@@ -1,0 +1,143 @@
+Currently STRUCTURE_SIZE_BOUNDARY is obeyed even when
+#pragma pack(1) is in effect. By contrast __attribute__((packed)) overrides 
+STRUCTURE_SIZE_BOUNDARY.
+
+This matters when odd sized packed structs are nested inside each other.
+
+Given the purpose of #pragma pack is for compatibility with Win32, I think 
+#pragma pack(1) act the same as __attribute__((packed)).
+
+The patch below fixes this.
+Tested with cross to arm-none-eabi.
+Ok?
+
+Paul
+
+2006-10-22  Paul Brook  <paul@codesourcery.com>
+
+	gcc/
+	* stor-layout.c (start_record_layout): maximum_field_alignment
+	overrides STRUCTURE_SIZE_BOUNDARY.
+
+	gcc/testsuite/
+	* gcc.dg/pragma-pack-4.c: New test.
+
+Index: gcc/stor-layout.c
+===================================================================
+--- gcc-4.1.1/gcc/stor-layout.c	2007-01-08 09:12:36.000000000 +0000
++++ gcc-4.1.1/gcc/stor-layout-pragma.c	2007-01-08 09:25:49.000000000 +0000
+@@ -297,10 +297,10 @@ layout_decl (tree decl, unsigned int kno
+ 
+   if (code == CONST_DECL)
+     return;
+-  
++
+   gcc_assert (code == VAR_DECL || code == PARM_DECL || code == RESULT_DECL
+ 	      || code == TYPE_DECL ||code == FIELD_DECL);
+-  
++
+   rtl = DECL_RTL_IF_SET (decl);
+ 
+   if (type == error_mark_node)
+@@ -525,7 +525,16 @@ start_record_layout (tree t)
+ #ifdef STRUCTURE_SIZE_BOUNDARY
+   /* Packed structures don't need to have minimum size.  */
+   if (! TYPE_PACKED (t))
+-    rli->record_align = MAX (rli->record_align, (unsigned) STRUCTURE_SIZE_BOUNDARY);
++  	/* rli->record_align = MAX (rli->record_align, (unsigned) STRUCTURE_SIZE_BOUNDARY); */
++	{
++		unsigned tmp;
++
++		/* #pragma pack overrides STRUCTURE_SIZE_BOUNDARY.  */
++		tmp = (unsigned) STRUCTURE_SIZE_BOUNDARY;
++		if (maximum_field_alignment != 0)
++		tmp = MIN (tmp, maximum_field_alignment);
++		rli->record_align = MAX (rli->record_align, tmp);
++	}
+ #endif
+ 
+   rli->offset = size_zero_node;
+@@ -544,7 +553,7 @@ tree
+ bit_from_pos (tree offset, tree bitpos)
+ {
+   return size_binop (PLUS_EXPR, bitpos,
+-		     size_binop (MULT_EXPR, 
++		     size_binop (MULT_EXPR,
+ 				 fold_convert (bitsizetype, offset),
+ 				 bitsize_unit_node));
+ }
+@@ -585,7 +594,7 @@ normalize_offset (tree *poffset, tree *p
+ 
+       *poffset
+ 	= size_binop (PLUS_EXPR, *poffset,
+-		      size_binop (MULT_EXPR, 
++		      size_binop (MULT_EXPR,
+ 				  fold_convert (sizetype, extra_aligns),
+ 				  size_int (off_align / BITS_PER_UNIT)));
+ 
+@@ -774,7 +783,7 @@ place_union_field (record_layout_info rl
+   DECL_FIELD_BIT_OFFSET (field) = bitsize_zero_node;
+   SET_DECL_OFFSET_ALIGN (field, BIGGEST_ALIGNMENT);
+ 
+-  /* If this is an ERROR_MARK return *after* having set the 
++  /* If this is an ERROR_MARK return *after* having set the
+      field at the start of the union. This helps when parsing
+      invalid fields. */
+   if (TREE_CODE (TREE_TYPE (field)) == ERROR_MARK)
+@@ -852,7 +861,7 @@ place_field (record_layout_info rli, tre
+       return;
+     }
+ 
+-  else if (TREE_CODE (type) == ERROR_MARK) 
++  else if (TREE_CODE (type) == ERROR_MARK)
+     {
+       /* Place this field at the current allocation position, so we
+ 	 maintain monotonicity.  */
+@@ -1792,7 +1801,7 @@ layout_type (tree type)
+ 	      length = size_binop (MAX_EXPR, length, size_zero_node);
+ 
+ 	    TYPE_SIZE (type) = size_binop (MULT_EXPR, element_size,
+-					   fold_convert (bitsizetype, 
++					   fold_convert (bitsizetype,
+ 							 length));
+ 
+ 	    /* If we know the size of the element, calculate the total
+@@ -1991,11 +2000,11 @@ set_sizetype (tree type)
+   TREE_TYPE (TYPE_CACHED_VALUES (t)) = type;
+   TYPE_UID (t) = TYPE_UID (sizetype);
+   TYPE_IS_SIZETYPE (t) = 1;
+-  
++
+   /* Replace our original stub sizetype.  */
+   memcpy (sizetype, t, tree_size (sizetype));
+   TYPE_MAIN_VARIANT (sizetype) = sizetype;
+-  
++
+   t = make_node (INTEGER_TYPE);
+   TYPE_NAME (t) = get_identifier ("bit_size_type");
+   /* We do want to use bitsizetype's cache, as we will be replacing that
+@@ -2009,7 +2018,7 @@ set_sizetype (tree type)
+   /* Replace our original stub bitsizetype.  */
+   memcpy (bitsizetype, t, tree_size (bitsizetype));
+   TYPE_MAIN_VARIANT (bitsizetype) = bitsizetype;
+-  
++
+   if (TYPE_UNSIGNED (type))
+     {
+       fixup_unsigned_type (bitsizetype);
+
+Index: gcc/testsuite/gcc.dg/pragma-pack-4.c
+===================================================================
+--- gcc/testsuite/gcc.dg/pragma-pack-4.c	(revision 0)
++++ gcc/testsuite/gcc.dg/pragma-pack-4.c	(revision 0)
+@@ -0,0 +1,10 @@
++/* Check that pragma pack overrides STRUCTURE_SIZE_BOUNDARY.  */
++/* { dg-do compile } */
++
++#pragma pack(1)
++struct S
++{
++  char a;
++};
++
++int test[sizeof(struct S) == 1 ? 1: -1];

@@ -1,0 +1,5 @@
+KERNELCONFIG=`pwd`/arm.config
+TARGET=arm-open2x-linux
+GCC_EXTRA_CONFIG="--with-float=soft --with-cpu=arm920t --enable-cxx-flags=-mcpu=arm920t"
+GLIBC_EXTRA_CONFIG="--without-fp"
+TARGET_CFLAGS="-O"

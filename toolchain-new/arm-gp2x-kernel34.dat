@@ -1,0 +1,5 @@
+KERNELCONFIG=`pwd`/arm.config
+TARGET=arm-open2x-linux
+GCC_EXTRA_CONFIG="--with-float=soft --disable-libstdcxx-pch --enable-cxx-flags=-mcpu=arm9tdmi"
+GLIBC_EXTRA_CONFIG="--disable-libstdcxx-pch --without-fp"
+TARGET_CFLAGS="-O"
