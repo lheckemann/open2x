@@ -89,24 +89,14 @@ VERSION = @VERSION@
 lib_LTLIBRARIES = libSDL_gfx.la
 
 libSDL_gfxincludedir = $(includedir)/SDL
-libSDL_gfxinclude_HEADERS = \
-	SDL_gfxPrimitives.h	\
-	SDL_gfxPrimitives_font.h	\
-	SDL_rotozoom.h	\
-	SDL_framerate.h \
-	SDL_imageFilter.h
+libSDL_gfxinclude_HEADERS =  	SDL_gfxPrimitives.h		SDL_gfxPrimitives_font.h		SDL_rotozoom.h		SDL_framerate.h 	SDL_imageFilter.h
 
 
-libSDL_gfx_la_SOURCES = \
-	SDL_gfxPrimitives.c	\
-	SDL_rotozoom.c	\
-	SDL_framerate.c \
-	SDL_imageFilter.c
+libSDL_gfx_la_SOURCES =  	SDL_gfxPrimitives.c		SDL_rotozoom.c		SDL_framerate.c 	SDL_imageFilter.c
 
 
 DEFS = @DEFS@ -DBUILD_DLL
-libSDL_gfx_la_LDFLAGS = \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+libSDL_gfx_la_LDFLAGS =  	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 
 DISTCLEANFILES = *~ *~c *~h *.cross.cache inc
@@ -140,7 +130,7 @@ mkinstalldirs
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/SDL_framerate.P .deps/SDL_gfxPrimitives.P \
 .deps/SDL_imageFilter.P .deps/SDL_rotozoom.P
@@ -258,7 +248,7 @@ TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
 	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
-	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+	  || (cd $(srcdir) && etags -o $$here/TAGS $(ETAGS_ARGS) $$tags  $$unique $(LISP))
 
 mostlyclean-tags:
 

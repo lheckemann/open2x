@@ -175,5 +175,5 @@ static inline void GP2X_WaitBusySurfaces(_THIS)
   do {} while (this->hidden->fio[MESGSTATUS] & MESG_BUSY);
 }
 
-#define GP2X_DEBUG 1
+//#define GP2X_DEBUG 1
 #endif // _SDL_gp2xvideo_h
