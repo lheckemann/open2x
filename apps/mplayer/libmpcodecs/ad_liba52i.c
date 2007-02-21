@@ -1,0 +1,317 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "config.h"
+#ifdef USE_LIBA52
+
+#include "mp_msg.h"
+#include "help_mp.h"
+
+#include "ad_internal.h"
+
+// #include "cpudetect.h" // ghcstop delete for ARMV4L
+
+#include "../liba52/ia52.h"
+#include "../liba52/mm_accel.h"
+
+
+static ia52_state_t *a52_state;
+static uint32_t a52_flags=0;
+
+static src_channels = 0; // hhsong 050726 add for level (channels 2,5 different level)
+
+#include "bswap.h"
+
+static ad_info_t info = 
+{
+    "AC3 decoding with liba52",
+    "liba52",
+    "Nick Kurshev",
+    "Michel LESPINASSE",
+    ""
+};
+
+LIBAD_EXTERN(liba52)
+
+extern int audio_output_channels;
+
+int a52_fillbuff(sh_audio_t *sh_audio)
+{
+    int length=0;
+    int flags=0;
+    int sample_rate=0;
+    int bit_rate=0;
+
+    sh_audio->a_in_buffer_len=0;
+    
+    /* sync frame:*/
+    while(1)
+    {
+        while(sh_audio->a_in_buffer_len<8)
+        {
+            int c = demux_getc(sh_audio->ds);
+            
+            if(c<0) 
+                return -1; /* EOF*/
+                
+            sh_audio->a_in_buffer[sh_audio->a_in_buffer_len++]=c;
+        }
+		
+        if(sh_audio->format!=0x2000)
+            swab(sh_audio->a_in_buffer,sh_audio->a_in_buffer,8);
+        
+        length = ia52_syncinfo (sh_audio->a_in_buffer, &flags, &sample_rate, &bit_rate);
+        
+        if(length>=7 && length<=3840) 
+            break; /* we're done.*/
+            
+        /* bad file => resync*/
+        if(sh_audio->format!=0x2000) 
+            swab(sh_audio->a_in_buffer,sh_audio->a_in_buffer,8);
+            
+        memcpy(sh_audio->a_in_buffer,sh_audio->a_in_buffer+1,7);
+        
+        --sh_audio->a_in_buffer_len;
+    }
+    
+    mp_msg(MSGT_DECAUDIO,MSGL_DBG2,"a52: len=%d  flags=0x%X  %d Hz %d bit/s\n",length,flags,sample_rate,bit_rate);
+
+    sh_audio->samplerate = sample_rate;
+    sh_audio->i_bps      = bit_rate/8;
+    
+    demux_read_data(sh_audio->ds,sh_audio->a_in_buffer+8,length-8);
+    
+    if(sh_audio->format!=0x2000)
+    
+    swab(sh_audio->a_in_buffer+8, sh_audio->a_in_buffer+8, length-8);
+    
+    if( crc16_block(sh_audio->a_in_buffer+2, length-2) != 0 )
+        mp_msg(MSGT_DECAUDIO,MSGL_STATUS,"a52: CRC check failed!  \n");
+    
+    return length;
+}
+
+/* returns: number of available channels*/
+static int a52_printinfo(sh_audio_t *sh_audio)
+{
+    int flags, sample_rate, bit_rate;
+    char* mode="unknown";
+    int channels=0;
+    
+    ia52_syncinfo (sh_audio->a_in_buffer, &flags, &sample_rate, &bit_rate);
+    
+    switch(flags&IA52_CHANNEL_MASK)
+    {
+        case IA52_CHANNEL: 
+            mode="channel"; 
+            channels=2; 
+            break;
+        case IA52_MONO: 
+            mode="mono"; 
+            channels=1; 
+            break;
+        case IA52_STEREO: 
+            mode="stereo"; 
+            channels=2; 
+            break;
+        case IA52_3F: 
+            mode="3f";
+            channels=3;
+            break;
+        case IA52_2F1R: 
+            mode="2f+1r";
+            channels=3;
+            break;
+        case IA52_3F1R: 
+            mode="3f+1r";
+            channels=4;
+            break;
+        case IA52_2F2R: 
+            mode="2f+2r";
+            channels=4;
+            break;
+        case IA52_3F2R: 
+            mode="3f+2r";
+            channels=5;
+            break;
+        case IA52_CHANNEL1: 
+            mode="channel1"; 
+            channels=2; 
+            break;
+        case IA52_CHANNEL2: 
+            mode="channel2"; 
+            channels=2; 
+            break;
+        case IA52_DOLBY: 
+            mode="dolby"; 
+            channels=2; 
+            break;
+  }
+  
+  mp_msg(MSGT_DECAUDIO,MSGL_INFO,"AC3: %d.%d (%s%s)  %d Hz  %3.1f kbit/s\n",
+        channels, (flags&IA52_LFE)?1:0,
+        mode, (flags&IA52_LFE)?"+lfe":"",
+        sample_rate, bit_rate*0.001f);
+        
+  return (flags&IA52_LFE) ? (channels+1) : channels;
+}
+
+
+static int preinit(sh_audio_t *sh)
+{
+    /* Dolby AC3 audio: */
+    /* however many channels, 2 bytes in a word, 256 samples in a block, 6 blocks in a frame */
+    
+    sh->audio_out_minsize=audio_output_channels*2*256*6;
+    sh->audio_in_minsize=3840;
+    
+  return 1;
+}
+
+static int init(sh_audio_t *sh_audio)
+{
+    uint32_t a52_accel=0;
+    #if 0
+    isample_t level=1, bias=384;
+	#else // ghcstop
+	isample_t level=2<<24; // ghcstop 041124: 1로 했더니 넘 작아서 크게 만들었음. mp3랑 비슷하게...^^, volume up
+	isample_t bias=384;
+	#endif
+    
+    int flags=0;
+    
+    /* Dolby AC3 audio:*/
+    #if 0 // ghcstop delete for ARMV4L
+        if(gCpuCaps.hasSSE) a52_accel|=MM_ACCEL_X86_SSE;
+        if(gCpuCaps.hasMMX) a52_accel|=MM_ACCEL_X86_MMX;
+        if(gCpuCaps.hasMMX2) a52_accel|=MM_ACCEL_X86_MMXEXT;
+        if(gCpuCaps.has3DNow) a52_accel|=MM_ACCEL_X86_3DNOW;
+        if(gCpuCaps.has3DNowExt) a52_accel|=MM_ACCEL_X86_3DNOWEXT;
+        if(gCpuCaps.hasAltiVec) a52_accel|=MM_ACCEL_PPC_ALTIVEC;
+    #endif 
+  
+    a52_state = ia52_init (a52_accel);
+    if (a52_state == NULL) 
+    {
+        mp_msg(MSGT_DECAUDIO,MSGL_ERR,"A52 init failed\n");
+        return 0;
+    }
+    
+    if(a52_fillbuff(sh_audio)<0)
+    {
+        mp_msg(MSGT_DECAUDIO,MSGL_ERR,"A52 sync failed\n");
+        return 0;
+    }
+    
+    /* 'a52 cannot upmix' hotfix:*/
+	#if 0	
+    a52_printinfo(sh_audio);
+	#else
+    src_channels = a52_printinfo(sh_audio);	// hhsong 050726 add. later must need channels 3,4 and 5 testing.
+    if(src_channels == 2)  
+		level = 1<<24;
+	#endif
+	
+    sh_audio->channels = audio_output_channels;
+
+    while(sh_audio->channels>0)
+    {
+        switch(sh_audio->channels)
+        {
+            case 1: a52_flags=IA52_MONO; break;
+            //case 2: a52_flags=IA52_STEREO; break;
+            case 2: a52_flags=IA52_DOLBY; break;
+            //case 3: a52_flags=IA52_3F; break;
+            case 3: a52_flags=IA52_2F1R; break;
+            case 4: a52_flags=IA52_2F2R; break; /* 2+2*/
+            case 5: a52_flags=IA52_3F2R; break;
+            case 6: a52_flags=IA52_3F2R|IA52_LFE; break; /* 5.1*/
+        }
+        
+        /* test:*/
+        flags=a52_flags|IA52_ADJUST_LEVEL;
+        mp_msg(MSGT_DECAUDIO,MSGL_V,"A52 flags before a52_frame: 0x%X\n",flags);
+        
+        if (ia52_frame (a52_state, sh_audio->a_in_buffer, &flags, &level, bias))
+        {
+            mp_msg(MSGT_DECAUDIO,MSGL_ERR,"a52: error decoding frame -> nosound\n");
+            return 0;
+        }
+        
+        mp_msg(MSGT_DECAUDIO,MSGL_V,"A52 flags after a52_frame: 0x%X\n",flags);
+        
+        /* frame decoded, let's init resampler:*/
+        if(a52_resample_init(a52_accel,flags,sh_audio->channels)) 
+            break;
+            
+        --sh_audio->channels; /* try to decrease no. of channels*/
+    }
+    
+    if(sh_audio->channels<=0)
+    {
+        mp_msg(MSGT_DECAUDIO,MSGL_ERR,"a52: no resampler. try different channel setup!\n");
+        return 0;
+    }
+    
+    return 1;
+}
+
+static void uninit(sh_audio_t *sh)
+{
+   	if( a52_state )
+		ia52_free (a52_state);
+}
+
+static int control(sh_audio_t *sh,int cmd,void* arg, ...)
+{
+    switch(cmd)
+    {
+      case ADCTRL_SKIP_FRAME:
+          a52_fillbuff(sh); 
+          break; // skip AC3 frame
+      return CONTROL_TRUE;
+    }
+  return CONTROL_UNKNOWN;
+}
+
+static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int maxlen)
+{
+    #if 0
+    isample_t level=1, bias=384;
+	#else // ghcstop
+	isample_t level=2<<24; // ghcstop 041207: 1로 했더니 넘 작아서 크게 만들었음. mp3랑 비슷하게...^^, volume up
+	isample_t bias=384;
+	#endif
+    int flags=a52_flags|IA52_ADJUST_LEVEL;
+    int i,len=-1;
+    
+    if(src_channels == 2)	// hhsong 050726 add.
+		level = 1<<24;
+	
+    if(!sh_audio->a_in_buffer_len) 
+        if(a52_fillbuff(sh_audio)<0) return len; /* EOF */
+        
+    sh_audio->a_in_buffer_len=0;
+    
+    if (ia52_frame (a52_state, sh_audio->a_in_buffer, &flags, &level, bias))
+    {
+        mp_msg(MSGT_DECAUDIO,MSGL_WARN,"a52: error decoding frame\n");
+        return len;
+    }
+    
+    len=0;
+    
+    for (i = 0; i < 6; i++) 
+    {
+        if( ia52_block (a52_state) )
+        {
+            mp_msg(MSGT_DECAUDIO,MSGL_WARN,"a52: error at resampling\n");
+            break;
+        }
+        len += 2*a52_resample( ia52_samples(a52_state), (int16_t *)&buf[len] );
+    }
+    
+    return len;
+}
+#endif // #ifdef USE_LIBA52
