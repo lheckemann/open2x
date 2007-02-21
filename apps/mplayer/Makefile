@@ -7,7 +7,7 @@
 include 	config.mak
 
 INCLUDES	= -I. -I./fbdisp
-EXTRALIBS	= -L$(TCDIR)/lib -lSDL_image -lmad -lvorbisidec -lz -lnsl  -L$(TCDIR)/lib -Wl,-rpath,$(TCDIR)/lib -lSDL -lpthread  -ldl -lm  -lpng -lz -ljpeg -lm -lunicodefont -lSDL_inifile
+EXTRALIBS	= -L$(OPEN2X)/lib -lSDL_image -lmad -lvorbisidec -lz -lnsl  -L$(OPEN2X)/lib -Wl,-rpath,$(OPEN2X)/lib -lSDL -lpthread  -ldl -lm  -lpng -lz -ljpeg -lm -lunicodefont -lSDL_inifile
 
 SUBLIBS		= libmpcodecs/libmpcodecs.a libaf/libaf.a libmpdemux/libmpdemux.a libao2/libao2.a osdep/libosdep.a fbdisp/libfbdisp.a
 LIBS		= $(SUBLIBS) $(EXTRALIBS)
@@ -118,5 +118,3 @@ all		:
 ifneq ($(wildcard .depend),)
 include .depend
 endif
-
-
