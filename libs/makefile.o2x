@@ -8,10 +8,11 @@
  FLAGS += CC='$(OPEN2X)/bin/$(HOST)-gcc'
  FLAGS += CXX='$(OPEN2X)/bin/$(HOST)-g++'
  FLAGS += AR='$(OPEN2X)/bin/$(HOST)-ar' 
+ FLAGS += STRIP='$(OPEN2X)/bin/$(HOST)-strip' 
  FLAGS += RANLIB='$(OPEN2X)/bin/$(HOST)-ranlib' 
  FLAGS += OPEN2X='$(PREFIX)'
  
- FLAGS += CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2 -I$(OPEN2X)/include/sdl'
+ FLAGS += CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2 -I$(OPEN2X)/include/SDL'
  FLAGS += LDFLAGS='-L$(OPEN2X)/lib'
 
  TARGETS += $(PREFIX)/lib/libSDL.a
@@ -34,10 +35,11 @@
  TARGETS += $(PREFIX)/lib/libsmpeg.a
  TARGETS += $(PREFIX)/lib/libtiff.a
  TARGETS += $(PREFIX)/lib/libungif.a
- TARGETS += $(PREFIX)/lib/libvorbis.a
+ # TARGETS += $(PREFIX)/lib/libvorbis.a
  TARGETS += $(PREFIX)/lib/libvorbisidec.a
  TARGETS += $(PREFIX)/lib/libImlib2.a
  TARGETS += $(PREFIX)/lib/libxml2.a
+ # TARGETS += $(PREFIX)/lib/libSDL_inifile.a
 
  all: $(TARGETS)
 
@@ -113,9 +115,9 @@
  $(PREFIX)/lib/libungif.a:
 	cd libungif-4.1.4 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
- #libvorbis: $(PREFIX)/lib/libvorbis.a
- #$(PREFIX)/lib/libvorbis.a: $(PREFIX)/lib/libogg.a
- #	cd libvorbis-1.1.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-ogg=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+ libvorbis: $(PREFIX)/lib/libvorbis.a
+ $(PREFIX)/lib/libvorbis.a: $(PREFIX)/lib/libogg.a
+ 	cd libvorbis-1.1.2 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-ogg=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libxml2: $(PREFIX)/lib/libxml2.a
  $(PREFIX)/lib/libxml2.a:
@@ -141,3 +143,7 @@
  $(PREFIX)/lib/libz.a:
 	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) && $(FLAGS) && AR='$(OPEN2X)/bin/$(HOST)-ar cru' && make && $(FLAGS) make install && $(FLAGS) make clean
 	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) --shared && $(FLAGS) && AR='$(OPEN2X)/bin/$(HOST)-ar cru' && make && $(FLAGS) make install && $(FLAGS) make clean
+
+ SDL_config: $(PREFIX)/lib/libSDL_inifile.a
+ $(PREFIX)/lib/libSDL_inifile.a:
+	cd SDL_config-0.5 && cd src && $(FLAGS) make && $(FLAGS) make clean
