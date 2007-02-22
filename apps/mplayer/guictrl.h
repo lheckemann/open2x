@@ -1,17 +1,17 @@
-/*              
+/*
  *  - DIGNSYS Inc. < www.dignsys.com >
- *             
+ *
  *    => Created.
  */
 
 #ifndef __GUICTRL_H_
 #define __GUICTRL_H_
 
-#include "SDL.h"
-#include "SDL_image.h"
+#include <SDL.h>
+#include <SDL_image.h>
+
 #include "typed.h"
 #include "filelistview.h"
-
 
 void OnDraw_SteroMono(SDL_Surface *pScreen, SDL_Surface *pBodyScreen, int flag);
 void OnDraw_Repeat(SDL_Surface *pScreen, SDL_Surface *pBodyScreen, int flag);

@@ -1,14 +1,13 @@
-/* 
- * Original decode routine from Mplayer < www.mplayerhq.hu >             
+/*
+ * Original decode routine from Mplayer < www.mplayerhq.hu >
  *
  *  - www.aesop-embedded.org
  *             godori <ghcstop>
  *
- *    => 2005.01.04 remake main decode routine for mmsp2 HW 
+ *    => 2005.01.04 remake main decode routine for mmsp2 HW
  *
  *    => DIGNSYS Inc. < www.dignsys.com > maintaining from April 2005
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,12 +63,12 @@ struct mmsp2_rtc_info
 };
 
 #define PATH_DEV_RTC                  "/dev/rtc"
-#define PATH_DEV_RTC_WITH_DEVFS       "/dev/misc/rtc"   
+#define PATH_DEV_RTC_WITH_DEVFS       "/dev/misc/rtc"
 
 #define IOCTL_MMSP2_READ_RTC    _IOR('p', 0x13, struct mmsp2_rtc_info)
 
-#undef USE_VPTS_Q               
-#define USE_VPTS_Q              
+#undef USE_VPTS_Q
+#define USE_VPTS_Q
 
 
 #define PT_NEXT_ENTRY 	1
@@ -102,8 +101,8 @@ static int audio_thread(void *arg);
 inline int mmsp2_mp4_video_decode(VS * is, unsigned char *buf, int data_length);
 inline int pre_process(VS * is, unsigned short yoffset, unsigned short cboffset, unsigned short croffset, int display);
 inline int post_process(VS * is);
-void dss(void); 
-VS      vs;         
+void dss(void);
+VS      vs;
 
 static int      rtc_fd = 0;
 static struct mmsp2_rtc_info rtcinfo;
@@ -115,19 +114,19 @@ int identify 	= 0;
 SDL_mutex      *apm;
 
 float 	nat = 0;
-int		ftr = 0;   
-float	time_frame = 0; 
+int		ftr = 0;
+float	time_frame = 0;
 
 int		delay_corrected = 1;
 
-static int      drop_frame_cnt = 0; 
-static float    default_max_pts_correction = -1; 
+static int      drop_frame_cnt = 0;
+static float    default_max_pts_correction = -1;
 static float    max_pts_correction = 0;
 static float    c_total = 0;
-float           AV_delay = 0;   
+float           AV_delay = 0;
 
 static int      total_frame_cnt = 0;
-static int      nframes = 0;    
+static int      nframes = 0;
 float           rel_seek_secs = 0;
 int             abs_seek_pos = 0;
 
@@ -154,12 +153,12 @@ int             set_of_sub_size = 0;
 int             set_of_sub_pos = -1;
 float           sub_last_pts = -303;
 
-sub_data       *subdata = NULL; 
-char           *mem_ptr;        
+sub_data       *subdata = NULL;
+char           *mem_ptr;
 #endif
 
-int             global_sub_size = 0;  
-int             global_sub_pos = -1;  
+int             global_sub_size = 0;
+int             global_sub_pos = -1;
 
 #define SUB_SOURCE_SUBS 0
 #define SUB_SOURCE_VOBSUB 1
@@ -175,11 +174,11 @@ SDL_Event       subchange;
 
 void            select_subtitle(void);
 
-static char    *stream_dump_name = "stream.dump"; 
+static char    *stream_dump_name = "stream.dump";
 int             stream_dump_type = 0;
 int             eof = 1;
 
-float           playback_speed = 1.0;   
+float           playback_speed = 1.0;
 float           audio_delay = 0.0;
 
 
@@ -190,10 +189,10 @@ static int      loop_times = -1;
 static int      loop_seek = 0;
 
 
-char          **audio_codec_list = NULL; 
-char          **video_codec_list = NULL; 
-char          **audio_fm_list = NULL;  
-char          **video_fm_list = NULL;  
+char          **audio_codec_list = NULL;
+char          **video_codec_list = NULL;
+char          **audio_fm_list = NULL;
+char          **video_fm_list = NULL;
 
 
 int             audio_id 		= -1;
@@ -203,7 +202,7 @@ int             vobsub_id 		= -1;
 char           	*audio_lang 	= NULL;
 char           	*dvdsub_lang 	= NULL;
 static char    	*spudec_ifo 	= NULL;
-char           	*filename 		= NULL;    
+char           	*filename 		= NULL;
 int             forced_subs_only = 0;
 
 
@@ -237,11 +236,11 @@ static sh_video_t *sh_video 	= NULL;
 ao_functions_t    *audio_out 	= NULL;
 
 
-static demux_stream_t *d_audio = NULL;  
+static demux_stream_t *d_audio = NULL;
 static demux_stream_t *d_video = NULL;
 static demux_stream_t *d_dvdsub = NULL;
 
-char           *current_module = NULL;  
+char           *current_module = NULL;
 
 
 static unsigned int inited_flags = 0;
@@ -263,7 +262,7 @@ extern float g_fResumePlayTime;
 extern bool g_bResumePlay;
 extern SDL_Event *resume_open_event;
 
-int pause_flag 			= 0;			
+int pause_flag 			= 0;
 int g_Timesec			= 0;
 extern int GetMenuStatus();
 extern bool	bMenuStatus;
@@ -275,78 +274,78 @@ void reset_player_variable(void)
 {
     exit_media_play();
 
-	pause_flag 			= 0;			
-	g_Timesec			= 0;                                      
-	TotalPlayTime		= 0 ;                                     
-	CurrentPlayTime		= 0 ;                                     	
-	g_Kbps				= 0 ;                                     	
-	g_Khz				= 0 ;                                     	
+	pause_flag 			= 0;
+	g_Timesec			= 0;
+	TotalPlayTime		= 0 ;
+	CurrentPlayTime		= 0 ;
+	g_Kbps				= 0 ;
+	g_Khz				= 0 ;
 	g_Timesec			= 0;
 	g_NotSupported		= false;
-	
-    memset((char *) &vs, 0x00, sizeof(VS)); 
-    
+
+    memset((char *) &vs, 0x00, sizeof(VS));
+
     rtc_fd = 0;
-    
+
     verbose 	= 0;
     identify 	= 0;
-    
-    
+
+
     nat 		= 0;
     ftr 	= 0;
     time_frame 				= 0;
-    
+
     delay_corrected = 1;
-    
-    drop_frame_cnt 				= 0; 
+
+    drop_frame_cnt 				= 0;
     default_max_pts_correction 	= -1;
-    max_pts_correction 			= 0; 
+    max_pts_correction 			= 0;
     c_total 	= 0;
-    AV_delay 	= 0;   
-    
+    AV_delay 	= 0;
+
     total_frame_cnt = 0;
-    nframes 		= 0;    
-    
+    nframes 		= 0;
+
     rel_seek_secs 	= 0;
     abs_seek_pos 	= 0;
-    
+
     sub_name 	= NULL;
     sub_delay 	= 0;
     sub_fps 	= 0;
     sub_auto 	= 1;
     vobsub_name = NULL;
-    
+
     subcc_enabled 		= 0;
     suboverlap_enabled 	= 1;
-    
+
     #ifdef USE_SUB
     set_of_sub_size = 0;
     set_of_sub_pos 	= -1;
     sub_last_pts 	= -303;
-    
+
     subdata = NULL;
     #endif
-    
+
     global_sub_size = 0;
     global_sub_pos = -1;
-    
+
     global_sub_quiet_osd_hack = 0;
-    
+
     vo_sub = NULL;
     subtitle_changed = 0;
     stream_dump_type = 0;
 
     eof = 1;
-    
+
     playback_speed 	= 1.0;
     audio_delay 	= 0.0;
-    
+
     seek_to_sec 	= NULL;
     seek_to_byte 	= 0;
     step_sec 		= 0;
     loop_times 		= -1;
     loop_seek 		= 0;
-    
+
     audio_id 	= -1;
     video_id 	= -1;
     dvdsub_id 	= -1;
@@ -354,31 +353,31 @@ void reset_player_variable(void)
     audio_lang 	= NULL;
     dvdsub_lang = NULL;
     spudec_ifo 	= NULL;
-    filename 	= NULL;    
+    filename 	= NULL;
     forced_subs_only = 0;
-    
+
     cache_size = -1;
     softsleep = 0;
-    
+
     force_fps 	= 0;
     force_srate = 0;
     audio_output_format = 0;
-    
+
     stream 		= NULL;
     demuxer 	= NULL;
     sh_audio 	= NULL;
     sh_video 	= NULL;
     audio_out 	= NULL;
-    
-    d_audio 	= NULL;  
+
+    d_audio 	= NULL;
     d_video 	= NULL;
     d_dvdsub 	= NULL;
-    
-    current_module = NULL;  
-    
+
+    current_module = NULL;
+
     inited_flags = 0;
-    
-    set_lock_value( &slock, SFULL ); 
+
+    set_lock_value( &slock, SFULL );
 }
 
 static void uninit_player(unsigned int mask)
@@ -425,7 +424,7 @@ static void uninit_player(unsigned int mask)
 #ifdef CVS_040109
         audio_out->uninit();
 #else
-        audio_out->uninit(1);   
+        audio_out->uninit(1);
 #endif
         audio_out = NULL;
     }
@@ -458,15 +457,15 @@ static void exit_player_with_rc(char *how, int rc)
 
     if(vs.video_tid)
     {
-		if(vs.vr)	
+		if(vs.vr)
 		{
 	        printf("video thread wait\n");
 	        SDL_WaitThread(vs.video_tid, NULL);
 		}
         printf("mmsp2 engine shutdown...\n");
-        close_dualcpu_vpp_unmap();  
+        close_dualcpu_vpp_unmap();
     }
-    
+
     if(vs.demux_tid)
     {
         printf("demux thread wait\n");
@@ -515,7 +514,7 @@ void exit_player(char *how)
 
 static int libmpdemux_was_interrupted(int eof)
 {
-#if 0                           
+#if 0
     mp_cmd_t       *cmd;
 
     if ((cmd = mp_input_get_cmd(0, 0)) != NULL)
@@ -586,12 +585,12 @@ void add_subtitles(char *filename, float fps, int silent)
 }
 
 
-void update_set_of_subtitles() 	
+void update_set_of_subtitles()
 {
     int             i;
 
     if (set_of_sub_size > 0 && subdata == NULL)
-    {                           
+    {
         for (i = set_of_sub_pos + 1; i < set_of_sub_size; ++i)
             set_of_subtitles[i - 1] = set_of_subtitles[i];
         set_of_subtitles[set_of_sub_size - 1] = NULL;
@@ -600,11 +599,11 @@ void update_set_of_subtitles()
             subdata = set_of_subtitles[set_of_sub_pos = 0];
     }
     else if (set_of_sub_size > 0 && subdata != NULL)
-    {                           
+    {
         set_of_subtitles[set_of_sub_pos] = subdata;
     }
     else if (set_of_sub_size <= 0 && subdata != NULL)
-    {                           
+    {
         set_of_subtitles[set_of_sub_pos = set_of_sub_size] = subdata;
         ++set_of_sub_size;
     }
@@ -626,18 +625,18 @@ int init_etc_setting(void)
     srand((int) time(NULL));
     gprintf("d1\n");
     mp_msg_init();
-    mp_msg_set_level(MSGL_INFO);    
+    mp_msg_set_level(MSGL_INFO);
     gprintf("d2\n");
-    all_codec_register();       
-    bin_lock_init( &slock, SFULL ); 
+    all_codec_register();
+    bin_lock_init( &slock, SFULL );
 
     return 1;
 }
 
 void close_etc_setting(void)
 {
-    lock_destroy(&slock);       
-    
+    lock_destroy(&slock);
+
 #ifdef GDEBUG
     printf("debug.txt close()\n");
     fclose(dbg);
@@ -683,20 +682,20 @@ play_next_file:
 
     stream 	= NULL;
     demuxer = NULL;
-    
+
     if(d_audio){d_audio = NULL;}
     if(d_video){d_video = NULL;}
-    
+
     sh_audio = NULL;
     sh_video = NULL;
 
     gprintf("d5\n");
     stream = open_stream(filename, 0, &file_format);
-    
-    
-    if(!stream)                
+
+
+    if(!stream)
     {
-#if 0                           
+#if 0
         eof = libmpdemux_was_interrupted(PT_NEXT_ENTRY);
 #else
         libmpdemux_was_interrupted(PT_NEXT_ENTRY);
@@ -721,7 +720,7 @@ play_next_file:
     sh_video = d_video->sh;
 
     gprintf("d7\n");
-    
+
     if(sh_video)
     {
         if (!video_read_properties(sh_video))
@@ -734,7 +733,7 @@ play_next_file:
 #if 1
             mp_msg(MSGT_CPLAYER, MSGL_V, "[V] filefmt:%d  fourcc:0x%X  size:%dx%d  fps:%5.2f  ftime:=%6.4f\n",
                    demuxer->file_format, sh_video->format, sh_video->disp_w, sh_video->disp_h, sh_video->fps, sh_video->frametime);
-            
+
 #endif
             if (force_fps)
             {
@@ -748,15 +747,15 @@ play_next_file:
                 sh_video = d_video->sh = NULL;
             }
         }
-    }                           
+    }
 
     fflush(stdout);
 
-    
+
     if(!sh_video && !sh_audio)
     {
         mp_msg(MSGT_CPLAYER, MSGL_FATAL, MSGTR_NoStreamFound);
-        goto goto_next_file;    
+        goto goto_next_file;
     }
 
     gprintf("d8\n");
@@ -765,24 +764,24 @@ play_next_file:
 
 #if 1
 #ifdef USE_SUB
-    
+
     if(sh_video)
     {
-        if(sub_name)           
+        if(sub_name)
         {
             for(i = 0; sub_name[i]!=NULL; ++i)
                 add_subtitles(sub_name[i], sh_video->fps, 0);
         }
 
-        
-        if(sub_auto)           
+
+        if(sub_auto)
         {
             char *psub = get_path("sub/");
             char **tmp  = sub_filenames((psub ? psub : ""), filename);
             char **tmp2 = tmp;
 
-            free(psub);         
-            
+            free(psub);
+
             while(*tmp2)
                 add_subtitles(*tmp2++, sh_video->fps, 0);
 
@@ -790,7 +789,7 @@ play_next_file:
             if(set_of_sub_size == 0)
             {
                 add_subtitles(mem_ptr = get_path("default.sub"), sh_video->fps, 1);
-                free(mem_ptr);  
+                free(mem_ptr);
             }
 
             if(set_of_sub_size > 0)
@@ -799,8 +798,8 @@ play_next_file:
 
         if(set_of_sub_size > 0)
         {
-			
-			global_sub_indices[SUB_SOURCE_SUBS] = global_sub_size;  
+
+			global_sub_indices[SUB_SOURCE_SUBS] = global_sub_size;
 			global_sub_size += set_of_sub_size;
         }
     }
@@ -825,14 +824,14 @@ play_next_file:
         {
             global_sub_pos = -1;
         }
-        
+
         global_sub_pos--;
     }
 
     select_subtitle();
-    
-#endif    
-    
+
+#endif
+
     gprintf("d11\n");
 
     if(d_audio)		vs.dmuxst_audio = d_audio;
@@ -855,10 +854,10 @@ play_next_file:
         if(!init_best_audio_codec(sh_audio, audio_codec_list, audio_fm_list))
         {
             printf("\n\ninit_best_audio_codec load fail\n\n");
-            sh_audio = d_audio->sh = NULL;  
-            
+            sh_audio = d_audio->sh = NULL;
+
             goto mmsp2out;
-            
+
         }
         else
             inited_flags |= INITED_ACODEC;
@@ -866,9 +865,9 @@ play_next_file:
         mp_msg(MSGT_CPLAYER, MSGL_INFO, "========================================================================\n");
     }
 
-    
-    identify = 0;               
-    
+
+    identify = 0;
+
     if(identify)
     {
         mp_msg(MSGT_GLOBAL, MSGL_INFO, "ID_FILENAME=%s\n", filename);
@@ -901,7 +900,7 @@ play_next_file:
         mp_msg(MSGT_GLOBAL, MSGL_INFO, "ID_LENGTH=%ld\n", demuxer_get_time_length(demuxer));
     }
 
-    
+
     if(!sh_video)
         goto main;
 
@@ -916,7 +915,7 @@ main:
             ao_data.channels = audio_output_channels ? audio_output_channels : sh_audio->channels;
             ao_data.format = audio_output_format ? audio_output_format : sh_audio->sample_format;
 #if 1
-            
+
             if (!preinit_audio_filters(sh_audio,
                                        (int) (sh_audio->samplerate * playback_speed), sh_audio->channels, sh_audio->sample_format, sh_audio->samplesize,
                                        &ao_data.samplerate, &ao_data.channels, &ao_data.format, audio_out_format_bits(ao_data.format) / 8))
@@ -925,32 +924,31 @@ main:
             }
             else
             {
-#    if 1                       
-                
+#    if 1
+
                 mp_msg(MSGT_CPLAYER, MSGL_INFO, "AF_pre: %dHz %dch %s\n", ao_data.samplerate, ao_data.channels, audio_out_format_name(ao_data.format));
 #    endif
             }
 #endif
 
-            if (!(audio_out = init_best_audio_out(audio_driver_list, 0, 
+            if (!(audio_out = init_best_audio_out(audio_driver_list, 0,
                                                   force_srate ? force_srate : ao_data.samplerate,
                                                   audio_output_channels ? audio_output_channels : ao_data.channels, audio_output_format ? audio_output_format : ao_data.format, 0)))
             {
-                
-                mp_msg(MSGT_CPLAYER, MSGL_ERR, MSGTR_CannotInitAO);
-                uninit_player(INITED_ACODEC);   
 
-                sh_audio = d_audio->sh = NULL;  
+                mp_msg(MSGT_CPLAYER, MSGL_ERR, MSGTR_CannotInitAO);
+                uninit_player(INITED_ACODEC);
+
+                sh_audio = d_audio->sh = NULL;
             }
             else
             {
-     			mixer.audio_out = audio_out;		
-        		mixer_setvolume(&mixer, leftVol, leftVol);	
-        		hwEq_change(0);		
-            	
+     			mixer.audio_out = audio_out;
+        		mixer_setvolume(&mixer, leftVol, leftVol);
+        		mixer_hwEq(&mixer, 0);
                 inited_flags |= INITED_AO;
-#if 0           
-                
+#if 0
+
                 mp_msg(MSGT_CPLAYER, MSGL_INFO, "AO: [%s] %dHz %dch %s (%d bps)\n",
                        audio_out->info->short_name, ao_data.samplerate, ao_data.channels, audio_out_format_name(ao_data.format), audio_out_format_bits(ao_data.format) / 8);
 
@@ -960,48 +958,48 @@ main:
                     mp_msg(MSGT_CPLAYER, MSGL_V, "AO: Comment: %s\n", audio_out->info->comment);
 #endif
 
-                
+
 #if 1
                 current_module = "af_init";
-                if (!init_audio_filters(sh_audio, (int) (sh_audio->samplerate * playback_speed), sh_audio->channels, sh_audio->sample_format, sh_audio->samplesize, ao_data.samplerate, ao_data.channels, ao_data.format, audio_out_format_bits(ao_data.format) / 8,    
+                if (!init_audio_filters(sh_audio, (int) (sh_audio->samplerate * playback_speed), sh_audio->channels, sh_audio->sample_format, sh_audio->samplesize, ao_data.samplerate, ao_data.channels, ao_data.format, audio_out_format_bits(ao_data.format) / 8,
                                         ao_data.outburst * 4, ao_data.buffersize))
                 {
                     mp_msg(MSGT_CPLAYER, MSGL_ERR, "Couldn't find matching filter / ao format!\n");
                 }
 #endif
-            }                   
-        }                       
+            }
+        }
 
         current_module = "av_init";
         if(sh_video)
             sh_video->timer = 0;
 
-        
+
         if(sh_audio)
         {
-            sh_audio->delay = -audio_delay; 
+            sh_audio->delay = -audio_delay;
         }
 
 
-        
+
         if (!sh_audio)
         {
             mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_NoSound);
             mp_msg(MSGT_CPLAYER, MSGL_V, "Freeing %d unused audio chunks\n", d_audio->packs);
-            ds_free_packs(d_audio); 
-            d_audio->id = -2;   
-            
+            ds_free_packs(d_audio);
+            d_audio->id = -2;
+
         }
 
         if (!sh_video)
         {
             mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_Video_NoVideo);
             mp_msg(MSGT_CPLAYER, MSGL_V, "Freeing %d unused video chunks\n", d_video->packs);
-            ds_free_packs(d_video); 
+            ds_free_packs(d_video);
             d_video->id = -2;
         }
 
-        
+
         if (!sh_video && !sh_audio)
             goto goto_next_file;
 
@@ -1026,8 +1024,8 @@ main:
         }
 #endif
 
-        
-        
+
+
 
 #if 0
         play_n_frames = play_n_frames_mf;
@@ -1067,7 +1065,7 @@ main:
                 set_FDC_YUVB_plane(real_width, real_height);
             }
         }
-        
+
         rtc_fd = open(PATH_DEV_RTC, O_RDWR);
         if (rtc_fd < 0)
         {
@@ -1087,20 +1085,20 @@ main:
         ioctl(rtc_fd, IOCTL_MMSP2_READ_RTC, &rtcinfo);
         printf("RTCTCNT = %u, RTCSTCNT = %u\n", rtcinfo.sec_count, rtcinfo.msec_count);
 
-        ivs(&vs);  
-    }                           
-    
-    return 1;                   
+        ivs(&vs);
+    }
+
+    return 1;
 
 
 mmsp2out:
-    close_dualcpu_vpp_unmap();  
+    close_dualcpu_vpp_unmap();
 	g_NotSupported = true;
 
-goto_next_file:              
-    uninit_player(INITED_ALL - (INITED_GUI + INITED_INPUT + 0));    
+goto_next_file:
+    uninit_player(INITED_ALL - (INITED_GUI + INITED_INPUT + 0));
 
-#if 0                           
+#if 0
     if (use_gui || playtree_iter != NULL)
     {
         eof = 0;
@@ -1109,7 +1107,7 @@ goto_next_file:
 #endif
 
     exit_player_with_rc(MSGTR_Exit_eof, 0);
-    return -1;                  
+    return -1;
 
 }
 
@@ -1124,14 +1122,14 @@ void ivs(VS * is)
     apm = SDL_CreateMutex();
 
     if( is->video_sh && is->audio_sh ) 	is->vr = 0;
-    else						        is->vr = 1; 
+    else						        is->vr = 1;
 
     is->aq = 0;
     is->vq = 0;
 
     is->si = 1;
 
-    
+
     is->dss 	= 0.0;
     is->sp = 0;
     is->dems 	= 0;
@@ -1140,16 +1138,16 @@ void ivs(VS * is)
     is->ar 	= 0;
 
     is->sm 	= SDL_CreateMutex();
-    
+
     is->vsm = SDL_CreateMutex();
     is->vsc	= SDL_CreateCond();
 
     is->arm	= SDL_CreateMutex();
     is->arc	= SDL_CreateCond();
-    
 
-    if (is->video_sh)	is->video_tid = SDL_CreateThread(video_thread, is); 
-    if (is->audio_sh)	is->audio_tid = SDL_CreateThread(audio_thread, is); 
+
+    if (is->video_sh)	is->video_tid = SDL_CreateThread(video_thread, is);
+    if (is->audio_sh)	is->audio_tid = SDL_CreateThread(audio_thread, is);
 }
 
 static int audio_thread(void *arg)
@@ -1168,46 +1166,46 @@ static int audio_thread(void *arg)
                     device_delay,
                     obuf_delay;
 
-	
-	if( sh_audio  ) 
+
+	if( sh_audio  )
 	{
 		LengthInSec=demuxer_get_time_length(demuxer);
 		TotalPlayTime = LengthInSec;
-		
+
 		memset( tmp, 0x00, sizeof(tmp) );
 		snprintf( tmp,sizeof( tmp ),"%02d:%02d:%02d", LengthInSec/3600, LengthInSec/60%60, LengthInSec%60 );
-		
+
 		printf("\n==============================\n");
 		printf("Total Playing Time: %s, %d, %d\n", tmp, TotalPlayTime, LengthInSec);
 		printf("==============================\n\n");
-	
+
 	}
 
     is->audio_sh->delay = 0.0;
     while (1)
     {
-		while(pause_flag)	SDL_Delay(1);	
+		while(pause_flag)	SDL_Delay(1);
 
         if (quit_event == 1)
             goto break_signal;
-        
+
         SDL_LockMutex(is->sm);
         if( is->se == 1 )
         {
-            if( is->sp == 1 ) 
+            if( is->sp == 1 )
             {
                 SDL_UnlockMutex(is->sm);
                 continue;
             }
             is->dems      = 1;
             is->sp    = 1;
-            is->tr = 0; 
-            
+            is->tr = 0;
+
             if( sh_video)
             {
                 is->vr = 0;
                 SDL_LockMutex(is->vsm);
-                while (is->vs == 0 )  
+                while (is->vs == 0 )
                     SDL_CondWait(is->vsc, is->vsm);
                 SDL_UnlockMutex(is->vsm);
             }
@@ -1219,17 +1217,17 @@ static int audio_thread(void *arg)
         playsize = audio_out->get_space();
 
 #if 0
-        if (!playsize && !(is->video_sh))   
+        if (!playsize && !(is->video_sh))
 #else
-        if (!playsize)          
+        if (!playsize)
 #endif
         {
-            SDL_Delay(10);      
+            SDL_Delay(10);
             continue;
         }
-        
+
         if (playsize > MAX_OUTBURST)
-            playsize = MAX_OUTBURST;    
+            playsize = MAX_OUTBURST;
 
         if (is->dmuxst_audio->eof == 1)
         {
@@ -1241,10 +1239,10 @@ static int audio_thread(void *arg)
             else
                 goto quit;
         }
-        
+
         while (is->audio_sh->a_out_buffer_len < playsize && !is->dmuxst_audio->eof)
         {
-			while(pause_flag)	SDL_Delay(1);	
+			while(pause_flag)	SDL_Delay(1);
 
             if (quit_event == 1)
                 goto break_signal;
@@ -1253,14 +1251,14 @@ static int audio_thread(void *arg)
                                playsize - is->audio_sh->a_out_buffer_len, is->audio_sh->a_out_buffer_size - is->audio_sh->a_out_buffer_len);
             if (ret <= 0)
             {
-                goto quit;      
+                goto quit;
             }
             is->audio_sh->a_out_buffer_len += ret;
         }
         if (playsize > is->audio_sh->a_out_buffer_len)
             playsize = is->audio_sh->a_out_buffer_len;
-        
-        
+
+
         if( is->tr == 0 )
         {
             if( sh_video )
@@ -1278,7 +1276,7 @@ static int audio_thread(void *arg)
                 if( sh_video )
                 {
                     SDL_LockMutex(is->arm);
-                    while (is->ar == 0 )  
+                    while (is->ar == 0 )
                         SDL_CondWait(is->arc, is->arm);
                     SDL_UnlockMutex(is->arm);
                 }
@@ -1291,14 +1289,14 @@ static int audio_thread(void *arg)
                 is->dss = 0;
                 SDL_UnlockMutex(is->sm);
             }
-            
-        }   
+
+        }
 
         SDL_LockMutex(apm);
         playsize = audio_out->play(is->audio_sh->a_out_buffer, playsize, 0);
-        
-		while(pause_flag)	SDL_Delay(1);	
-        
+
+		while(pause_flag)	SDL_Delay(1);
+
         if (playsize > 0)
         {
             is->audio_sh->a_out_buffer_len -= playsize;
@@ -1306,13 +1304,13 @@ static int audio_thread(void *arg)
             is->audio_sh->delay += (float) playsize / ((float) ((ao_data.bps && sh_audio->afilter) ? ao_data.bps : sh_audio->o_bps));
             is->by = (float) is->audio_sh->a_buffer_len / (float) is->audio_sh->o_bps;
             is->dsat = (float) is->dmuxst_audio->pts;
-            is->dsat += (float)((ds_tell_pts(is->dmuxst_audio) - is->audio_sh->a_in_buffer_len) / (float)(is->audio_sh->i_bps*8));		
+            is->dsat += (float)((ds_tell_pts(is->dmuxst_audio) - is->audio_sh->a_in_buffer_len) / (float)(is->audio_sh->i_bps*8));
         }
         SDL_UnlockMutex(apm);
 
 		g_Timesec = (int)is->audio_sh->delay;
 		CurrentPlayTime = is->dmuxst_audio->pts;
-		
+
     }
 
 break_signal:
@@ -1322,7 +1320,7 @@ quit:
     if (break_signal_sent == 0)
     {
         break_signal_sent = 1;
-        event.type = EVENT_QUIT_PLAY;   
+        event.type = EVENT_QUIT_PLAY;
         SDL_PushEvent(&event);
     }
 
@@ -1334,20 +1332,20 @@ static int video_thread(void *arg)
 {
     VS     *is = arg;
 
-    int             adec;       
+    int             adec;
     int             dframe = 0;
     int             in_size = -1;
     SDL_Event       event;
     unsigned char  *start = NULL;
-    
-#if 0 
+
+#if 0
     init_vpts_readq();
     init_nft_readq();
 #endif
-    
+
     while (1)
     {
-		while(pause_flag)	SDL_Delay(1);	
+		while(pause_flag)	SDL_Delay(1);
 
         if (quit_event == 1)
         {
@@ -1365,9 +1363,9 @@ static int video_thread(void *arg)
             }
 
             SDL_LockMutex(is->drm);
-            while (is->tr == 0)  
+            while (is->tr == 0)
                 SDL_CondWait(is->drc, is->drm);
-            is->vr = 1;    
+            is->vr = 1;
             SDL_UnlockMutex(is->drm);
             if( is->se == 1 )
             {
@@ -1407,7 +1405,7 @@ static int video_thread(void *arg)
 		    resume_open_event->type = EVENT_RESUME_SEEK;
 		    SDL_PushEvent(resume_open_event);
 		}
-    }                           
+    }
 
 
 break_signal:
@@ -1417,12 +1415,12 @@ quit:
     if (break_signal_sent == 0)
     {
         break_signal_sent = 1;
-        
+
         event.type = EVENT_QUIT_PLAY;
         SDL_PushEvent(&event);
     }
 
-    
+
     return 0;
 }
 
@@ -1431,10 +1429,10 @@ quit:
 inline int mmsp2_mp4_video_decode(VS * is, unsigned char *buf, int data_length)
 {
     int fn = 0;
-    int run_fault_count = 0;    
+    int run_fault_count = 0;
 
     memcpy(dbuf, buf, data_length);
-    memset(dbuf + data_length, 0, 2048);    
+    memset(dbuf + data_length, 0, 2048);
     do
     {
         if (run_940_decoder() < 0)
@@ -1446,7 +1444,7 @@ inline int mmsp2_mp4_video_decode(VS * is, unsigned char *buf, int data_length)
         {
             return -1;
         }
-        
+
         if (mp4d_disp.Command == MP_CMD_DISPLAY)
         {
             if (mp4d_disp.display_frames != 0)
@@ -1470,7 +1468,7 @@ inline int mmsp2_mp4_video_decode(VS * is, unsigned char *buf, int data_length)
                     is->sv = get_vpts_readq();
                     is->sn  = get_nft_readq();
                     pre_process(is, mp4d_disp.remain_frame_luma_offset_addr, mp4d_disp.remain_frame_cb_offset_addr, mp4d_disp.remain_frame_cr_offset_addr, 1);
-                } 
+                }
             }
         }
         else if (mp4d_disp.Command == MP_CMD_FAIL)
@@ -1480,11 +1478,11 @@ inline int mmsp2_mp4_video_decode(VS * is, unsigned char *buf, int data_length)
         }
 
     }
-    while (mp4d_disp.has_bframe);   
+    while (mp4d_disp.has_bframe);
 
 exit_routine:
 
-    return fn;    
+    return fn;
 }
 
 inline int pre_process(VS * is, unsigned short yoffset, unsigned short cboffset, unsigned short croffset, int display)
@@ -1494,14 +1492,14 @@ inline int pre_process(VS * is, unsigned short yoffset, unsigned short cboffset,
     float           min;
     float           d_time;
     float           frame_time;
-	frame_time = is->sn; 
+	frame_time = is->sn;
 
     sh_video->timer += frame_time;
-    time_frame += frame_time;   
+    time_frame += frame_time;
 
     {
-        ftr = 0;   
-        time_frame -= GetRelativeTime();    
+        ftr = 0;
+        time_frame -= GetRelativeTime();
 
         if (sh_audio && !d_audio->eof)
         {
@@ -1514,37 +1512,37 @@ inline int pre_process(VS * is, unsigned short yoffset, unsigned short cboffset,
             delay = audio_out->get_delay();
             SDL_UnlockMutex(apm);
             time_frame = delay - sh_audio->delay;
-            
-            if (delay > 0.25)   
+
+            if (delay > 0.25)
                 delay = 0.25;
-            else if (delay < 0.10)  
+            else if (delay < 0.10)
                 delay = 0.10;
 
             if (time_frame > delay * 0.6)
             {
                 ftr = 1;
-                time_frame = delay * 0.5;   
+                time_frame = delay * 0.5;
             }
         }
-        else                    
+        else
         {
             if (time_frame < -3 * frame_time || time_frame > 3 * frame_time)
                 time_frame = 0;
         }
-    }                           
+    }
     if (time_frame > 0.001)
     {
         min = 0.005;
         while (time_frame > min)
         {
             if (time_frame <= 0.020)
-                usec_sleep(0);  
+                usec_sleep(0);
             else
                 usec_sleep(1000000 * (time_frame - 0.020));
             time_frame -= GetRelativeTime();
         }
     }
-    
+
     if (display)
         run_FDC_and_display(yoffset, cboffset, croffset);
 
@@ -1566,7 +1564,7 @@ inline int post_process(VS * is)
         delay = b + audio_out->get_delay();
         SDL_UnlockMutex(apm);
 
-        v_pts = is->sv ?  is->sv : is->video_sh->pts; 
+        v_pts = is->sv ?  is->sv : is->video_sh->pts;
 
         AV_delay = (a_pts - delay - audio_delay) - v_pts;
 
@@ -1583,10 +1581,10 @@ inline int post_process(VS * is)
             max_pts_correction = default_max_pts_correction;
         else
         {
-            
-            max_pts_correction = sh_video->frametime * 0.10;    
+
+            max_pts_correction = sh_video->frametime * 0.10;
         }
-        if (!ftr)  
+        if (!ftr)
         {
             SDL_LockMutex(apm);
             sh_audio->delay += x;
@@ -1597,28 +1595,28 @@ inline int post_process(VS * is)
 
         nframes++;
     }
-    else                        
+    else
     {
-    }                           
+    }
 
 #if 1
 #    ifdef USE_SUB
-    
+
     if (subdata && v_pts > 0)
     {
         float           pts = v_pts;
 
         if (sub_fps == 0)
             sub_fps = sh_video->fps;
-        
+
         if (pts > sub_last_pts || pts < sub_last_pts - 1.0)
         {
             find_sub(subdata, (pts + sub_delay) * (subdata->sub_uses_time ? 100. : sub_fps));
-            
+
             sub_last_pts = pts;
             if (subtitle_changed == 1)
             {
-                subchange.type = EVENT_SUBTITLE_CHANGE; 
+                subchange.type = EVENT_SUBTITLE_CHANGE;
                 SDL_PushEvent(&subchange);
             }
         }
@@ -1631,18 +1629,18 @@ inline int post_process(VS * is)
 
 void set_audio_delay(ADelay fast_slow)
 {
-    lock_take(&slock);          
+    lock_take(&slock);
     if (fast_slow == AD_PLUS_100MS)
     {
         SDL_LockMutex(apm);
-        vs.audio_sh->delay += (-0.100); 
+        vs.audio_sh->delay += (-0.100);
         audio_delay += (-0.100);
         SDL_UnlockMutex(apm);
     }
     else if (fast_slow == AD_MINUS_100MS)
     {
         SDL_LockMutex(apm);
-        vs.audio_sh->delay += (0.100);  
+        vs.audio_sh->delay += (0.100);
         audio_delay += (0.100);
         SDL_UnlockMutex(apm);
     }
@@ -1674,7 +1672,7 @@ int movie_seek(float seeksec, MSeek how)
     {
         abs_seek_pos = 3;
     }
-    
+
     vs.se = 1;
     SDL_UnlockMutex(vs.sm);
 
@@ -1685,7 +1683,7 @@ void dss(void)
 {
     if( abs_seek_pos == 0 )
     {
-        rel_seek_secs += vs.dss; 
+        rel_seek_secs += vs.dss;
     }
     else if( abs_seek_pos == 3 )
     {
@@ -1704,7 +1702,7 @@ void dss(void)
 
         if (sh_audio)
         {
-            audio_out->reset(); 
+            audio_out->reset();
         }
 
         if (sh_video)
@@ -1712,16 +1710,16 @@ void dss(void)
             c_total = 0;
             max_pts_correction = 0.1;
         }
-    }                           
+    }
 
-   
+
     if (sh_video)
     {
         init_vpts_readq();
         init_nft_readq();
 
-        put_vpts_readq(sh_video->pts);  
-        put_nft_readq(vs.sn);    
+        put_vpts_readq(sh_video->pts);
+        put_nft_readq(vs.sn);
 
         ftr = 0;
     }
@@ -1760,7 +1758,7 @@ void select_subtitle(void)
         {
             set_of_sub_pos = global_sub_pos - global_sub_indices[SUB_SOURCE_SUBS];
             subdata = set_of_subtitles[set_of_sub_pos];
-            
+
             if (stream_dump_type == 3)	list_sub_file(subdata);
             if (stream_dump_type == 4)	dump_mpsub(subdata, sh_video->fps);
             if (stream_dump_type == 6)	dump_srt(subdata, sh_video->fps);
@@ -1778,7 +1776,7 @@ void select_subtitle(void)
 #    endif
         }
 #endif
-        
+
         global_sub_quiet_osd_hack = 0;
     }
 
@@ -1798,9 +1796,9 @@ void volume_change(bool up_flag)
 		leftVol	 -= 10;
 		if(leftVol < 0)	leftVol = 0;
 	}
-	
-	mixer_setvolume(&mixer, leftVol, leftVol); 	
-	
+
+	mixer_setvolume(&mixer, leftVol, leftVol);
+
 	if(leftVol < 14)		vol = 0;
 	else if(leftVol < 14*2)	vol = 1;
 	else if(leftVol < 14*3)	vol = 2;
@@ -1811,9 +1809,4 @@ void volume_change(bool up_flag)
 	else 					vol = 7;
 
 	if(bMenuStatus)	OnDraw_Volume(vol);
-}
-
-void hwEq_change(int eq_flag)
-{
-	mixer_hwEq(&mixer, eq_flag); 
 }

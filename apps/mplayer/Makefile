@@ -1,7 +1,3 @@
-#/*
-# Example Makefile
-#*/
-
 .EXPORT_ALL_VARIABLES:
 
 include 	config.mak
@@ -37,7 +33,7 @@ OBJFILES	= $(patsubst %.s,%.o,$(patsubst %.c,%.o,$(FILES)))
 default		: $(PRG_CFG) $(TGT_NAME)
 
 $(PRG_CFG): version.h codec-cfg.c codec-cfg.h
-	gcc -g codec-cfg.c mp_msg.c -o $(PRG_CFG) -DCODECS2HTML $(I18NLIBS)
+	$(BUILD_CC) -g codec-cfg.c mp_msg.c -o $(PRG_CFG) -DCODECS2HTML $(I18NLIBS)
 	./$(PRG_CFG) ./etc/codecs.conf > codecs.conf.h
 
 
@@ -73,12 +69,12 @@ libavcodec/libavcodec.a:
 %o : %s
 		@echo "Assembling $< ..."
 		@ $(RM) $@
-		@$(CC) $(CFLAGS_AS) -c $<
+		$(CC) $(CFLAGS_AS) -c $<
 
 %o : %c
 		@echo "Compiling $< ..."
 		@$(RM) $@
-		@$(CC) $(CFLAGS) -c $<
+		$(CC) $(CFLAGS) -c $<
 
 
 clean		:
@@ -95,7 +91,7 @@ depend		:
 		@$(RM) *.o
 		
 install :
-	arm-linux-strip $(TGT_NAME)
+		$(STRIP) $(TGT_NAME)
 
 all		:
 		@make clean

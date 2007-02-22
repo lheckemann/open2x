@@ -4,7 +4,7 @@
 
 ## OPEN2X - This should point to the root of your tool-chain (i.e. folder above the BIN dir) 
  
-OPEN2X=/opt/open2x/gcc-3.4.4-glibc-2.3.6
+OPEN2X=/opt/open2x/gcc-4.1.1-glibc-2.3.6
  
 ## CROSS_COMPILE - This should be the canonical tool names of your tool.
 ## Defaults would be 'arm-open2x-linux-' for a normal Open2x tool-chain.
@@ -13,7 +13,9 @@ CROSS_COMPILE=arm-open2x-linux-
 
 AR = $CROSS_COMPILEar
 CC = $CROSS_COMPILEgcc
+STRIP = $CROSS_COMPILEstrip
 HOST_CC = $CROSS_COMPILEgcc
+BUILD_CC = gcc
 
 ## -- END OPEN2X USER SETTINGS
 
@@ -21,7 +23,9 @@ export OPEN2X
 export CROSS_COMPILE
 export AR
 export CC
+export STRIP
 export HOST_CC
+export BUILD_CC
 
 PREFIX=$OPEN2X
 export PREFIX

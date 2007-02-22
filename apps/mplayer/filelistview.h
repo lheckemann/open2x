@@ -1,4 +1,4 @@
-/*              
+/*
  *  DIGNSYS Inc. < www.dignsys.com >
  *  	Created.
  *
@@ -7,8 +7,8 @@
 #ifndef __FILELISTVIEW_H_
 #define __FILELISTVIEW_H_
 
-#include "SDL.h"
-#include "SDL_image.h"
+#include <SDL.h>
+#include <SDL_image.h>
 
 void FileView_Initialize();
 void FileView_Exitialize();

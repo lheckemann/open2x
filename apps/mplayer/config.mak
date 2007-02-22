@@ -1,3 +1,11 @@
+CROSS_COMPILE=arm-open2x-linux-
+
+AR = $(CROSS_COMPILE)ar
+CC = $(CROSS_COMPILE)gcc
+STRIP = $(CROSS_COMPILE)strip
+HOST_CC = $(CROSS_COMPILE)gcc
+BUILD_CC = gcc
+
 LANG = C
 MAN_LANG =  en
 TARGET_OS = Linux
