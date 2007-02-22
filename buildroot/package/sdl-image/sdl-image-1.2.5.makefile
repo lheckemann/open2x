@@ -21,13 +21,13 @@ $(SDL_IMAGE_DIR)/.configured: $(SDL_IMAGE_DIR)/.unpacked
 	./configure \
 		--target=$(GNU_TARGET_NAME) \
 		--host=$(GNU_TARGET_NAME) \
-		--build=$(GNU_HOST_NAME) \
-		--prefix=$(STAGING_DIR)/usr \
+		--build=`uname -m` \
+		--prefix=/usr \
 		--with-sdl-prefix=$(STAGING_DIR) \
 		--exec-prefix=/usr \
 		--bindir=/usr/bin \
 		--sbindir=/usr/sbin \
-		--libdir=$(STAGING_DIR)/lib \
+		--libdir=/lib \
 		--libexecdir=/usr/lib \
 		--sysconfdir=/etc \
 		--datadir=/usr/share \
@@ -41,6 +41,8 @@ $(SDL_IMAGE_DIR)/.configured: $(SDL_IMAGE_DIR)/.unpacked
 	touch $(SDL_IMAGE_DIR)/.configured
 
 $(SDL_IMAGE_DIR)/.compiled: $(SDL_IMAGE_DIR)/.configured
+	sed -e 's/-L\/lib -Wl,-rpath,\/usr\/lib -lSDL -lpthread/-L\/opt\/open2x\/gcc-3.4.4-glibc-2.3.6\/lib -Wl,-rpath,\/usr\/lib -lSDL -lpthread/g' $(SDL_IMAGE_DIR)/Makefile > $(SDL_IMAGE_DIR)/Makefile.temp
+	mv $(SDL_IMAGE_DIR)/Makefile.temp $(SDL_IMAGE_DIR)/Makefile
 	LDFLAGS="-L$(STAGING_DIR)/lib -lSDL" $(MAKE) -C $(SDL_IMAGE_DIR)
 	touch $(SDL_IMAGE_DIR)/.compiled
 

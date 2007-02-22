@@ -26,7 +26,7 @@ $(FREETYPE_DIR)/.configured: $(FREETYPE_DIR)/.unpacked
 	./configure \
 		--target=$(GNU_TARGET_NAME) \
 		--host=$(GNU_TARGET_NAME) \
-		--build=$(GNU_HOST_NAME) \
+		--build=`uname -m` \
 		--prefix=/usr \
 		--exec-prefix=/usr \
 		--bindir=/usr/bin \

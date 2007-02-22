@@ -46,7 +46,7 @@ $(KEXEC_DIR)/.configured: $(KEXEC_DIR)/.unpacked
 		CFLAGS="$(TARGET_CFLAGS)" \
 		./configure \
 		--host=$(GNU_TARGET_NAME) \
-		--build=$(GNU_HOST_NAME) \
+		--build=`uname -m` \
 		--prefix=/ \
 		$(KEXEC_CONFIG_OPTS) \
 	);

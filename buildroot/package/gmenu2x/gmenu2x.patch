@@ -1,0 +1,20 @@
+diff -Naur gmenu2x/build/Makefile gmenu2x_new/build/Makefile
+--- gmenu2x/build/Makefile	2006-12-09 17:19:20.000000000 +0000
++++ gmenu2x_new/build/Makefile	2007-02-22 19:54:22.000000000 +0000
+@@ -1,5 +1,5 @@
+-CHAINPREFIX=$(GP2XDEV)
+-CROSS_COMPILE=$(CHAINPREFIX)/bin/gp2x-
++CHAINPREFIX=/opt/open2x/gcc-3.4.4-glibc-2.3.6
++CROSS_COMPILE=$(CHAINPREFIX)/bin/arm-open2x-linux-
+ 
+ CC= $(CROSS_COMPILE)gcc
+ CXX = $(CROSS_COMPILE)g++
+@@ -7,7 +7,7 @@
+ 
+ CFLAGS = -I"$(CHAINPREFIX)/include" `$(CHAINPREFIX)/bin/sdl-config --cflags` -DTARGET_GP2X -O2 -Wno-unused -msoft-float -fomit-frame-pointer -ffast-math -funroll-loops
+ CXXFLAGS = $(CFLAGS)
+-LDFLAGS = -static -L$(CHAINPREFIX)/lib `$(CHAINPREFIX)/bin/sdl-config --libs` -lfreetype -lSDL_image -lSDL_gfx -ljpeg -lpng12 -lSDL -lz
++LDFLAGS = -L$(CHAINPREFIX)/lib `$(CHAINPREFIX)/bin/sdl-config --libs` -lfreetype -lSDL_image -lSDL_gfx -ljpeg -lpng12 -lSDL -lz
+ 
+ TARGET = gmenu2x
+ OBJS = gmenu2x.o surface.o surfacecollection.o link.o linkapp.o linkaction.o SFont.o asfont.o joystick.o menu.o utilities.o dirdialog.o filedialog.o inputdialog.o settingsdialog.o textdialog.o textmanualdialog.o menusetting.o menusettingint.o menusettingbool.o menusettingrgba.o menusettingstring.o menusettingmultistring.o menusettingfile.o menusettingdir.o selector.o filelister.o messagebox.o

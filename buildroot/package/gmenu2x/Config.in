@@ -1,0 +1,9 @@
+config BR2_PACKAGE_GMENU2X
+	bool "gmenu2x"
+	default n
+	depends BR2_PACKAGE_SDL
+	depends BR2_PACKAGE_SDL_GFX
+	help
+
+	  gmenu2x is an alternative GP2X frontend, written with SDL by
+	  Ryo.

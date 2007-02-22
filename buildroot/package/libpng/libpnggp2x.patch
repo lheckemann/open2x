@@ -1,0 +1,34 @@
+diff -Naur libpng-1.2.12/scripts/makefile.linux libpng-1.2.12_new/scripts/makefile.linux
+--- libpng-1.2.12/scripts/makefile.linux	2006-06-27 21:22:40.000000000 +0100
++++ libpng-1.2.12_new/scripts/makefile.linux	2007-02-22 20:23:18.000000000 +0000
+@@ -19,23 +19,23 @@
+ 
+ # Utilities:
+ AR_RC=ar rc
+-CC=gcc
++CC=arm-open2x-linux-gcc
+ MKDIR_P=mkdir -p
+ LN_SF=ln -sf
+-RANLIB=ranlib
++RANLIB=arm-open2x-linux-ranlib
+ RM_F=/bin/rm -f
+ 
+ # where "make install" puts libpng12.a, libpng12.so*,
+ # libpng12/png.h and libpng12/pngconf.h
+ # Prefix must be a full pathname.
+-prefix=/usr/local
++prefix=/opt/open2x/gcc-3.4.4-glibc-2.3.6
+ exec_prefix=$(prefix)
+ 
+ # Where the zlib library and include files are located.
+-#ZLIBLIB=/usr/local/lib
+-#ZLIBINC=/usr/local/include
+-ZLIBLIB=../zlib
+-ZLIBINC=../zlib
++ZLIBLIB=/opt/open2x/gcc-3.4.4-glibc-2.3.6/lib
++ZLIBINC=/opt/open2x/gcc-3.4.4-glibc-2.3.6/include
++#ZLIBLIB=../zlib
++#ZLIBINC=../zlib
+ 
+ ALIGN=
+ # for i386:

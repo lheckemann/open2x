@@ -90,8 +90,8 @@ endif
 
 
 $(BUSYBOX_DIR)/busybox: $(BUSYBOX_DIR)/.configured
-	sed '/$(do_strip)/d' Makefile > Makefile.temp
-	mv Makefile.temp Makefile
+	sed 's/(do_strip)/H/g' $(BUSYBOX_DIR)/Makefile > $(BUSYBOX_DIR)/Makefile.temp
+	mv $(BUSYBOX_DIR)/Makefile.temp $(BUSYBOX_DIR)/Makefile
 	$(MAKE) CC=$(TARGET_CC) CROSS_COMPILE="$(arm-open2x-linux)" \
 		CROSS="$(arm-open2x-linux)" PREFIX="$(TARGET_DIR)" \
 		ARCH=$(KERNEL_ARCH) \

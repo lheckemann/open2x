@@ -1,0 +1,8 @@
+config BR2_PACKAGE_SDL_GFX
+	bool "SDL_gfx"
+	default n
+	depends BR2_PACKAGE_SDL
+	help
+
+	  SDL_gfx adds support for drawing primitives as well 
+	  as some rotation and zooming functions to SDL.

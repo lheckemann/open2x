@@ -22,7 +22,7 @@ $(SDL_DIR)/.configured: $(SDL_DIR)/.unpacked
 	./configure \
 		--target=$(GNU_TARGET_NAME) \
 		--host=$(GNU_TARGET_NAME) \
-		--build=$(GNU_HOST_NAME) \
+		--build=`uname -m` \
 		--prefix=/usr \
 		--exec-prefix=/usr \
 		--bindir=/usr/bin \
@@ -32,7 +32,7 @@ $(SDL_DIR)/.configured: $(SDL_DIR)/.unpacked
 		--sysconfdir=/etc \
 		--datadir=/usr/share \
 		--localstatedir=/var \
-		--includedir=/include \
+		--includedir=$(STAGING_DIR)/include \
 		--mandir=/usr/man \
 		--infodir=/usr/info \
 		--enable-shared \
@@ -52,7 +52,7 @@ $(SDL_DIR)/.compiled: $(SDL_DIR)/.configured
 
 $(SDL_DIR)/.installed: $(SDL_DIR)/.compiled
 	$(MAKE) DESTDIR=$(STAGING_DIR) -C $(SDL_DIR) install;
-	ln -s $(STAGING_DIR)/include/SDL* $(STAGING_DIR)/include
+	ln -s $(STAGING_DIR)/usr/bin/arm-linux-sdl-config $(STAGING_DIR)/bin/sdl-config
 	touch -c $(STAGING_DIR)/usr/lib/libSDL.so
 	cp -dpf $(STAGING_DIR)/usr/lib/libSDL*.so* $(TARGET_DIR)/usr/lib/
 	-$(STRIP) --strip-unneeded $(TARGET_DIR)/usr/lib/libSDL.so

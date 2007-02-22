@@ -34,51 +34,21 @@ libpng-source: $(DL_DIR)/$(LIBPNG_SOURCE)
 
 $(LIBPNG_DIR)/.unpacked: $(DL_DIR)/$(LIBPNG_SOURCE)
 	$(LIBPNG_CAT) $(DL_DIR)/$(LIBPNG_SOURCE) | tar -C $(BUILD_DIR) $(TAR_OPTIONS) -
+	toolchain/patch-kernel.sh $(LIBPNG_DIR) package/libpng libpng*.patch
 	touch $(LIBPNG_DIR)/.unpacked
 
 $(LIBPNG_DIR)/.configured: $(LIBPNG_DIR)/.unpacked
-	(cd $(LIBPNG_DIR); rm -rf config.cache; \
-		$(TARGET_CONFIGURE_OPTS) \
-		CFLAGS="$(TARGET_CFLAGS)" \
-		ac_cv_func_memcmp_working=yes \
-		ac_cv_have_decl_malloc=yes \
-		gl_cv_func_malloc_0_nonnull=yes \
-		ac_cv_func_malloc_0_nonnull=yes \
-		ac_cv_func_calloc_0_nonnull=yes \
-		ac_cv_func_realloc_0_nonnull=yes \
-		./configure \
-		--target=$(GNU_TARGET_NAME) \
-		--host=$(GNU_TARGET_NAME) \
-		--build=$(GNU_HOST_NAME) \
-		--prefix=/usr \
-		--exec-prefix=/usr \
-		--bindir=/usr/bin \
-		--sbindir=/usr/sbin \
-		--libdir=/lib \
-		--libexecdir=/usr/lib \
-		--sysconfdir=/etc \
-		--datadir=/usr/share \
-		--localstatedir=/var \
-		--includedir=/include \
-		--mandir=/usr/man \
-		--infodir=/usr/info \
-		--without-libpng-compat \
-		--without-x \
-	);
 	touch $(LIBPNG_DIR)/.configured
 
 $(LIBPNG_DIR)/.compiled: $(LIBPNG_DIR)/.configured
-	$(MAKE) -C $(LIBPNG_DIR)
+	$(MAKE) -C $(LIBPNG_DIR) -f $(LIBPNG_DIR)/scripts/makefile.linux
 	touch $(LIBPNG_DIR)/.compiled
 
 $(STAGING_DIR)/lib/libpng.so: $(LIBPNG_DIR)/.compiled
-	$(MAKE) DESTDIR=$(STAGING_DIR) -C $(LIBPNG_DIR) install;
-	$(SED) "s,^libdir=.*,libdir=\'$(STAGING_DIR)/lib\',g" $(STAGING_DIR)/lib/libpng12.la
-	$(SED) "s,^prefix=.*,prefix=\'$(STAGING_DIR)\',g" \
-		-e "s,^exec_prefix=.*,exec_prefix=\'$(STAGING_DIR)/usr\',g" \
-		-e "s,^includedir=.*,includedir=\'$(STAGING_DIR)/include/libpng12\',g" \
-		-e "s,^libdir=.*,libdir=\'$(STAGING_DIR)/lib\',g" \
-		$(STAGING_DIR)/usr/bin/libpng12-config
+	cp -dpf $(LIBPNG_DIR)/png.h $(STAGING_DIR)/include
+	cp -dpf $(LIBPNG_DIR)/pngconf.h $(STAGING_DIR)/include
+	cp -dpf $(LIBPNG_DIR)/*.a $(STAGING_DIR)/lib
+	cp -dpf $(LIBPNG_DIR)/*.so* $(STAGING_DIR)/lib
 	touch -c $(STAGING_DIR)/lib/libpng.so
 
 $(TARGET_DIR)/usr/lib/libpng.so: $(STAGING_DIR)/lib/libpng.so

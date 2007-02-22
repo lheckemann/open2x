@@ -1,0 +1,15 @@
+config BR2_PACKAGE_GLIBC
+	bool "glibc"
+	default y
+	help
+
+	  glibc is the core (i.e. *very* important) C library 
+	  used in most desktop Linux distributions and also 
+	  for some embedded devices (such as the GP2X). It is 
+	  possible to replace this with uClibc, a lightweight 
+	  alternative but this isn't supported or recommended 
+	  as it suffers from compatibility problems with most 
+	  GP2X software.
+	  
+	  In summary, DON'T REMOVE THIS!!
+
