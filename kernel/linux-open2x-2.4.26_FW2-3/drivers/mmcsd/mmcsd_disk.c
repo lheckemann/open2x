@@ -86,18 +86,16 @@ static int do_mmcsd_rw(struct request *req, int rd)
 {
 	int ret = 0;
 	int dev = DEVICE_NR(req->rq_dev);
-	unsigned int sect_first, sect_last;
-	unsigned long blksize, from;
+	unsigned int sect, sect_last;
 	char *buffer;
 	unsigned int stat;
 	int ncnt;
 
-	/* read_len must be 512 bytes */
-	blksize = SD_SLOT(dev)->read_len;
+	/* read_len and sect must be 512 bytes */
+	// blksize = SD_SLOT(dev)->read_len;
 	buffer = req->buffer;
-	sect_first = req->sector + mmcsd_part[MINOR(req->rq_dev)].start_sect;
-	sect_last = sect_first + req->current_nr_sectors;
-	from = sect_first * blksize;
+	sect = req->sector + mmcsd_part[MINOR(req->rq_dev)].start_sect;
+	sect_last = sect + req->current_nr_sectors;
 
 	if(xflag)
 	{
@@ -121,9 +119,9 @@ static int do_mmcsd_rw(struct request *req, int rd)
 
 	if(rd)
 	{
-		while (sect_first < sect_last)
+		while (sect < sect_last)
 		{
-			ret = SD_SLOT(dev)->transferMultblock(SD_SLOT(dev), rd, from, buffer,1);
+			ret = SD_SLOT(dev)->transferMultblock(SD_SLOT(dev), rd, sect, buffer,1);
 
 			if (ret)
 			{
@@ -134,9 +132,8 @@ static int do_mmcsd_rw(struct request *req, int rd)
 				}else break;
 			}
 
-			sect_first++;
-			from += blksize;
-			buffer += blksize;
+			sect++;
+			buffer += 512;
 		}
 	}
 	else
@@ -170,7 +167,7 @@ static int do_mmcsd_rw(struct request *req, int rd)
 		if(req->current_nr_sectors > 1)
 			xflag=1;
 
-		ret = SD_SLOT(dev)->transferMultblock(SD_SLOT(dev), rd, from, buffer,req->current_nr_sectors);
+		ret = SD_SLOT(dev)->transferMultblock(SD_SLOT(dev), rd, sect, buffer,req->current_nr_sectors);
 
 	}
 
@@ -299,7 +296,7 @@ static int mmcsd_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,
 			}
 		}
 		grok_partitions(&mmcsd_gendisk, dev, mmcsd_gendisk.max_p,
-				SD_SLOT(dev)->size / SD_SLOT(dev)->read_len);
+				SD_SLOT(dev)->block_cnt);
 		return 0;
 	}
 	case BLKROSET:
@@ -383,7 +380,6 @@ static struct block_device_operations mmcsd_fops = {
 static void mmcsd_notify_add(struct mmcsd_slot *slot)
 {
 	int i, dev, minor;
-	loff_t		size;
 	unsigned int nsize;
 
 
@@ -408,7 +404,7 @@ static void mmcsd_notify_add(struct mmcsd_slot *slot)
 
 	register_disk(&mmcsd_gendisk, MKDEV(MAJOR_NR, minor),
 		       mmcsd_gendisk.max_p, mmcsd_gendisk.fops,
-		      SD_SLOT(dev)->size / SD_SLOT(dev)->read_len);
+		      SD_SLOT(dev)->block_cnt);
 
 	/* Check usb */
 	switch(nsize)
@@ -430,7 +426,8 @@ static void mmcsd_notify_add(struct mmcsd_slot *slot)
 			break;
 	}
 
-	printk("Register %s: %ldMsB\n", SD_SLOT(dev)->sd ? "SD": "MMC", SD_SLOT(dev)->size/(1024 * 1024));
+	printk("Register %s: %ldMsB\n", SD_SLOT(dev)->sd ? "SD": "MMC",
+		SD_SLOT(dev)->block_cnt / (1024 * 1024 / SD_SLOT(dev)->read_len));
 
 }
 

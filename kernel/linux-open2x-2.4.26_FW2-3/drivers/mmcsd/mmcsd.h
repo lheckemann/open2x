@@ -119,6 +119,7 @@
 				/* bcr, , R6, SEBD_RELATIVE_ADDR, SD only */
 #define MMCSD_CMD4	0x44	/* bc, 31:16 RCA, , SET_DSR */
 #define MMCSD_CMD7	0x47	/* ac, 31:16 RCA, R1, SELECT/DESELECT CARD */
+#define MMCSD_CMD8	0x48	/* bcr, 11:0, , SEND_IF_COND */
 #define MMCSD_CMD9	0x49	/* ac, 31:16 RCA, R2, SEND_CSD */
 #define MMCSD_CMD10	0x4a	/* ac, 31:16 RCA, R2, SEND_CID */
 #define MMCSD_CMD11	0x4b	/* adtc, 31:0 dadr, R1, READ_DAT_UNTIL_STOP */
@@ -282,7 +283,7 @@ typedef struct {
 	__u8 read_mis;		/* [ 77: 77] read block misalignment */
 	__u8 dsr;		/* [ 76: 76] DSR implemented */
 				/* [ 75: 74] Reserved */
-	__u16 c_size;		/* [ 73: 62] Device size */
+	__u32 c_size;		/* [ 73: 62] Device size (SDHC: [ 69: 48] )*/
 	__u8 vcc_r_min;		/* [ 61: 59] Max. read current at Vcc min */
 	__u8 vcc_r_max;		/* [ 58: 56] Max. read current at Vcc max */
 	__u8 vcc_w_min;		/* [ 55: 53] Max. write current at Vcc min */
@@ -591,12 +592,13 @@ struct mmcsd_slot {
 	__u8 bus_width;	/* bus width for SD card(0x0: 1 bit, 0x2: 4 bits) */
 	__u8 narrow_bus; /* if true, support only narrow bus */
 	__u8 cnt;
+	__u8 sdhc;	/* if true, it's a SDHC card */
 	int card_in;
 
 	/* MMC/SD card information */
 	unsigned int read_len;	/* read block length */
 	unsigned int write_len;	/* write block length */
-	u_long size;	/* total size of card in bytes */
+	u_long block_cnt;	/* total card block count (in 512B blocks) */
 	u_long stat;	/* card status */
 	__u8 readonly;	/* If true, it's readonly */
 
@@ -649,7 +651,7 @@ static inline void mmcsd_str2r6(R6_status * r6, __u8 *buff)
 	r6->card_status = (buff[2] << 8) | buff[3];
 }
 extern void mmcsd_str2cid( CID_regs *regs, __u8 *buff, __u8 id);
-extern void mmcsd_str2csd( CSD_regs *regs, __u8 *buff, __u8 id);
+extern int  mmcsd_str2csd( CSD_regs *regs, __u8 *buff, __u8 id);
 
 /* Information Collecting functions */
 extern void mmcsd_get_CSD_info(struct mmcsd_slot *slot, CSD_regs *csd);

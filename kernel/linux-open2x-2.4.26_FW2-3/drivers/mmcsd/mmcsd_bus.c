@@ -121,7 +121,7 @@ retry_set_bus:
  *
  * Description: This function transfer lblock
  *
- * Arguments  : rd(r/w), from(sector positin), buf
+ * Arguments  : rd(r/w), from(512B block number), buf
  *
  * Returns    : none
  *
@@ -131,9 +131,18 @@ static int mmcsd_do_transfer_Multblock(struct mmcsd_slot *slot, int rd, u_long f
 	int ret;
 	struct mmcsd_cmd cmd;
 
+	/* FIXME: it appears invalid 'from' value locks up the kernel */
+
 	ret = down_interruptible(&slot->mutex);
 	if (ret < 0) {
 		return ret;
+	}
+
+	/* Currently only SDHC uses block addressing */
+	if (!slot->sd || !slot->sdhc)
+	{
+		/* switch to byte addressing */
+		from <<= 9;
 	}
 
 	if(slot->cnt < 1)
@@ -207,7 +216,8 @@ static int mmcsd_do_transfer_Multblock(struct mmcsd_slot *slot, int rd, u_long f
 		mdelay(10);
 
 #if 1 /* shkim patch : support 1024 bytes per block */
-		if( (slot->read_len > 512) || (slot->write_len > 512) )
+//		if( (slot->read_len > 512) || (slot->write_len > 512) )
+		if (!slot->sdhc) /* SDHC cards have hardcoded block size and don't need CMD16 */
 		{
 			/* change block length 512 bytes */
 			cmd.cmd = MMCSD_CMD16;
@@ -222,10 +232,6 @@ static int mmcsd_do_transfer_Multblock(struct mmcsd_slot *slot, int rd, u_long f
 				printk("CMD16 failed, ret = %d\n", ret);
 				goto err;
 			}
-
-			/* change block length infomation */
-			slot->read_len = 512;
-			slot->write_len = 512;
 		}
 #endif
 	}
@@ -383,6 +389,7 @@ retry_send_op_cond:
 int check_sd_ocr(struct mmcsd_slot *slot)
 {
 	struct mmcsd_cmd  cmd;
+	int ret, sd20 = 0;
 
 #if 1 /* shkim patch : 051215 */
 	int retry = MMCSD_RESP_TIME_LONG;  //org int retry = 50;
@@ -391,6 +398,19 @@ int check_sd_ocr(struct mmcsd_slot *slot)
 
 
 retry_sd_ocr:
+	/* CMD8, SEND_IF_COND (tell that we support SD2.0) */
+	cmd.cmd = MMCSD_CMD8;
+	cmd.arg = 0x1aa;		/* [11:8] Host Voltage Supply Flags, [7:0] Check Pattern (0xAA) */
+	cmd.res_type = MMCSD_RES_TYPE_R3; /* actually it should be R7 (?), but this should fit too (no status bits) */
+	cmd.res_flag = 0;
+	cmd.t_res = MMCSD_TIME_NCR_MAX;
+	cmd.t_fin = MMCSD_TIME_NRC_MIN;
+	ret = slot->send_cmd(slot, &cmd);
+	if (ret == 0) {
+		/* if a card responds to CMD8, it means it is SD2.0 compliant (but it does not mean it is a SDHC card) */
+		sd20 = 1;
+	}
+
 	/* CMD55, make ACMD */
 	slot->rca = 0;
 	cmd.cmd = MMCSD_CMD55;
@@ -403,7 +423,7 @@ retry_sd_ocr:
 
 	/* ACMD41, SEND_OP_COND */
 	cmd.cmd = MMCSD_ACMD41;
-	slot->ocr = MMCSD_VDD_27_36;
+	slot->ocr = MMCSD_VDD_27_36 | (sd20<<30);
 	cmd.arg = slot->ocr;
 	cmd.res_type = MMCSD_RES_TYPE_R1;
 	cmd.res_flag = MMCSD_RES_FLAG_NOCRC;
@@ -419,7 +439,7 @@ retry_sd_ocr:
 		goto retry_sd_ocr;
 		return 0;               // fail
 #else /* shkim patch : 051215 */
-	if(SDIRSP0 == 0x80ff8000) {
+	if(SDIRSP0 & (1 << 31)) {
 		mdelay(10);     // wait card power up status
 		return 1;       //success
 	} else {
@@ -616,7 +636,12 @@ send_csd:
 
 	DPRINTK("sent CMD9\n");
 
-	mmcsd_str2csd( &(slot->csd), cmd.res, slot->sd);
+	ret = mmcsd_str2csd( &(slot->csd), cmd.res, slot->sd);
+	if (ret) return ret;
+	slot->sdhc = (slot->csd.csd == 1);
+	if (slot->sdhc)
+		printk("SDHC card detected\n");
+
 if(slot->sd) /* SD */
 	DPRINTK("csd(%d) spec_vers(%d) taac.man(%d) taac.exp(%d) nsac(%d)\n"
 	       "tran.man(%d) tran.exp(%d) ccc(%03x) read_len(%x)\n"//read_len(%d)\n"
@@ -772,7 +797,7 @@ static int mmcsd_read_proc(char *page, char **start, off_t off, int count, int *
 			slot->readonly ? "yes":"no",
 			slot->sd ? "SD":"MMC",
 			slot->sd ? slot->cid.pnm_sd : slot->cid.pnm,
-			slot->size/(1024 * 1024));
+			slot->block_cnt / (1024 * 1024 / slot->read_len));
 
 	len = (p - page) - off;
 	if (len < 0) len = 0;
