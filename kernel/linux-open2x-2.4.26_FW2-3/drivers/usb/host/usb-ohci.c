@@ -1409,6 +1409,7 @@ static void td_submit_urb (struct urb * urb)
 	int cnt = 0; 
 	__u32 info = 0;
   	unsigned int toggle = 0;
+	unsigned long flags;
 
 	/* OHCI handles the DATA-toggles itself, we just use the USB-toggle bits for reseting */
   	if(usb_gettoggle(urb->dev, usb_pipeendpoint(urb->pipe), usb_pipeout(urb->pipe))) {
