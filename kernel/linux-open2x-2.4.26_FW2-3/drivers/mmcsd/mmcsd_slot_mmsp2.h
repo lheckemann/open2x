@@ -1,6 +1,11 @@
 /*
  * drivers/mmcsd/mmcsd_mmsp2.h
  *
+ * Copyright (C) 2007 The Open2x Project (www.open2x.org)
+ * John Willis <djwillis@open2x.org>
+ *
+ * SDHC Support - John Willis, help from Notaz, Squidge and RobBrown
+ *
  * Copyright (C) 2005,2006 Gamepark Holdings, Inc. (www.gp2x.com)
  * Hyun <hyun3678@gp2x.com>
  *

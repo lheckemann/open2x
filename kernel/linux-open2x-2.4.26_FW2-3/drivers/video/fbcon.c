@@ -26,7 +26,7 @@
  *
  *  Hardware cursor support added by Emmanuel Marty (core@ggi-project.org)
  *  Smart redraw scrolling, arbitrary font width support, 512char font support
- *  and software scrollback added by 
+ *  and software scrollback added by
  *                         Jakub Jelinek (jj@ultra.linux.cz)
  *
  *  Random hacking by Martin Mares <mj@ucw.cz>
@@ -75,6 +75,7 @@
 #include <linux/selection.h>
 #include <linux/smp.h>
 #include <linux/init.h>
+#include <linux/proc_fs.h>
 #include <linux/pm.h>
 
 #include <asm/irq.h>
@@ -98,6 +99,9 @@
 #include <asm/io.h>
 #endif
 #define INCLUDE_LINUX_LOGO_DATA
+//#define LINUX_LOGO_COLORS 214
+//#define INCLUDE_LINUX_LOGO16 1
+//#define INCLUDE_LINUX_LOGOBW 1
 
 #include <video/fbcon.h>
 #include <video/fbcon-mac.h>	/* for 6x11 font on mac */
@@ -109,8 +113,6 @@
 #  define DPRINTK(fmt, args...)
 #endif
 
-//#define LOGO_H			80
-//#define LOGO_W			80
 #ifdef INCLUDE_LINUX_LOGO_DATA
 #include <asm/linux_logo.h>
 #define LOGO_H			240
@@ -130,6 +132,11 @@ static unsigned long softback_buf, softback_curr;
 static unsigned long softback_in;
 static unsigned long softback_top, softback_end;
 static int softback_lines;
+
+#ifdef CONFIG_LPP
+extern void fbcon_progress(unsigned int progress,char *text);
+extern void fbcon_progress_setup( unsigned char *fb, unsigned int line);
+#endif
 
 #define REFCOUNT(fd)	(((int *)(fd))[-1])
 #define FNTSIZE(fd)	(((int *)(fd))[-2])
@@ -207,6 +214,9 @@ static int fbcon_font_op(struct vc_data *conp, struct console_font_op *op);
 static int fbcon_set_palette(struct vc_data *conp, unsigned char *table);
 static int fbcon_scrolldelta(struct vc_data *conp, int lines);
 
+#define LOGO_H              240
+#define LOGO_W              320
+#define LOGO_LINE  (LOGO_W/8)
 
 /*
  *  Internal routines
@@ -427,8 +437,8 @@ static const char *fbcon_startup(void)
 
 #ifdef CONFIG_MAC
     /*
-     * On a Macintoy, the VBL interrupt may or may not be active. 
-     * As interrupt based cursor is more reliable and race free, we 
+     * On a Macintoy, the VBL interrupt may or may not be active.
+     * As interrupt based cursor is more reliable and race free, we
      * probe for VBL interrupts.
      */
     if (MACH_IS_MAC) {
@@ -445,10 +455,10 @@ static const char *fbcon_startup(void)
 	 */
 	while (!vbl_detected && ++ct<1000)
 	    udelay(20);
- 
+
 	if(ct==1000)
 	    printk("fbcon_startup: No VBL detected, using timer based cursor.\n");
- 
+
 	free_irq(IRQ_MAC_VBL, fbcon_vbl_detect);
 
 	if (vbl_detected) {
@@ -559,7 +569,7 @@ static __inline__ void updatescrollmode(struct display *p)
 static void fbcon_font_widths(struct display *p)
 {
     int i;
-    
+
     p->_fontwidthlog = 0;
     for (i = 2; i <= 6; i++)
     	if (fontwidth(p) == (1 << i))
@@ -581,14 +591,14 @@ static void fbcon_setup(int con, int init, int logo)
     unsigned short *save = NULL, *r, *q;
     int i, charcnt = 256;
     struct fbcon_font_desc *font;
-    
+
     if (con != fg_console || (p->fb_info->flags & FBINFO_FLAG_MODULE) ||
         p->type == FB_TYPE_TEXT)
     	logo = 0;
 
     p->var.xoffset = p->var.yoffset = p->yscroll = 0;  /* reset wrap/pan */
 
-    if (con == fg_console && p->type != FB_TYPE_TEXT) {   
+    if (con == fg_console && p->type != FB_TYPE_TEXT) {
 	if (fbcon_softback_size) {
 	    if (!softback_buf) {
 		softback_buf = (unsigned long)kmalloc(fbcon_softback_size, GFP_KERNEL);
@@ -608,13 +618,13 @@ static void fbcon_setup(int con, int init, int logo)
 	    softback_in = softback_top = softback_curr = softback_buf;
 	softback_lines = 0;
     }
-    
+
     for (i = 0; i < MAX_NR_CONSOLES; i++)
     	if (i != con && fb_display[i].fb_info == p->fb_info &&
     	    fb_display[i].conp && fb_display[i].fontdata)
     		break;
 
-    fbcon_free_font(p);    
+    fbcon_free_font(p);
     if (i < MAX_NR_CONSOLES) {
     	struct display *q = &fb_display[i];
 
@@ -626,7 +636,7 @@ static void fbcon_setup(int con, int init, int logo)
     	    p->_fontwidthlog = q->_fontwidthlog;
     	    p->_fontheightlog = q->_fontheightlog;
     	    p->fontdata = q->fontdata;
-    	    p->userfont = q->userfont; 
+    	    p->userfont = q->userfont;
     	    if (p->userfont) {
     		REFCOUNT(p->fontdata)++;
     		charcnt = FNTCHARCNT(p->fontdata);
@@ -644,7 +654,7 @@ static void fbcon_setup(int con, int init, int logo)
         p->fontdata = font->data;
         fbcon_font_widths(p);
     }
-    
+
     if (!fontwidthvalid(p,fontwidth(p))) {
 #if defined(CONFIG_FBCON_MAC) && defined(CONFIG_MAC)
 	if (MACH_IS_MAC)
@@ -661,10 +671,10 @@ static void fbcon_setup(int con, int init, int logo)
     if (p->dispsw->set_font)
     	p->dispsw->set_font(p, fontwidth(p), fontheight(p));
     updatescrollmode(p);
-    
+
     old_cols = conp->vc_cols;
     old_rows = conp->vc_rows;
-    
+
     nr_cols = p->var.xres/fontwidth(p);
     nr_rows = p->var.yres/fontheight(p);
 
@@ -673,7 +683,7 @@ static void fbcon_setup(int con, int init, int logo)
     	/* Need to make room for the logo */
 	int cnt;
 	int step;
-    
+
     	logo_lines = (LOGO_H + fontheight(p) - 1) / fontheight(p);
     	q = (unsigned short *)(conp->vc_origin + conp->vc_size_row * old_rows);
     	step = logo_lines * old_cols;
@@ -704,7 +714,7 @@ static void fbcon_setup(int con, int init, int logo)
     	    }
     	}
     	scr_memsetw((unsigned short *)conp->vc_origin,
-		    conp->vc_video_erase_char, 
+		    conp->vc_video_erase_char,
 		    conp->vc_size_row * logo_lines);
     }
 #endif
@@ -772,7 +782,7 @@ static void fbcon_setup(int con, int init, int logo)
     	conp->vc_top = logo_lines;
     }
 #endif
-    
+
     if (con == fg_console && softback_buf) {
     	int l = fbcon_softback_size / conp->vc_size_row;
     	if (l > 5)
@@ -866,7 +876,7 @@ static void fbcon_putc(struct vc_data *conp, int c, int ypos, int xpos)
 
     if (!p->can_soft_blank && console_blanked)
 	    return;
-	    
+
     if (vt_cons[unit]->vc_mode != KD_TEXT)
     	    return;
 
@@ -915,7 +925,7 @@ static void fbcon_cursor(struct vc_data *conp, int mode)
     int unit = conp->vc_num;
     struct display *p = &fb_display[unit];
     int y = conp->vc_y;
-    
+
     if (mode & CM_SOFTBACK) {
     	mode &= ~CM_SOFTBACK;
     	if (softback_lines) {
@@ -1069,7 +1079,7 @@ static void fbcon_redraw_softback(struct vc_data *conp, struct display *p, long 
     unsigned long n;
     int line = 0;
     int count = conp->vc_rows;
-    
+
     d = (u16 *)softback_curr;
     if (d == (u16 *)softback_in)
 	d = (u16 *)conp->vc_origin;
@@ -1152,7 +1162,7 @@ static void fbcon_redraw_softback(struct vc_data *conp, struct display *p, long 
     }
 }
 
-static void fbcon_redraw(struct vc_data *conp, struct display *p, 
+static void fbcon_redraw(struct vc_data *conp, struct display *p,
 			 int line, int count, int offset)
 {
     unsigned short *d = (unsigned short *)
@@ -1335,7 +1345,7 @@ static int fbcon_scroll(struct vc_data *conp, int t, int b, int dir,
 	return 0;
 
     fbcon_cursor(conp, CM_ERASE);
-    
+
     /*
      * ++Geert: Only use ywrap/ypan if the console is in text mode
      * ++Andrew: Only use ypan on hardware text mode when scrolling the
@@ -1400,8 +1410,8 @@ static int fbcon_scroll(struct vc_data *conp, int t, int b, int dir,
 		fbcon_redraw(conp, p, t, b-t-count, count*conp->vc_cols);
 		p->dispsw->clear(conp, p, real_y(p, b-count), 0,
 				 count, conp->vc_cols);
-		scr_memsetw((unsigned short *)(conp->vc_origin + 
-		    	    conp->vc_size_row * (b-count)), 
+		scr_memsetw((unsigned short *)(conp->vc_origin +
+		    	    conp->vc_size_row * (b-count)),
 		    	    conp->vc_video_erase_char,
 		    	    conp->vc_size_row * count);
 		return 1;
@@ -1460,8 +1470,8 @@ static int fbcon_scroll(struct vc_data *conp, int t, int b, int dir,
 		fbcon_redraw(conp, p, b - 1, b-t-count, -count*conp->vc_cols);
 		p->dispsw->clear(conp, p, real_y(p, t), 0,
 				 count, conp->vc_cols);
-	    	scr_memsetw((unsigned short *)(conp->vc_origin + 
-	    		    conp->vc_size_row * t), 
+	    	scr_memsetw((unsigned short *)(conp->vc_origin +
+	    		    conp->vc_size_row * t),
 	    		    conp->vc_video_erase_char,
 	    		    conp->vc_size_row * count);
 	    	return 1;
@@ -1476,7 +1486,7 @@ static void fbcon_bmove(struct vc_data *conp, int sy, int sx, int dy, int dx,
 {
     int unit = conp->vc_num;
     struct display *p = &fb_display[unit];
-    
+
     if (!p->can_soft_blank && console_blanked)
 	return;
 
@@ -1537,6 +1547,10 @@ static int fbcon_switch(struct vc_data *conp)
     struct display *p = &fb_display[unit];
     struct fb_info *info = p->fb_info;
 
+    int depth = p->var.bits_per_pixel;
+    int line = p->next_line;
+    unsigned char *fb = p->screen_base;
+
     if (softback_top) {
     	int l = fbcon_softback_size / conp->vc_size_row;
 	if (softback_lines)
@@ -1555,7 +1569,7 @@ static int fbcon_switch(struct vc_data *conp)
 #ifdef INCLUDE_LINUX_LOGO_DATA
     if (logo_shown >= 0) {
     	struct vc_data *conp2 = vc_cons[logo_shown].d;
-    	
+
     	if (conp2->vc_top == logo_lines && conp2->vc_bottom == conp2->vc_rows)
     		conp2->vc_top = 0;
     	logo_shown = -1;
@@ -1589,6 +1603,14 @@ static int fbcon_switch(struct vc_data *conp)
 	update_region(fg_console,
 		      conp->vc_origin + conp->vc_size_row * conp->vc_top,
 		      conp->vc_size_row * (conp->vc_bottom - conp->vc_top) / 2);
+
+#ifdef CONFIG_LPP
+	/* initialize progress bar part */
+	if(depth==8||depth==15||depth==16||depth==24||depth==32){
+		fbcon_progress_setup( fb, line );
+		vbl_cursor_cnt= 0;
+	}
+#endif
 	return 0;
     }
 #endif
@@ -1662,7 +1684,7 @@ static inline int fbcon_get_font(int unit, struct console_font_op *op)
     op->height = fontheight(p);
     op->charcount = (p->charmask == 0x1ff) ? 512 : 256;
     if (!op->data) return 0;
-    
+
     if (op->width <= 8) {
 	j = fontheight(p);
     	for (i = 0; i < op->charcount; i++) {
@@ -1722,7 +1744,7 @@ static int fbcon_do_set_font(int unit, struct console_font_op *op, u8 *data, int
 
     if (CON_IS_VISIBLE(p->conp) && softback_lines)
 	fbcon_set_origin(p->conp);
-	
+
     resize = (w != fontwidth(p)) || (h != fontheight(p));
     if (p->userfont)
         old_data = p->fontdata;
@@ -1854,15 +1876,15 @@ static inline int fbcon_set_font(int unit, struct console_font_op *op)
 #endif
     if ((w <= 0) || (w > 32) || (op->charcount != 256 && op->charcount != 512))
         return -EINVAL;
-    
-    if (w > 8) { 
+
+    if (w > 8) {
     	if (w <= 16)
     		size *= 2;
     	else
     		size *= 4;
     }
     size *= op->charcount;
-       
+
     if (!(new_data = kmalloc(FONT_EXTRA_WORDS*sizeof(int)+size, GFP_USER)))
         return -ENOMEM;
     new_data += FONT_EXTRA_WORDS*sizeof(int);
@@ -2021,7 +2043,7 @@ static unsigned long fbcon_getxy(struct vc_data *conp, unsigned long pos, int *p
     unsigned long ret;
     if (pos >= conp->vc_origin && pos < conp->vc_scr_end) {
     	unsigned long offset = (pos - conp->vc_origin) / 2;
-    	
+
     	x = offset % conp->vc_cols;
     	y = offset / conp->vc_cols;
     	if (conp->vc_num == fg_console)
@@ -2029,7 +2051,7 @@ static unsigned long fbcon_getxy(struct vc_data *conp, unsigned long pos, int *p
     	ret = pos + (conp->vc_cols - x) * 2;
     } else if (conp->vc_num == fg_console && softback_lines) {
     	unsigned long offset = pos - softback_curr;
-    	
+
     	if (pos < softback_curr)
     	    offset += softback_end - softback_buf;
     	offset /= 2;
@@ -2074,7 +2096,7 @@ static int fbcon_scrolldelta(struct vc_data *conp, int lines)
 {
     int unit, offset, limit, scrollback_old;
     struct display *p;
-    
+
     unit = fg_console;
     p = &fb_display[unit];
     if (softback_top) {
@@ -2085,13 +2107,13 @@ static int fbcon_scrolldelta(struct vc_data *conp, int lines)
 #ifdef INCLUDE_LINUX_LOGO_DATA
     	if (logo_shown >= 0) {
 		struct vc_data *conp2 = vc_cons[logo_shown].d;
-    	
+
 		if (conp2->vc_top == logo_lines && conp2->vc_bottom == conp2->vc_rows)
     		    conp2->vc_top = 0;
     		if (logo_shown == unit) {
     		    unsigned long p, q;
     		    int i;
-    		    
+
     		    p = softback_in;
     		    q = conp->vc_origin + logo_lines * conp->vc_size_row;
     		    for (i = 0; i < logo_lines; i++) {
@@ -2180,7 +2202,7 @@ static int __init fbcon_show_logo( void )
     /* Return if the frame buffer is not mapped */
     if (!fb)
 	return 0;
-	
+
     /*
      * Set colors if visual is PSEUDOCOLOR and we have enough colors, or for
      * DIRECTCOLOR
@@ -2207,7 +2229,7 @@ static int __init fbcon_show_logo( void )
 	    p->fb_info->fbops->fb_set_cmap(&palette_cmap, 1, fg_console,
 					   p->fb_info);
 	}
-	
+
     if (depth >= 8) {
 	logo = linux_logo;
 	logo_depth = 8;
@@ -2220,20 +2242,24 @@ static int __init fbcon_show_logo( void )
 	logo = linux_logo_bw;
 	logo_depth = 1;
     }
-    
+
     if (p->fb_info->fbops->fb_rasterimg)
     	p->fb_info->fbops->fb_rasterimg(p->fb_info, 1);
 
+#ifdef CONFIG_LPP
+	for (x = 0; x < (LOGO_W + 8) &&
+#else
     for (x = 0; x < smp_num_cpus * (LOGO_W + 8) &&
+#endif
     	 x < p->var.xres - (LOGO_W + 8); x += (LOGO_W + 8)) {
-    	 
+
 #if defined(CONFIG_FBCON_CFB16) || defined(CONFIG_FBCON_CFB24) || \
     defined(CONFIG_FBCON_CFB32) || defined(CONFIG_FB_SBUS)
         if (p->visual == FB_VISUAL_DIRECTCOLOR) {
 	    unsigned int val;		/* max. depth 32! */
 	    int bdepth;
 	    int redshift, greenshift, blueshift;
-		
+
 	    /* Bug: Doesn't obey msb_right ... (who needs that?) */
 	    redshift   = p->var.red.offset;
 	    greenshift = p->var.green.offset;
@@ -2311,7 +2337,7 @@ static int __init fbcon_show_logo( void )
 	    unsigned char mask[9] = { 0,0x80,0xc0,0xe0,0xf0,0xf8,0xfc,0xfe,0xff };
 	    unsigned char redmask, greenmask, bluemask;
 	    int redshift, greenshift, blueshift;
-		
+
 	    /* Bug: Doesn't obey msb_right ... (who needs that?) */
 	    redmask   = mask[p->var.red.length   < 8 ? p->var.red.length   : 8];
 	    greenmask = mask[p->var.green.length < 8 ? p->var.green.length : 8];
@@ -2323,8 +2349,8 @@ static int __init fbcon_show_logo( void )
 	    src = logo;
 	    for( y1 = 0; y1 < LOGO_H; y1++ ) {
 		dst = fb + y1*line + x*bdepth;
-			//for( x1 = 0; x1 < LOGO_W; x1++, src++ ) 
-			for( x1 = 0; x1 < LOGO_W; x1++) 
+			//for( x1 = 0; x1 < LOGO_W; x1++, src++ )
+			for( x1 = 0; x1 < LOGO_W; x1++)
 			{
 				/////////////////////////////////////////////////////////////////////////////////////
 				// 미스콜이아 수정
@@ -2374,7 +2400,7 @@ static int __init fbcon_show_logo( void )
 #if defined(CONFIG_FBCON_CFB8) || defined(CONFIG_FB_SBUS)
 	if (depth == 8 && p->type == FB_TYPE_PACKED_PIXELS) {
 	    /* depth 8 or more, packed, with color registers */
-		
+
 	    src = logo;
 	    for( y1 = 0; y1 < LOGO_H; y1++ ) {
 		dst = fb + y1*line + x;
@@ -2406,7 +2432,7 @@ static int __init fbcon_show_logo( void )
 	    /* extract a bit from the source image */
 #define	BIT(p,pix,bit)	(p[pix*logo_depth/8] & \
 			 (1 << ((8-((pix*logo_depth)&7)-logo_depth) + bit)))
-		
+
 	    src = logo;
 	    for( y1 = 0; y1 < LOGO_H; y1++ ) {
 		for( x1 = 0; x1 < LOGO_LINE; x1++, src += logo_depth ) {
@@ -2422,7 +2448,7 @@ static int __init fbcon_show_logo( void )
 		    }
 		}
 	    }
-	
+
 	    /* fill remaining planes */
 	    if (depth > logo_depth) {
 		for( y1 = 0; y1 < LOGO_H; y1++ ) {
@@ -2492,9 +2518,9 @@ static int __init fbcon_show_logo( void )
 		}
 		done = 1;
 	}
-#endif			
+#endif
     }
-    
+
     if (p->fb_info->fbops->fb_rasterimg)
     	p->fb_info->fbops->fb_rasterimg(p->fb_info, 0);
 
@@ -2511,7 +2537,7 @@ static int
 pm_fbcon_request(struct pm_dev *dev, pm_request_t rqst, void *data)
 {
 	unsigned long flags;
-	
+
 	switch (rqst)
 	{
 	case PM_RESUME:
@@ -2541,9 +2567,9 @@ pm_fbcon_request(struct pm_dev *dev, pm_request_t rqst, void *data)
 /*
  *  The console `switch' structure for the frame buffer based console
  */
- 
+
 const struct consw fb_con = {
-    con_startup: 	fbcon_startup, 
+    con_startup: 	fbcon_startup,
     con_init: 		fbcon_init,
     con_deinit: 	fbcon_deinit,
     con_clear: 		fbcon_clear,

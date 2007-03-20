@@ -222,6 +222,13 @@ static int part_show(struct seq_file *s, void *v)
 	return 0;
 }
 
+#if defined(CONFIG_LPP)
+extern void fbcon_progress( unsigned int progress, char *text);
+#define PROGRESS(value, text) fbcon_progress(value,text)
+#else
+#define PROGRESS(value,text)
+#endif
+
 struct seq_operations partitions_op = {
 	.start		= part_start,
 	.next		= part_next,
@@ -237,15 +244,19 @@ extern int atmdev_init(void);
 
 int __init device_init(void)
 {
+	PROGRESS(9,"setting up block devices");
 	blk_dev_init();
 	sti();
 #ifdef CONFIG_NET
+	PROGRESS(26, "setting up network devices");
 	net_dev_init();
 #endif
 #ifdef CONFIG_ATM
+	PROGRESS(28, "setting up ATM");
 	(void) atmdev_init();
 #endif
 #ifdef CONFIG_VT
+	PROGRESS(29, "setting up console");
 	console_map_init();
 #endif
 	return 0;

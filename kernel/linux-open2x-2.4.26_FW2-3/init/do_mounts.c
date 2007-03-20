@@ -19,6 +19,13 @@
 
 #define BUILD_CRAMDISK
 
+#if defined(CONFIG_LPP)
+extern void fbcon_progress( unsigned int progress, char *text);
+#define PROGRESS(value, text) fbcon_progress(value,text)
+#else
+#define PROGRESS(value,text)
+#endif
+
 extern int get_filesystem_list(char * buf);
 
 extern asmlinkage long sys_mount(char *dev_name, char *dir_name, char *type,
@@ -920,11 +927,13 @@ void prepare_namespace(void)
 		}
 	} else if (is_floppy && rd_doload && rd_load_disk(0))
 		ROOT_DEV = MKDEV(RAMDISK_MAJOR, 0);
+	PROGRESS(48, "mounting root filesystem");
 	mount_root();
 out:
 	sys_umount("/dev", 0);
 	sys_mount(".", "/", NULL, MS_MOVE, NULL);
 	sys_chroot(".");
+	PROGRESS(49, "mounting devfs filesystem");
 	mount_devfs_fs ();
 }
 

@@ -18,6 +18,14 @@
 #include <linux/slab.h>
 #include <linux/init.h>
 
+#if defined(CONFIG_LPP)
+extern void fbcon_progress( unsigned int progress, char *text);
+#define PROGRESS(value, text) fbcon_progress(value,text)
+#else
+#define PROGRESS(value,text)
+#endif
+	
+
 #ifndef MODULE
 static int io[PARPORT_MAX+1] __initdata = { [0 ... PARPORT_MAX] = 0 };
 #ifdef CONFIG_PARPORT_PC
@@ -142,6 +150,7 @@ int __init parport_init (void)
 	if (io[0] == PARPORT_DISABLE) 
 		return 1;
 
+	PROGRESS(4,"setting up parport");
 #ifdef CONFIG_SYSCTL
 	parport_default_proc_register ();
 #endif

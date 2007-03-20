@@ -74,6 +74,14 @@ extern int irda_device_init(void);
 #include <asm/smp.h>
 #endif
 
+#if defined(CONFIG_LPP)
+extern void fbcon_progress( unsigned int progress, char *text );
+extern void fbcon_register_progress(void);
+#define PROGRESS(value,text) fbcon_progress(value,text)
+#else
+#define PROGRESS(value,text)
+#endif
+
 /*
  * Versions of gcc older than that listed below may actually compile
  * and link okay, but the end product can have subtle run time bugs.
@@ -483,6 +491,8 @@ static void __init do_basic_setup(void)
 	 */
 	child_reaper = current;
 
+	PROGRESS(1,"booting...");
+
 #if defined(CONFIG_MTRR)	/* Do this after SMP initialization */
 /*
  * We should probably create some architecture-dependent "fixup after
@@ -537,7 +547,8 @@ static void __init do_basic_setup(void)
 	tc_init();
 #endif
 
-	/* Networking initialization needs a process context */ 
+	/* Networking initialization needs a process context */
+	PROGRESS(3,"initializing network context");
 	sock_init();
 
 	start_context_thread();
@@ -598,6 +609,11 @@ static int init(void * unused)
 	 * The Bourne shell can be used instead of init if we are 
 	 * trying to recover a really broken machine.
 	 */
+
+	PROGRESS(50, "starting init");
+	#ifdef CONFIG_LPP
+	fbcon_register_progress();
+#endif
 
 	if (execute_command)
 		run_init_process(execute_command);

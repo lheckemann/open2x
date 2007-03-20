@@ -1,0 +1,14 @@
+#define PROGRESS_BAR_X      0
+#define PROGRESS_BAR_Y      236
+#define PROGRESS_CORNER_X   320
+#define PROGRESS_CORNER_Y   240
+#define PROGRESS_VERTICALLY 0
+#define REVERSE_DIRECTION   0
+#define TEXT_X              0
+#define TEXT_Y              229
+#define MAX_TEXT_LEN        60
+#define MESSAGE_LENGTH      80
+#define ICON_X              0
+#define ICON_Y              223
+#define LOGO_H              240
+#define LOGO_W              320

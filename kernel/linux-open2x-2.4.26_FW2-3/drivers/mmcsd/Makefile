@@ -1,5 +1,5 @@
 #
-# Makefile for the kernel MMCSD/SD Card subsystem
+# Makefile for the kernel MMC/SD Card subsystem
 #
 
 O_TARGET := mmcsd.o

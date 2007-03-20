@@ -39,7 +39,14 @@ extern void mda_console_init(void);
 #if defined(CONFIG_S390_TAPE) && defined(CONFIG_S390_TAPE_CHAR)
 extern void tapechar_init(void);
 #endif
-     
+
+#if defined(CONFIG_LPP)
+extern void fbcon_progress( unsigned int progress, char *text);
+#define PROGRESS(value, text) fbcon_progress(value,text)
+#else
+#define PROGRESS(value,text)
+#endif
+
 static ssize_t do_write_mem(struct file * file, void *p, unsigned long realp,
 			    const char * buf, size_t count, loff_t *ppos)
 {
@@ -733,6 +740,7 @@ static struct file_operations memory_fops = {
 
 int __init chr_dev_init(void)
 {
+	PROGRESS(6,"setting up character devices");
 	if (devfs_register_chrdev(MEM_MAJOR,"mem",&memory_fops))
 		printk("unable to get major %d for memory devs\n", MEM_MAJOR);
 	memory_devfs_register();
