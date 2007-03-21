@@ -2349,19 +2349,25 @@ static int __init fbcon_show_logo( void )
 	    src = logo;
 	    for( y1 = 0; y1 < LOGO_H; y1++ ) {
 		dst = fb + y1*line + x*bdepth;
-			//for( x1 = 0; x1 < LOGO_W; x1++, src++ )
-			for( x1 = 0; x1 < LOGO_W; x1++)
-			{
-				/////////////////////////////////////////////////////////////////////////////////////
-				// 미스콜이아 수정
-//		    	val = safe_shift((linux_logo_red[*src-32]   & redmask), redshift) |
-//		          	safe_shift((linux_logo_green[*src-32] & greenmask), greenshift) |
-//		          	safe_shift((linux_logo_blue[*src-32]  & bluemask), blueshift);
-
-		    	val = safe_shift((*src++ & redmask	), redshift		) |
-		          	  safe_shift((*src++ & greenmask), greenshift	) |
-		          	  safe_shift((*src++ & bluemask	), blueshift	);
-				/////////////////////////////////////////////////////////////////////////////////////
+//			//for( x1 = 0; x1 < LOGO_W; x1++, src++ )
+//			for( x1 = 0; x1 < LOGO_W; x1++)
+//			{
+//				/////////////////////////////////////////////////////////////////////////////////////
+//				// 미스콜이아 수정
+////		    	val = safe_shift((linux_logo_red[*src-32]   & redmask), redshift) |
+////		          	safe_shift((linux_logo_green[*src-32] & greenmask), greenshift) |
+////		          	safe_shift((linux_logo_blue[*src-32]  & bluemask), blueshift);
+//
+//		    	val = safe_shift((*src++ & redmask	), redshift		) |
+//		          	  safe_shift((*src++ & greenmask), greenshift	) |
+//		          	  safe_shift((*src++ & bluemask	), blueshift	);
+//				/////////////////////////////////////////////////////////////////////////////////////
+// Start 'unhack'
+		for( x1 = 0; x1 < LOGO_W; x1++, src++ ) {
+		    val = safe_shift((linux_logo_red[*src-32]   & redmask), redshift) |
+		          safe_shift((linux_logo_green[*src-32] & greenmask), greenshift) |
+		          safe_shift((linux_logo_blue[*src-32]  & bluemask), blueshift);
+// End 'unhack'.
 		    if (bdepth == 4 && !((long)dst & 3)) {
 			/* Some cards require 32bit access */
 			fb_writel (val, dst);
