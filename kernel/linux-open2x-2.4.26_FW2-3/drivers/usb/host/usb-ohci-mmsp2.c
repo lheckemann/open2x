@@ -48,6 +48,8 @@ static void __init mmsp2_ohci_configure(void)
 	printk("u_fact = %ld, u_clk = %ld, u_err = %c%ld\n",
 			u_fact, u_clk, u_clk > DESIRED_CLOCK ? '+':'-', u_err);
 
+	COMCLKEN |= 0x01;
+
 	/* from EBOOT */
 	UIRMCSET &= 0xff00;
 	UIRMCSET |= ((0x02) << 6) | 1;
