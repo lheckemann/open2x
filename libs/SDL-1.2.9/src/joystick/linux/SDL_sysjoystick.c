@@ -206,9 +206,10 @@ static char *mystrdup(const char *string)
   return(newstring);
 }
 
-// for GP2X's joystick
-//[*]-----------------------------------------------------------------------[*]
-//#define MAX_JOYSTICKS  18  /* only 2 are supported in the multimedia API */
+/* for GP2X's joystick */
+
+/*[*]-----------------------------------------------------------------------[*]*/
+/*  #define MAX_JOYSTICKS  18  */ /* only 2 are supported in the multimedia API */
 #define MAX_AXES        0  /* each joystick can have up to 2 axes */
 #define MAX_BUTTONS    19  /* and 6 buttons                      */
 #define	MAX_HATS        0
