@@ -112,13 +112,13 @@ static struct joystick_logical_layout {
   Some USB HIDs show up as a single joystick even though they actually
   control 2 or more joysticks.  This array sets up a means of mapping
   a single physical joystick to multiple logical joysticks. (djm)
-                                                                                
+
   njoys
   the number of logical joysticks
-                                                                                
+
   layouts
   an array of layout structures, one to describe each logical joystick
-                                                                                
+
   axes, hats, balls, buttons
   arrays that map a physical thingy to a logical thingy
 */
@@ -173,7 +173,7 @@ struct joystick_hwdata {
   int fd;
   // GP2X button states
   unsigned long prev_buttons;
-  
+
   /* The current linux joystick driver maps hats to two axes */
   struct hwdata_hat {
     int axis[2];
@@ -215,25 +215,25 @@ static char *mystrdup(const char *string)
 
 #define	JOYNAMELEN      7
 
-#define	PEPC_VK_UP          (1<< 0)	
-#define	PEPC_VK_UP_LEFT     (1<< 1)	
-#define	PEPC_VK_LEFT        (1<< 2)	
-#define	PEPC_VK_DOWN_LEFT   (1<< 3)	
-#define	PEPC_VK_DOWN        (1<< 4)	
-#define	PEPC_VK_DOWN_RIGHT  (1<< 5)	
-#define	PEPC_VK_RIGHT       (1<< 6)	
-#define	PEPC_VK_UP_RIGHT    (1<< 7)	
-#define	PEPC_VK_START       (1<< 8)	
-#define	PEPC_VK_SELECT      (1<< 9)	
-#define	PEPC_VK_FL          (1<<10)	
-#define	PEPC_VK_FR          (1<<11)	
-#define	PEPC_VK_FA          (1<<12)	
-#define	PEPC_VK_FB          (1<<13)	
-#define	PEPC_VK_FX          (1<<14)	
-#define	PEPC_VK_FY          (1<<15)	
-#define	PEPC_VK_VOL_UP      (1<<16)	
-#define	PEPC_VK_VOL_DOWN    (1<<17)	
-#define	PEPC_VK_STICK_PUSH  (1<<18)	
+#define	PEPC_VK_UP          (1<< 0)
+#define	PEPC_VK_UP_LEFT     (1<< 1)
+#define	PEPC_VK_LEFT        (1<< 2)
+#define	PEPC_VK_DOWN_LEFT   (1<< 3)
+#define	PEPC_VK_DOWN        (1<< 4)
+#define	PEPC_VK_DOWN_RIGHT  (1<< 5)
+#define	PEPC_VK_RIGHT       (1<< 6)
+#define	PEPC_VK_UP_RIGHT    (1<< 7)
+#define	PEPC_VK_START       (1<< 8)
+#define	PEPC_VK_SELECT      (1<< 9)
+#define	PEPC_VK_FL          (1<<10)
+#define	PEPC_VK_FR          (1<<11)
+#define	PEPC_VK_FA          (1<<12)
+#define	PEPC_VK_FB          (1<<13)
+#define	PEPC_VK_FX          (1<<14)
+#define	PEPC_VK_FY          (1<<15)
+#define	PEPC_VK_VOL_UP      (1<<16)
+#define	PEPC_VK_VOL_DOWN    (1<<17)
+#define	PEPC_VK_STICK_PUSH  (1<<18)
 
 static char *gp2x_dev_name = "/dev/GPIO";
 
@@ -457,7 +457,7 @@ const char *SDL_SYS_JoystickName(int index)
   name = NULL;
   fd = open(SDL_joylist[index].fname, O_RDONLY, 0);
   if ( fd >= 0 ) {
-    if ( 
+    if (
 #ifdef USE_INPUT_EVENTS
 	(ioctl(fd, EVIOCGNAME(sizeof(namebuf)), namebuf) <= 0) &&
 #endif
@@ -485,27 +485,27 @@ const char *SDL_SYS_JoystickName(int index)
 int SDL_GP2X_JoystickOpen(SDL_Joystick *joystick)
 {
   int fd;
-  
+
   fd = open(gp2x_dev_name, O_RDWR | O_NDELAY );
-  if (fd < 0){      	
+  if (fd < 0){
     fputs("GPIO OPEN FAIL\n", stderr);
     return -1;
   }
-  
+
   joystick->hwdata = (struct joystick_hwdata *) malloc(sizeof(*joystick->hwdata));
   if (joystick->hwdata == NULL) {
     SDL_OutOfMemory();
     return -1;
   }
- 
+
   // fill nbuttons, naxes, and nhats fields
   joystick->nbuttons = MAX_BUTTONS;
   joystick->naxes = MAX_AXES;
   joystick->nhats = MAX_HATS;
-  
+
   joystick->hwdata->fd = fd;
   joystick->hwdata->prev_buttons = 0;
-  
+
   return 0;
 }
 //[*]-----------------------------------------------------------------------[*]
@@ -518,10 +518,10 @@ void SDL_GP2X_JoystickUpdate(SDL_Joystick *joystick)
 {
   int ret=0;
   unsigned long buff=0,prev_buttons=0, changed=0;
-  
-  ret = read(joystick->hwdata->fd, &buff, 4); 
+
+  ret = read(joystick->hwdata->fd, &buff, 4);
   prev_buttons 	= joystick->hwdata->prev_buttons;
-  changed 		= buff^prev_buttons; 
+  changed 		= buff^prev_buttons;
 
 #ifdef GP2X
   //fprintf(stderr, "SDL_GP2X: Joystick buttons :%X\n", buff);
@@ -557,7 +557,7 @@ void SDL_GP2X_JoystickUpdate(SDL_Joystick *joystick)
   if (changed & PEPC_VK_UP_RIGHT)
     SDL_PrivateJoystickButton(joystick, GP2X_VK_UP_RIGHT,
 		(buff & PEPC_VK_UP_RIGHT) ? SDL_PRESSED : SDL_RELEASED);
-  
+
   if (changed & PEPC_VK_START)
     SDL_PrivateJoystickButton(joystick, GP2X_VK_START,
 		(buff & PEPC_VK_START) ? SDL_PRESSED : SDL_RELEASED);
@@ -601,7 +601,7 @@ void SDL_GP2X_JoystickUpdate(SDL_Joystick *joystick)
   if (changed & PEPC_VK_STICK_PUSH)
     SDL_PrivateJoystickButton(joystick, GP2X_VK_STICK_PUSH,
 		(buff & PEPC_VK_STICK_PUSH) ? SDL_PRESSED : SDL_RELEASED);
-	
+
   joystick->hwdata->prev_buttons = buff;
 }
 
@@ -858,10 +858,10 @@ static SDL_bool EV_ConfigJoystick(SDL_Joystick *joystick, int fd)
 static void ConfigLogicalJoystick(SDL_Joystick *joystick)
 {
   struct joystick_logical_layout* layout;
-  
+
   layout = SDL_joylist[joystick->index].map->layouts +
     SDL_joylist[joystick->index].logicalno;
-                                                                                
+
   joystick->nbuttons = layout->nbuttons;
   joystick->nhats = layout->nhats;
   joystick->naxes = layout->naxes;
@@ -884,7 +884,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
   // GP2X's internal joystick needs special handling
   if (joystick->index == 0)
     return SDL_GP2X_JoystickOpen(joystick);
-  
+
   /* Open the joystick and set the joystick file descriptor */
 #ifndef NO_LOGICAL_JOYSTICKS
   if (SDL_joylist[joystick->index].fname == NULL) {
@@ -893,7 +893,7 @@ int SDL_SYS_JoystickOpen(SDL_Joystick *joystick)
 
     if (realjoy == NULL)
       return -1;
-    
+
     fd = realjoy->hwdata->fd;
   } else {
     fd = open(SDL_joylist[joystick->index].fname, O_RDONLY, 0);
@@ -1237,7 +1237,7 @@ void SDL_SYS_JoystickUpdate(SDL_Joystick *joystick)
 {
   int i;
 
-  // GP2X internal joystick
+  /* GP2X internal joystick */
   if (joystick->index == 0)
     return SDL_GP2X_JoystickUpdate(joystick);
 
@@ -1267,7 +1267,7 @@ void SDL_SYS_JoystickClose(SDL_Joystick *joystick)
 {
   if (joystick->index == 0)
     return SDL_GP2X_JoystickClose(joystick);
-  
+
 #ifndef NO_LOGICAL_JOYSTICKS
   register int i;
   if (SDL_joylist[joystick->index].fname == NULL) {
