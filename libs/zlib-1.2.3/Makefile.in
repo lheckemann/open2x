@@ -18,11 +18,10 @@
 
 CC=cc
 
-CFLAGS=-O
+#CFLAGS=-O
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
-#CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
-#           -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion -Wstrict-prototypes -Wmissing-prototypes
 
 LDFLAGS=libz.a
 LDSHARED=$(CC)
@@ -33,8 +32,8 @@ SHAREDLIB=libz.so
 SHAREDLIBV=libz.so.1.2.3
 SHAREDLIBM=libz.so.1
 
-AR=ar rc
-RANLIB=ranlib
+#AR=ar rc
+#RANLIB=ranlib
 TAR=tar
 SHELL=/bin/sh
 EXE=
@@ -68,7 +67,7 @@ test: all
 	fi
 
 libz.a: $(OBJS) $(OBJA)
-	$(AR) $@ $(OBJS) $(OBJA)
+	$(AR) cru $@ $(OBJS) $(OBJA)
 	-@ ($(RANLIB) $@ || true) >/dev/null 2>&1
 
 match.o: match.S

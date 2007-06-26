@@ -18,11 +18,10 @@
 
 CC=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc
 
-CFLAGS=-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/sdl -DUSE_MMAP
+#CFLAGS=-O
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
-#CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
-#           -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS=-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -DUSE_MMAP
 
 LDFLAGS=-L. libz.so.1.2.3
 LDSHARED=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -shared -Wl,-soname,libz.so.1
@@ -33,8 +32,8 @@ SHAREDLIB=libz.so
 SHAREDLIBV=libz.so.1.2.3
 SHAREDLIBM=libz.so.1
 
-AR=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-ar rc
-RANLIB=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-ranlib
+#AR=ar rc
+#RANLIB=ranlib
 TAR=tar
 SHELL=/bin/sh
 EXE=
@@ -68,7 +67,7 @@ test: all
 	fi
 
 libz.a: $(OBJS) $(OBJA)
-	$(AR) $@ $(OBJS) $(OBJA)
+	$(AR) cru $@ $(OBJS) $(OBJA)
 	-@ ($(RANLIB) $@ || true) >/dev/null 2>&1
 
 match.o: match.S
