@@ -14,14 +14,16 @@
  
  FLAGS += CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2 -I$(OPEN2X)/include/SDL'
  FLAGS += LDFLAGS='-L$(OPEN2X)/lib'
+ FLAGS += BUILD_CC='/usr/bin/cc'
+ FLAGS += PKG_CONFIG='$(OPEN2X)/bin/pkg-config'
 
+ TARGETS += $(PREFIX)/lib/libxml2.a
  TARGETS += $(PREFIX)/lib/libSDL.a
  TARGETS += $(PREFIX)/lib/libSDL_gfx.a
  TARGETS += $(PREFIX)/lib/libz.a
  TARGETS += $(PREFIX)/lib/libpng.a
  TARGETS += $(PREFIX)/lib/libSDL_image.a
- TARGETS += $(PREFIX)/lib/libSDL_mixer.a
- # TARGETS += $(PREFIX)/lib/libSDL_svg.a
+ TARGETS += $(PREFIX)/lib/libSDL_svg.a
  TARGETS += $(PREFIX)/lib/libSDL_ttf.a
  TARGETS += $(PREFIX)/lib/libbz2.a
  TARGETS += $(PREFIX)/lib/libfreetype.a
@@ -37,9 +39,8 @@
  TARGETS += $(PREFIX)/lib/libungif.a
  # TARGETS += $(PREFIX)/lib/libvorbis.a
  TARGETS += $(PREFIX)/lib/libvorbisidec.a
+ TARGETS += $(PREFIX)/lib/libSDL_mixer.a
  TARGETS += $(PREFIX)/lib/libImlib2.a
- TARGETS += $(PREFIX)/lib/libxml2.a
- # TARGETS += $(PREFIX)/lib/libSDL_inifile.a
 
  all: $(TARGETS)
 
@@ -48,7 +49,7 @@
 
  SDL: $(PREFIX)/lib/libSDL.a
  $(PREFIX)/lib/libSDL.a:
-	cd SDL-1.2.9 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd SDL-1.2.9 && ./autogen.sh && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  SDL_gfx: $(PREFIX)/lib/libSDL_gfx.a
  $(PREFIX)/lib/libSDL_gfx.a: $(PREFIX)/lib/libSDL.a
@@ -58,17 +59,9 @@
  $(PREFIX)/lib/libSDL_image.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libjpeg.a $(PREFIX)/lib/libpng.a
 	cd SDL_image-1.2.4 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
- SDL_mixer: $(PREFIX)/lib/libSDL_mixer.a
- $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libsmpeg.a $(PREFIX)/lib/libvorbisidec.a
-	cd SDL_mixer-1.2.6 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes --enable-music-libmikmod=no && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
-
- SDL_svg: $(PREFIX)/lib/libSDL_svg.a
- $(PREFIX)/lib/libSDL_svg.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libxml2.a $(PREFIX)/lib/libz.a
-	cd SDL_svg-1.1.9 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
-
  SDL_ttf: $(PREFIX)/lib/libSDL_ttf.a
  $(PREFIX)/lib/libSDL_ttf.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libfreetype.a
-	cd SDL_ttf-2.0.7 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-freetype-prefix=$(PREFIX) --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd SDL_ttf-2.0.7 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-freetype-prefix=$(PREFIX) --with-sdl-prefix=$(PREFIX) --without-x && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
   bzip2: $(PREFIX)/lib/libbz2.a
  $(PREFIX)/lib/libbz2.a:
@@ -76,7 +69,7 @@
  
  freetype: $(PREFIX)/lib/libfreetype.a
  $(PREFIX)/lib/libfreetype.a:
-	cd freetype-2.1.10 && GNUMAKE=make ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd freetype-2.1.10 && GNUMAKE=make $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  imlib2: $(PREFIX)/lib/libImlib2.a
  $(PREFIX)/lib/libImlib2.a: $(PREFIX)/lib/libjpeg.a $(PREFIX)/lib/libpng.a $(PREFIX)/lib/libtiff.a $(PREFIX)/lib/libungif.a $(PREFIX)/lib/libz.a $(PREFIX)/lib/libbz2.a $(PREFIX)/lib/libid3tag.a $(PREFIX)/lib/libfreetype.a
@@ -104,7 +97,6 @@
 
  libpng: $(PREFIX)/lib/libpng.a
  $(PREFIX)/lib/libpng.a: $(PREFIX)/lib/libz.a
-	## cd libpng-1.2.8 && $(FLAGS) make -f scripts/makefile.linux && $(FLAGS) make -f scripts/makefile.linux install && $(FLAGS) make -f scripts/makefile.linux clean
 	cd libpng-1.2.15 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  libtiff: $(PREFIX)/lib/libtiff.a
@@ -121,7 +113,11 @@
 
  libxml2: $(PREFIX)/lib/libxml2.a
  $(PREFIX)/lib/libxml2.a:
-	cd libxml2-2.6.23 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd libxml2-2.6.29 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+
+ SDL_svg: $(PREFIX)/lib/libSDL_svg.a
+ $(PREFIX)/lib/libSDL_svg.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libxml2.a $(PREFIX)/lib/libz.a
+	cd SDL_svg-1.1.9 && ./autogen.sh $(FLAGS) $(LIBS) && $(FLAGS) $(LIBS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --with-gnu-ld && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  ncurses: $(PREFIX)/lib/libncurses.a
  $(PREFIX)/lib/libncurses.a:
@@ -133,7 +129,7 @@
 
  smpeg: $(PREFIX)/lib/libsmpeg.a
  $(PREFIX)/lib/libsmpeg.a:
-	cd smpeg-cvs && ./autogen.sh && $(LIBS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --disable-gtk-player --disable-opengl-player --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --without-x && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd smpeg-cvs && $(FLAGS) $(LIBS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --disable-gtk-player --disable-opengl-player --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --without-x && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
  tremor: $(PREFIX)/lib/libvorbisidec.a
  $(PREFIX)/lib/libvorbisidec.a:
@@ -144,6 +140,6 @@
 	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) && $(FLAGS) && AR='$(OPEN2X)/bin/$(HOST)-ar cru' && make && $(FLAGS) make install && $(FLAGS) make clean
 	cd zlib-1.2.3 && $(FLAGS) ./configure --prefix=$(PREFIX) --shared && $(FLAGS) && AR='$(OPEN2X)/bin/$(HOST)-ar cru' && make && $(FLAGS) make install && $(FLAGS) make clean
 
- SDL_config: $(PREFIX)/lib/libSDL_inifile.a
- $(PREFIX)/lib/libSDL_inifile.a:
-	cd SDL_config-0.5 && cd src && $(FLAGS) make && $(FLAGS) make clean
+ SDL_mixer: $(PREFIX)/lib/libSDL_mixer.a
+ $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libsmpeg.a $(PREFIX)/lib/libvorbisidec.a
+	cd SDL_mixer-1.2.6 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes --enable-music-libmikmod=no && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean

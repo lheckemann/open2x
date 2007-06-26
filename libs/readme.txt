@@ -1,4 +1,3 @@
-
  ----------------
  OPEN2X LIBRARIES
  ----------------
@@ -11,8 +10,8 @@
 
   svn checkout https://svn.sourceforge.net/svnroot/open2x/trunk/libs
 
- For more information and other useful software, please visit the open2x
- project page on sourceforge.
+ For more information and other useful software, please visit the Open2x
+ Wiki (http://wiki.open2x.org/).
 
  ----------------
  CONFIG AND USAGE
@@ -20,10 +19,20 @@
 
  1) Make sure you have the open2x toolchain installed:
 
-  open2x-gcc -v
+  http://wiki.open2x.org/open2x/wiki/index.php?title=Toolchain
+  
+ 
+ 2) Make sure there is a good reason the latest prebuilt library package is no good for you:
+ 
+  http://wiki.open2x.org/open2x/wiki/index.php?title=Prebuilt_Library_Packages
 
- 2) Execute the makefile to build the libraries:
+ 2) If you still need to make your own libs:
+    
+    Execute the script to build the libraries.
 
-  make
+  ./open2x-libs.sh
+    
+    Just pass clean to the script to clear out old 
+    libs or the lib name to just build one lib)
 
  3) Enjoy!

@@ -2,9 +2,6 @@
 SHELL=/bin/sh
 
 # To assist in cross-compiling
-CC=open2x-gcc
-AR=open2x-ar
-RANLIB=open2x-ranlib
 LDFLAGS=-L$(OPEN2X)/lib
 
 BIGFILES=-D_FILE_OFFSET_BITS=64
@@ -12,7 +9,6 @@ CFLAGS=-Wall -Winline -O -g $(BIGFILES)
 
 # Where you want it installed when you do 'make install'
 PREFIX=$(OPEN2X)
-
 
 OBJS= blocksort.o  \
       huffman.o    \

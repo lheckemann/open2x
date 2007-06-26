@@ -33,12 +33,14 @@ echo Open2x - GP2X patched development libs. Build and Install script.
 echo Please ensure you have configured this script to point to your Open2x GCC tool-chain.
 echo and approperate folder locations before you continue.
 echo
+echo Run ./open2x-libs.sh with no parameters to build all the supported libs, with clean to 
+echo clean old libs out or with the lib name as the %1 to just build that lib.
+echo
 echo Current settings.
 echo 
 echo Install root/Working dir	= $OPEN2X
 echo Tool locations 		= $OPEN2X/bin
 echo Host/Target		= $HOST / $TARGET
-echo Building			= Everything or just $1
 echo 
 read -p "Press return to continue." first
 echo
