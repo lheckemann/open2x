@@ -49,7 +49,7 @@ more info.
 Lastly, you can just build SDL on its own using a configure flag something 
 like what is shown below.
 
-./configure --prefix=$LIB_ROOT --host=$HOST --disable-shared
+./configure --prefix=$LIB_ROOT --host=$HOST --disable-shared --enable-video-gp2x
 
 
 Using:

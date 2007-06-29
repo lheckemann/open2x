@@ -35,6 +35,7 @@
 #include <linux/input.h>
 #endif
 
+#include "SDL_events.h"
 #include "SDL_joystick.h"
 #include "../SDL_sysjoystick.h"
 #include "../SDL_joystick_c.h"
@@ -300,6 +301,17 @@ struct joystick_hwdata {
 };
 
 /* Defines for GP2X joystick */
+
+static char *mystrdup(const char *string)
+{
+  char *newstring;
+
+  newstring = (char *)malloc(strlen(string)+1);
+  if (newstring) {
+    strcpy(newstring, string);
+  }
+  return(newstring);
+}
 
 /*  #define MAX_JOYSTICKS  18  */ /* only 2 are supported in the multimedia API */
 #define MAX_AXES        0  /* each joystick can have up to 2 axes */
@@ -628,10 +640,6 @@ void SDL_GP2X_JoystickUpdate(SDL_Joystick *joystick)
 	ret = read(joystick->hwdata->fd, &buff, 4);
 	prev_buttons = joystick->hwdata->prev_buttons;
 	changed = buff^prev_buttons;
-
-	#ifdef GP2X
-		//fprintf(stderr, "SDL_GP2X: Joystick buttons :%X\n", buff);
-	#endif
 
 	if (changed & PEPC_VK_UP)
 		SDL_PrivateJoystickButton(joystick, GP2X_VK_UP,

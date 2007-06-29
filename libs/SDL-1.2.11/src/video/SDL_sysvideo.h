@@ -405,7 +405,7 @@ extern VideoBootStrap OS2FSLib_bootstrap;
 extern VideoBootStrap AALIB_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_GP2X
-	&GP2X_bootstrap,
+extern VideoBootStrap GP2X_bootstrap;
 #endif
 #if SDL_VIDEO_DRIVER_DUMMY
 extern VideoBootStrap DUMMY_bootstrap;

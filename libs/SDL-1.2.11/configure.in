@@ -1099,6 +1099,22 @@ AC_HELP_STRING([--enable-video-cocoa], [use Cocoa/Quartz video driver [[default=
     fi
 }
 
+dnl paeryn/djwillis 27072007 Set up the GP2X video driver.
+CheckGP2X()
+{
+    AC_ARG_ENABLE(video-gp2x,
+AC_HELP_STRING([--enable-video-gp2x], [use gp2x video driver [[default=yes]]]),
+                  , enable_video_gp2x=yes)
+    if test x$enable_video = xyes -a x$enable_video_gp2x = xyes; then
+	AC_MSG_CHECKING(for GP2X support)
+	video_gp2x=yes
+	AC_DEFINE(SDL_VIDEO_DRIVER_GP2X)
+	SOURCES="$SOURCES $srcdir/src/video/gp2x/*.c"
+	SOURCES="$SOURCES $srcdir/src/video/*.s"
+	have_video=yes
+    fi
+}
+
 dnl Find the framebuffer console includes
 CheckFBCON()
 {
@@ -1436,19 +1452,6 @@ AC_HELP_STRING([--enable-video-gem], [use Atari Gem video driver [[default=yes]]
             SDL_LIBS="$SDL_LIBS -lgem"
             have_video=yes
         fi
-    fi
-}
-
-dnl paeryn/djwillis 27072007 Set up the GP2X video driver.
-CheckGP2XVideo()
-{
-    AC_ARG_ENABLE(video-gp2x,
-AC_HELP_STRING([--enable-video-gp2x], [use gp2x video driver [[default=yes]]]),
-                  , enable_video_gp2x=yes)
-    if test x$enable_video_gp2x = xyes; then
-	AC_DEFINE(SDL_VIDEO_DRIVER_GP2X)
-	SOURCES="$SOURCES $srcdir/src/video/gp2x/*.c"
-	have_video=yes
     fi
 }
 
@@ -2155,10 +2158,10 @@ case "$host" in
         CheckARTSC
         CheckESD
         CheckNAS
+        CheckGP2X
         CheckX11
         CheckNANOX
         CheckFBCON
-        CheckGP2XVideo
         CheckDirectFB
         CheckPS2GS
         CheckGGI

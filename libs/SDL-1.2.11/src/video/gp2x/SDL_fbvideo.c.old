@@ -39,21 +39,18 @@ static char rcsid =
 
 #include "SDL.h"
 #include "SDL_error.h"
+
 #include "SDL_video.h"
 #include "SDL_mouse.h"
-#include "SDL_sysvideo.h"
-#include "SDL_pixels_c.h"
-#include "SDL_events_c.h"
+#include "../SDL_sysvideo.h"
+#include "../SDL_pixels_c.h"
+#include "../../events/SDL_events_c.h"
 #include "SDL_fbvideo.h"
 #include "SDL_fbmouse_c.h"
 #include "SDL_fbevents_c.h"
-#if 0 // ghcstop_041123 delete
-#include "SDL_fb3dfx.h"
-#include "SDL_fbmatrox.h"
-#include "SDL_fbriva.h"
-#endif
 
-#define SDL_MMSP2  // Paeryn, unofficial HW accel
+
+#define SDL_MMSP2  // Paeryn, Open2x GP2X HW accel.
 #include "SDL_fbmmsp2.h"
 #include "mmsp2_regs.h"
 int memory_fd;
@@ -68,13 +65,13 @@ int memory_fd;
  * mplayer의 20041123이전의 버전에서는 이부분을 0으로 하고 사용할 것
  * 그 이후버전은 이부분을 1로 하고 SDL_fbevents.c의 #define FB_VT_OPEN 1 // ghcstop add를
  * 0으로 하고 테스트 하고 있으나 문제점이 발견되네....키 이벤트가 안먹어잉....(test program에서는
- * - testbitmap.c 잘된다...--;, 20041124) 
+ * - testbitmap.c 잘된다...--;, 20041124)
  */
-#define FB_INPUT_DEVICE_ENABLE 1 
+#define FB_INPUT_DEVICE_ENABLE 1
 
 
 // ghcstop: 나중에 video setting쪽을 볼때는 SDL_SetError를 printf로 치환해서 볼 것(1.2.5에서는 이렇게 테스트했음)
-#define FBCON_DEBUG 1// ghcstop delete
+//#define FBCON_DEBUG 1// ghcstop delete
 
 #if defined(i386) && defined(FB_TYPE_VGA_PLANES)
 #define VGA16_FBCON_SUPPORT
@@ -84,7 +81,7 @@ int memory_fd;
 static inline void outb (unsigned char value, unsigned short port)
 {
   __asm__ __volatile__ ("outb %b0,%w1"::"a" (value), "Nd" (port));
-} 
+}
 #endif /* FB_TYPE_VGA_PLANES */
 
 /* A list of video resolutions that we query for (sorted largest to smallest) */
@@ -210,7 +207,7 @@ static SDL_VideoDevice *FB_CreateDevice(int devindex)
 {
 	SDL_VideoDevice *this;
 
-    ghcd(("FB_CreateDevice\n"));        
+    ghcd(("FB_CreateDevice\n"));
 	/* Initialize all variables that we clean on shutdown */
 	this = (SDL_VideoDevice *)malloc(sizeof(SDL_VideoDevice));
 	if ( this ) {
@@ -447,7 +444,7 @@ static int FB_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	mapped_memlen = finfo.smem_len+mapped_offset;
 #ifdef SDL_MMSP2
 	// gp2x fbcon doesn't alloc any surface memory but reserves space
-	// for 2 1280x1024x16 frame buffers. Need to go via /dev/mem 
+	// for 2 1280x1024x16 frame buffers. Need to go via /dev/mem
 	if (finfo.smem_start == 0x3101000) {
 	  mapped_memlen = 0x500000;  // gp2x has space for 2 1280x1024 16bit
 	  mapped_mem = mmap(NULL, mapped_memlen, PROT_READ|PROT_WRITE,
@@ -487,8 +484,8 @@ static int FB_VideoInit(_THIS, SDL_PixelFormat *vformat)
 		vformat->Bmask |= (0x00000001<<vinfo.blue.offset);
 	}
 	saved_vinfo = vinfo;
-	
-	
+
+
 	#if 0 // ghcstop_041123
 	/* Save hardware palette, if needed */
 	FB_SavePalette(this, &finfo, &vinfo);
@@ -563,7 +560,7 @@ static int FB_VideoInit(_THIS, SDL_PixelFormat *vformat)
 	mmsp2_regs[SYSCLKENREG] |= FASTIOCLK;
 	mmsp2_regs[VCLKENREG] = 0xffff;
 #endif
-#if 0 // ghcstop_041123 delete			
+#if 0 // ghcstop_041123 delete
 	if ( mapped_io ) {
 		switch (finfo.accel) {
 		    case FB_ACCEL_MATROX_MGA2064W:
@@ -599,7 +596,7 @@ static int FB_VideoInit(_THIS, SDL_PixelFormat *vformat)
 			break;
 		}
 	}
-#endif // no accelation, comment	
+#endif // no accelation, comment
 
 
 #if FB_INPUT_DEVICE_ENABLE // ghcstop
@@ -608,10 +605,10 @@ static int FB_VideoInit(_THIS, SDL_PixelFormat *vformat)
 		FB_VideoQuit(this);
 		return(-1);
 	}
-	
+
 	#if 0 // ghcstop delete, no keyboard, no mouse in s3c2410
 	// ghcstop_041123: SDL_fbevents.c, 아직은 마우스 살리지 말고나중에 살려야겠군...
-	if ( FB_OpenMouse(this) < 0 ) { 
+	if ( FB_OpenMouse(this) < 0 ) {
 		const char *sdl_nomouse;
 
 		sdl_nomouse = getenv("SDL_NOMOUSE");
@@ -622,7 +619,7 @@ static int FB_VideoInit(_THIS, SDL_PixelFormat *vformat)
 		}
 	}
     #endif
-#endif    
+#endif
 
 	/* We're done! */
 	return(0);
@@ -820,7 +817,7 @@ ghcd(("fbs-0\n"));
 	}
 #endif
 
-ghcd(("fbs-1\n"));        
+ghcd(("fbs-1\n"));
 	#if 0 // ghcstop_041123 delete
 	/* Restore the original palette */
 	FB_RestorePalette(this);
@@ -1264,7 +1261,7 @@ static void FB_VGA16Update(_THIS, int numrects, SDL_Rect *rects)
 	left = rects->x & ~7;
         width = (rects->w + 7) >> 3;
         height = rects->h;
-        src = (Uint32*)screen->pixels + (rects->y * SRCPitch) + (left >> 2); 
+        src = (Uint32*)screen->pixels + (rects->y * SRCPitch) + (left >> 2);
         dst = (Uint8*)mapped_mem + (rects->y * FBPitch) + (left >> 3);
 
 	if((phase = (long)dst & 3L)) {
@@ -1363,7 +1360,7 @@ static void FB_VGA16Update(_THIS, int numrects, SDL_Rect *rects)
  		*dstPtr++ = (m >> 26) | (m >> 17) | (m >> 8) | (m << 1);
 		srcPtr += 2;
 	    }
-	    
+
 	    writeSeq(0x02, 1 << 3);
 	    dstPtr = dst;
 	    srcPtr = src;
@@ -1535,10 +1532,10 @@ static void FB_VideoQuit(_THIS)
 // ghcstop fix to original: 041123
 #if FB_INPUT_DEVICE_ENABLE
 		if ( this->screen->pixels && FB_InGraphicsMode(this) ) {
-#else			
+#else
 		if ( this->screen->pixels  ) {
 #endif
-			
+
 #ifdef __powerpc__	/* SIGBUS when using memset() ?? */
 			Uint8 *rowp = (Uint8 *)this->screen->pixels;
 			int left = this->screen->pitch*this->screen->h;
@@ -1614,5 +1611,5 @@ static void FB_VideoQuit(_THIS)
 	#endif
 	dprintf("FB_closeKeyboard\n"); // ghcstop
 	FB_CloseKeyboard(this);
-#endif	
+#endif
 }

@@ -34,7 +34,7 @@ static char rcsid =
 
 #include "mmsp2_regs.h"
 
-// Hidden "this" pointer for the video functions
+/* Hidden "this" pointer for the video functions */
 #define _THIS	SDL_VideoDevice *this
 
 // Allocate 5MB for the frame buffer (seems to be how gph have it)
