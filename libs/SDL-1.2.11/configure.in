@@ -1109,8 +1109,8 @@ AC_HELP_STRING([--enable-video-gp2x], [use gp2x video driver [[default=yes]]]),
 	AC_MSG_CHECKING(for GP2X support)
 	video_gp2x=yes
 	AC_DEFINE(SDL_VIDEO_DRIVER_GP2X)
+	SOURCES="$SOURCES $srcdir/src/video/ARM_blit1to2.S"
 	SOURCES="$SOURCES $srcdir/src/video/gp2x/*.c"
-	SOURCES="$SOURCES $srcdir/src/video/*.s"
 	have_video=yes
     fi
 }

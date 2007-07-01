@@ -77,7 +77,7 @@ static void Blit1to1(SDL_BlitInfo *info)
 
 
 /* GP2X ARM ASM Blit 1to2 */
-#if defined(ARM)
+#if defined(SDL_VIDEO_DRIVER_GP2X)
 	void Blit1to2ARM(Uint8 *src, int srcskip,
 		Uint8 *dst, int dstskip,
 		int width, int height,
@@ -87,7 +87,7 @@ static void Blit1to1(SDL_BlitInfo *info)
 static void Blit1to2(SDL_BlitInfo *info)
 {
 /* GP2X ARM ASM Blit 1to2 */
-#if defined(ARM)
+#if defined(SDL_VIDEO_DRIVER_GP2X)
 	Blit1to2ARM(info->s_pixels,
 		info->s_skip,
 		info->d_pixels,
@@ -203,7 +203,7 @@ static void Blit1to2(SDL_BlitInfo *info)
 		}
 	}
 #endif /* USE_DUFFS_LOOP */
-#endif /* ARM */
+#endif /* SDL_VIDEO_DRIVER_GP2X */
 }
 static void Blit1to3(SDL_BlitInfo *info)
 {

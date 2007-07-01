@@ -47,6 +47,9 @@ static char rcsid =
 #define GP2X_SCREEN_OFFSET 0
 //0x1101000
 
+// This is used in both gp2xvideo and gp2xyuv, so I put it here to make maintenance easier
+#define GP2X_UPPER_MEM_START 0x2000000
+
 // Number of native modes supported
 #define SDL_NUMMODES 8
 
@@ -174,6 +177,17 @@ static inline void GP2X_WaitBusySurfaces(_THIS)
     bucket->dirty = 0;
   do {} while (this->hidden->fio[MESGSTATUS] & MESG_BUSY);
 }
+
+// Waits until vblank is active (doesn't necessarily wait for vblank to start)
+static inline void GP2X_WaitVBlank(const SDL_PrivateVideoData *data)
+{
+ 	// wait for vblank to start, choose transition type by polarity
+ 	if (data->vsync_polarity)
+ 	  do {} while ((data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+ 	else
+ 	  do {} while (!(data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+}
+
 
 //#define GP2X_DEBUG 1
 #endif // _SDL_gp2xvideo_h

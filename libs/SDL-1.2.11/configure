@@ -28345,8 +28345,8 @@ echo $ECHO_N "checking for GP2X support... $ECHO_C" >&6; }
 #define SDL_VIDEO_DRIVER_GP2X 1
 _ACEOF
 
+	SOURCES="$SOURCES $srcdir/src/video/ARM_blit1to2.S"
 	SOURCES="$SOURCES $srcdir/src/video/gp2x/*.c"
-	SOURCES="$SOURCES $srcdir/src/video/*.s"
 	have_video=yes
     fi
 }
