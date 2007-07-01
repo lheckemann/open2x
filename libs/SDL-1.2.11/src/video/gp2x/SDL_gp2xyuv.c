@@ -247,8 +247,6 @@ void GP2X_UnlockYUVOverlay(_THIS, SDL_Overlay *overlay)
 
 int GP2X_DisplayYUVOverlay(_THIS, SDL_Overlay *overlay, SDL_Rect *dstrect)
 {
-	printf("SDL_GP2X: in GP2X_DisplayYUVOverlay!\n");
-
 	struct private_yuvhwdata *hwdata = overlay->hwdata;
 	unsigned int uAddress = (unsigned int) hwdata->GP2XAddr[hwdata->uBackBuf];
 	SDL_PrivateVideoData *data = this->hidden;
