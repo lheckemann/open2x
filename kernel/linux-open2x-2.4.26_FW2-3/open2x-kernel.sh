@@ -26,6 +26,7 @@ export PREFIX
 PATH=$PATH:$OPEN2X/bin
 WORK_DIR=`pwd`
 
+
 export PATH
 export WORK_DIR
 
@@ -55,5 +56,6 @@ make modules
 make bzImage
 gzip -c $WORK_DIR/arch/arm/boot/zImage > $WORK_DIR/zImage.gz
 $U_BOOT_MKIMAGE/mkimage -A arm -O linux -T kernel -C gzip -a 00008000 -e 00008000 -n "Open2x Linux Kernel" -d $WORK_DIR/zImage.gz $WORK_DIR/gp2xkernel.img
+make modules_install INSTALL_MOD_PATH=$WORK_DIR/modules
 
 echo Done - Please check build logs.
