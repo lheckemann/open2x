@@ -1,12 +1,14 @@
 VERSION = 2
 PATCHLEVEL = 4
 SUBLEVEL = 26
-#EXTRAVERSION =-vrs2
+EXTRAVERSION =-open2x
 
 KERNELRELEASE=$(VERSION).$(PATCHLEVEL).$(SUBLEVEL)$(EXTRAVERSION)
 
-ARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ -e s/arm.*/arm/ -e s/sa110/arm/)
+#ARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ -e s/arm.*/arm/ -e s/sa110/arm/)
+
 ARCH := arm
+
 KERNELPATH=kernel-$(shell echo $(KERNELRELEASE) | sed -e "s/-//g")
 
 CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
@@ -21,7 +23,7 @@ HOSTCC  	= gcc
 HOSTCFLAGS	= -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
 
 ifndef CROSS_COMPILE
-export CROSS_COMPILE    = arm-linux-
+	export CROSS_COMPILE    = arm-open2x-linux-
 endif
 
 #
@@ -217,7 +219,7 @@ DRIVERS := $(DRIVERS-y)
 # files removed with 'make clean'
 CLEAN_FILES = \
 	kernel/ksyms.lst include/linux/compile.h \
-	vmlinux System.map mmsp2 vmlinux.bin.gz \
+	vmlinux System.map gp2xkernel.img vmlinux.bin.gz \
 	.tmp* \
 	drivers/char/consolemap_deftbl.c drivers/video/promcon_tbl.c \
 	drivers/char/conmakehash \
@@ -366,23 +368,12 @@ include/linux/compile.h: $(CONFIGURATION) include/linux/version.h newversion
 	@echo -n \#`cat .version` > .ver1
 	@if [ -n "$(CONFIG_SMP)" ] ; then echo -n " SMP" >> .ver1; fi
 	@if [ -f .name ]; then  echo -n \-`cat .name` >> .ver1; fi
-
-	@LANG=C echo ' '`date -R` >> .ver1
-#	@LANG=C echo ' '`date` >> .ver1
-
+	@LANG=C echo ' '`date` >> .ver1
 	@echo \#define UTS_VERSION \"`cat .ver1 | $(uts_truncate)`\" > .ver
 	@LANG=C echo \#define LINUX_COMPILE_TIME \"`date +%T`\" >> .ver
-
-	@echo \#define LINUX_COMPILE_BY \"dev\" >> .ver
-	@echo \#define LINUX_COMPILE_HOST \"gp2x.com\" >> .ver
-	@echo \#define LINUX_COMPILE_DOMAIN \"gp2x.com\" >> .ver
-
-#	@echo \#define LINUX_COMPILE_BY \"`whoami`\" >> .ver
-#	@echo \#define LINUX_COMPILE_HOST \"`hostname | $(uts_truncate)`\" >> .ver
-#	@([ -x /bin/dnsdomainname ] && /bin/dnsdomainname > .ver1) || \
-#	 ([ -x /bin/domainname ] && /bin/domainname > .ver1) || \
-#	 echo > .ver1
-#	@echo \#define LINUX_COMPILE_DOMAIN \"`cat .ver1 | $(uts_truncate)`\" >> .ver
+	@echo \#define LINUX_COMPILE_BY \"`whoami`\" >> .ver
+	@echo \#define LINUX_COMPILE_HOST \"`hostname | $(uts_truncate)`\" >> .ver
+	@echo \#define LINUX_COMPILE_DOMAIN \"open2x.org\" >> .ver
 
 	@echo \#define LINUX_COMPILER \"`$(CC) $(CFLAGS) -v 2>&1 | tail -n 1`\" >> .ver
 	@mv -f .ver $@
@@ -457,7 +448,8 @@ endif
 .PHONY: _modinst_post
 _modinst_post: _modinst_post_pcmcia
 #	if [ -r System.map ]; then $(DEPMOD) -ae -F System.map $(depmod_opts) $(KERNELRELEASE); fi
-	if [ -r System.map ]; then $(PERL) $(DEPMOD) -b $(MODLIB) -k vmlinux -F System.map ; fi
+	if [ -r System.map ]; then $(PERL) $(DEPMOD) -b $(MODLIB) -F System.map ; fi
+	#-k vmlinux 
 
 # Backwards compatibilty symlinks for people still using old versions
 # of pcmcia-cs with hard coded pathnames on insmod.  Remove

@@ -16,6 +16,9 @@ U_BOOT_MKIMAGE=/storage/file-store/Projects/GP2X/open2x-svn/bootloader/u-boot-op
 
 ## -- END OPEN2X USER SETTINGS
 
+
+## -- KERNEL BUILD SCRIPT
+
 export OPEN2X
 export CROSS_COMPILE
 export U_BOOT_MKIMAGE
@@ -25,7 +28,6 @@ export PREFIX
  
 PATH=$PATH:$OPEN2X/bin
 WORK_DIR=`pwd`
-
 
 export PATH
 export WORK_DIR
@@ -54,8 +56,9 @@ make menuconfig
 make dep
 make modules
 make bzImage
+make modules_install INSTALL_MOD_PATH=$WORK_DIR/modules
+
 gzip -c $WORK_DIR/arch/arm/boot/zImage > $WORK_DIR/zImage.gz
 $U_BOOT_MKIMAGE/mkimage -A arm -O linux -T kernel -C gzip -a 00008000 -e 00008000 -n "Open2x Linux Kernel" -d $WORK_DIR/zImage.gz $WORK_DIR/gp2xkernel.img
-make modules_install INSTALL_MOD_PATH=$WORK_DIR/modules
 
 echo Done - Please check build logs.

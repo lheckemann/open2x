@@ -824,7 +824,7 @@ static void add_task_handler(void *data)
 
 	printk("mount...1 \n");
 #if 1
-	sys_mount("/dev/mmcsd/disc0/part1", "/mnt/sd", "vfat", 0xC0ED0000|MS_NOATIME|MS_SYNCHRONOUS, "iocharset=utf8");
+	sys_mount("/dev/mmcsd/disc0/part1", "/mnt/sd", "auto", 0xC0ED0000|MS_NOATIME|MS_SYNCHRONOUS, "iocharset=utf8");
 #endif
 	printk("mount...2: \n");
 
@@ -876,7 +876,7 @@ static void card_detect_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 	if (!card_in && !empty)
 	{
 		/* card inserted */
-		printk("MMC/SD Card Detected\n");
+		printk("SD Card: Detected\n");
 		card_in = 1;
 		mdelay(100);
 		card_detect_task.data = (void *)dev_id;
@@ -886,7 +886,7 @@ static void card_detect_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 	else if (card_in && empty)
 	{
 		/* card ejected */
-		printk("MMC/SD card ejected\n");
+		printk("SD Card: Ejected\n");
 		card_in = 0;
 
 #ifdef USE_INTERRUPT
@@ -915,7 +915,7 @@ static void card_detect_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 #if 0
  		card_detect_level = 1;
     	set_external_irq(IRQ_SDCD, EINT_HIGH_LEVEL, GPIOPU_NOSET);
-       	printk("MMC/SD Card Detected\n");
+       	printk("SD Card: Detected\n");
         card_in = 1;
         mdelay(100);
         card_detect_task.data = (void *) dev_id;
@@ -927,7 +927,7 @@ static void card_detect_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 		else{
 			card_detect_level = 1;
     		set_external_irq(IRQ_SDCD, EINT_HIGH_LEVEL, GPIOPU_NOSET);
-       		printk("MMC/SD Card Detected\n");
+       		printk("SD Card: Card Detected\n");
         	card_in = 1;
         	mdelay(20);
         	card_detect_task.data = (void *) dev_id;
@@ -942,7 +942,7 @@ static void card_detect_interrupt(int irq, void *dev_id, struct pt_regs *regs)
     {
        	card_detect_level = 0;
     	set_external_irq(IRQ_SDCD, EINT_LOW_LEVEL, GPIOPU_NOSET);
-        printk("MMC/SD card ejected\n");
+        printk("SD Card: Ejected\n");
         card_in = 0;
 
         DPRINTK1("###[%s:%d]->%s:wake_up\n", __FILE__, __LINE__, __FUNCTION__);
@@ -1008,7 +1008,7 @@ static int __init init_mmcsd_slot(void)
 #ifdef USE_INTERRUPT
 	ret = request_irq(IRQ_SD, sdi_interrupt, SA_INTERRUPT, "SD", (void *)&slot);
 	if (ret) {
-		printk("MMC/SD Slot: request_irq(SD) failed\n");
+		printk("SD Slot: request_irq(SD) failed\n");
 		return ret;
 	}
 #endif
@@ -1024,7 +1024,7 @@ static int __init init_mmcsd_slot(void)
 
     if (ret)
     {
-        printk("MMC/SD Slot: request_irq(SD CD) failed\n");
+        printk("SD Slot: request_irq(SD CD) failed\n");
 #ifdef USE_INTERRUPT
 		free_irq(IRQ_SD, (void *)&slot);
 #endif
@@ -1032,7 +1032,7 @@ static int __init init_mmcsd_slot(void)
     }
 
 
-	printk("MMC/SD Slot initialized\n");
+	printk("SD Slot: Initialized\n");
 
 	return ret;
 }
@@ -1057,4 +1057,4 @@ module_init(init_mmcsd_slot);
 module_exit(exit_mmcsd_slot);
 
 MODULE_AUTHOR("DIGNSYS Inc.(www.dignsys.com)");
-MODULE_DESCRIPTION("MMC/SD slot interfaces specific to MMSP2 MMC/SD Controller");
+MODULE_DESCRIPTION("SD slot interfaces specific to MMSP2/GP2X SD Controller");
