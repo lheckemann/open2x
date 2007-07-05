@@ -17,7 +17,21 @@ U_BOOT_MKIMAGE=/storage/file-store/Projects/GP2X/open2x-svn/bootloader/u-boot-op
 ## -- END OPEN2X USER SETTINGS
 
 
-## -- KERNEL BUILD SCRIPT
+## -- MAIN KERNEL BUILD SCRIPT
+
+## -- FUNCTIONS
+
+abort() {
+	echo
+	echo "Please Note - The Linux Kernel build process has failed."
+	echo "Error below:"
+	echo
+	echo $@
+	echo
+	exec false
+}
+
+## -- END FUNCTIONS
 
 export OPEN2X
 export CROSS_COMPILE
@@ -53,12 +67,83 @@ rm -f $WORK_DIR/gp2xkernel.img
 clear
 
 make menuconfig
+if [ $? != 0 ]; then
+	abort "Error: make menuconfig failed."
+fi
+
 make dep
-make modules
+if [ $? != 0 ]; then
+	abort "Error: make dep failed."
+fi
+
 make bzImage
+if [ $? != 0 ]; then
+	abort "Error: make bzImage failed."
+fi
+
+make modules
+if [ $? != 0 ]; then
+	abort "Error: make modules failed."
+fi
+
 make modules_install INSTALL_MOD_PATH=$WORK_DIR/modules
+if [ $? != 0 ]; then
+	abort "Error: make modules_install failed."
+fi
 
 gzip -c $WORK_DIR/arch/arm/boot/zImage > $WORK_DIR/zImage.gz
-$U_BOOT_MKIMAGE/mkimage -A arm -O linux -T kernel -C gzip -a 00008000 -e 00008000 -n "Open2x Linux Kernel" -d $WORK_DIR/zImage.gz $WORK_DIR/gp2xkernel.img
+if [ $? != 0 ]; then
+	abort "Error: Could not create GZipped Kernel image."
+fi
+
+if [ -f $U_BOOT_MKIMAGE/mkimage ]
+	then
+		$U_BOOT_MKIMAGE/mkimage -A arm -O linux -T kernel -C gzip -a 00008000 -e 00008000 -n "Open2x Linux Kernel" -d $WORK_DIR/zImage.gz $WORK_DIR/gp2xkernel.img
+		if [ $? != 0 ]; then
+			abort "Error: U-Boot mkimage failed. You will NOT have a GP2XKERNEL.IMG!"
+		fi
+	else
+		abort "Error: U-Boot mkimage not found (Need to install?). You will NOT have a GP2XKERNEL.IMG!"
+fi
+
+echo Building Kernel Package.
+
+echo Collecting files...
+
+mkdir "gp2xkernel-open2x-`date '+%Y-%m-%d'`" > /dev/null
+mkdir "gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules" > /dev/null
+mkdir "gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules/lib" > /dev/null
+mkdir "gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules/lib/modules" > /dev/null
+mkdir "gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules/lib/modules/2.4.26-open2x" > /dev/null
+
+echo "#!/bin/bash" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "echo Installing Modules..." >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "cp -R -f ./modules/lib/modules/2.4.26-open2x /lib/modules/2.4.26-open2x" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "# Sync the SD card to check that everything is written." >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "sync" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "# Return to the GPH menu screen" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "cd /usr/gp2x" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "exec /usr/gp2x/gp2xmenu" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+
+cp ./gp2xkernel.img ./gp2xkernel-open2x-`date '+%Y-%m-%d'`/ > /dev/null
+cp ./README.Open2x ./gp2xkernel-open2x-`date '+%Y-%m-%d'`/ > /dev/null
+cp -R ./modules/lib/modules/2.4.26-open2x/kernel ./gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules/lib/modules/2.4.26-open2x/kernel  > /dev/null
+cp -R ./modules/lib/modules/2.4.26-open2x/pcmcia ./gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules/lib/modules/2.4.26-open2x/pcmcia  > /dev/null
+cp ./modules/lib/modules/2.4.26-open2x/modules.dep ./gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules/lib/modules/2.4.26-open2x/modules.dep > /dev/null
+
+echo Building ZIP bundle...
+if [ -f /usr/bin/zip ]
+	then
+		rm ./"gp2xkernel-open2x-`date '+%Y-%m-%d'`.zip"
+		cd "gp2xkernel-open2x-`date '+%Y-%m-%d'`"
+		zip -r -9 "../gp2xkernel-open2x-`date '+%Y-%m-%d'`.zip" *
+		echo You should have a "gp2xkernel-open2x-`date '+%Y-%m-%d'`.zip" with the Open2x kernel and your modules.
+		cd ..
+		rm -R ./"gp2xkernel-open2x-`date '+%Y-%m-%d'`"
+	else  
+		echo - /usr/bin/zip not found, ZIP bundle not created.
+		echo All included files can also be found in ./"gp2xkernel-open2x-`date '+%Y-%m-%d'`"
+		echo - Please use you preferred archive tool to bundle these files.
+fi
 
 echo Done - Please check build logs.
