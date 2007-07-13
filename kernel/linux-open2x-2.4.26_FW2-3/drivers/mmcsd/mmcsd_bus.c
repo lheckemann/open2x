@@ -570,14 +570,14 @@ inline static int mmcsd_identify(struct mmcsd_slot *slot)
 	mmcsd_str2cid( &(slot->cid), cmd.res, slot->sd);
 	DPRINTK("*** CID Register ***\n");
 	if(slot->sd) {
-		DPRINTK(" Manufactuer ID : 0x%02x\n OEM ID : 0x%04x\n Product Name : %s\n"
+		printk("SD Card:\n Manufactuer ID : 0x%02x\n OEM ID : 0x%04x\n Product Name : %s\n"
 			" Product Revision : %d\n Product S/N : 0x%08x\n Manufacturing Data : %04d/%02d\n",
 	       		slot->cid.mid, slot->cid.oid, slot->cid.pnm_sd, slot->cid.prv, slot->cid.psn,
 			2000 + ((slot->cid.mdt_sd >> 4) & 0xff), slot->cid.mdt_sd & 0xf);
 	} /* SD */
 
 	else {
-		DPRINTK(" Manufactuer ID : 0x%02x\n OEM ID : 0x%04x\n Product Name : %s\n"
+		printk("MMC Card:\n Manufactuer ID : 0x%02x\n OEM ID : 0x%04x\n Product Name : %s\n"
 			" Product Revision : %d\n Product S/N : 0x%08x\n Manufacturing Data : %04d/%02d\n",
 	       		slot->cid.mid, slot->cid.oid, slot->cid.pnm, slot->cid.prv, slot->cid.psn,
 			1997 + ((slot->cid.mdt_sd >> 4) & 0xff), slot->cid.mdt_sd & 0xf);
@@ -645,7 +645,7 @@ send_csd:
 	if (ret) return ret;
 	slot->sdhc = (slot->csd.csd == 1);
 	if (slot->sdhc)
-		printk("SDHC card detected\n");
+		printk("SD Card: SDHC card detected\n");
 
 if(slot->sd) /* SD */
 	DPRINTK("csd(%d) spec_vers(%d) taac.man(%d) taac.exp(%d) nsac(%d)\n"
