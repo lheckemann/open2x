@@ -1,3 +1,0 @@
-# Default target skeleton stuff, may be overridden
-TARGET_SKELETON=target/generic/target_skeleton
-TARGET_DEVICE_TABLE=target/generic/device_table.txt

@@ -1,6 +1,0 @@
-menu "Board Support Options"
-
-# This must be last
-source "target/generic/Config.in"
-
-endmenu

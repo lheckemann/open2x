@@ -1,6 +1,0 @@
-config BR2_TARGET_SYSLINUX
-	bool "syslinux"
-	default n
-	depends on BR2_i386
-	help
-	  The syslinux bootloader for x86 systems.

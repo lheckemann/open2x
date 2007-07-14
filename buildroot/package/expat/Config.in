@@ -1,8 +1,0 @@
-#
-
-config BR2_PACKAGE_EXPAT
-	bool"expat"
-	default n
-	help
-	  The Expat XML Parser.
-

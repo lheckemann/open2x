@@ -1,7 +1,0 @@
-config BR2_PACKAGE_USBUTILS
-	bool "usbutils"
-	default n
-	help
-	  USB enumeration utilities
-
-	  http://linux-usb.sourceforge.net/

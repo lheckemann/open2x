@@ -1,6 +1,0 @@
-config BR2_PACKAGE_FREETYPE
-	bool "freetype"
-	default n
-	help
-
-	http://www.freetype.org/
