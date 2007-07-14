@@ -1,0 +1,12 @@
+menu "Target Options"
+
+comment "filesystem for target device"
+
+source "target/cramfs/Config.in"
+source "target/ext2/Config.in"
+source "target/tar/Config.in"
+comment "bootloader for target device"
+
+source "target/gp2x/uboot/Config.in"
+
+endmenu

@@ -1,0 +1,5 @@
+config BR2_PACKAGE_GMENU2X
+	bool "GMenu2X"
+	default y
+	help
+	  A complete frontend for the GP2X.

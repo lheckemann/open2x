@@ -1,0 +1,5 @@
+config BR2_PACKAGE_O2XLIBS
+	bool "Open2x Libraries"
+	default y
+	help
+	  The basic set of Open2x libraries from a libpack.

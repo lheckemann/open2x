@@ -1,0 +1,185 @@
+#
+
+mainmenu "Buildroot2 Configuration"
+
+config BR2_HAVE_DOT_CONFIG
+	bool
+	default y
+
+choice
+	prompt "Target Architecture"
+	default BR2_arm
+	help
+	  Select the target architecture family to build for.
+
+config BR2_arm
+	bool "arm"
+endchoice
+
+#
+# Keep the variants separate, there's no need to clutter everything else.
+# sh is fairly "special" in this regard, as virtually everyone else has
+# things kept down to a _sensible_ number of target variants. No such
+# luck for sh..
+#
+choice
+	prompt "Target Architecture Variant"
+	depends BR2_arm || BR2_armeb
+	default BR2_arm920t
+	help
+	  Specific CPU variant to use
+
+config BR2_generic_arm
+	bool "generic_arm"
+config BR2_arm920t
+	bool "arm920t"
+endchoice
+
+config BR2_ARM_TYPE
+	string
+	default ARM920T		if BR2_arm920t
+	default GENERIC_ARM	if BR2_generic_arm
+
+config BR2_ARCH
+	string
+	default "arm"		if BR2_arm
+
+config BR2_ENDIAN
+	string
+	default "LITTLE" if BR2_arm || BR2_cris || BR2_i386 || BR2_mipsel || \
+	                    BR2_sh3 || BR2_sh4 || BR2_x86_64 || BR2_nios2 || \
+			    BR2_sh64
+	default "BIG"    if BR2_alpha || BR2_armeb || BR2_avr32 || BR2_m68k || BR2_mips || \
+	                    BR2_powerpc || BR2_sh2a_nofpueb || BR2_sh2eb || \
+	                    BR2_sh3eb || BR2_sh4eb || BR2_sparc
+
+menu "Build options"
+
+config BR2_WGET
+	string "Wget command"
+	default "wget --passive-ftp -nd"
+
+config BR2_SVN
+	string "Subversion (svn) checkout command"
+	default "svn co"
+
+config BR2_ZCAT
+	string "zcat command"
+	default "gzip -d -c"
+	help
+	  Command to be used to extract a gzip'ed file to stdout.
+	  zcat is identical to gunzip -c except that the former may
+	  not be available on your system.
+	  Default is "gzip -d -c"
+	  Other possible values include "gunzip -c" or "zcat".
+
+config BR2_BZCAT
+	string "bzcat command"
+	default "bzcat"
+	help
+	  Command to be used to extract a bzip2'ed file to stdout.
+	  bzcat is identical to bunzip2 -c except that the former may
+	  not be available on your system.
+	  Default is "bzcat"
+	  Other possible values include "bunzip2 -c" or "bzip2 -d -c".
+
+config BR2_TAR_OPTIONS
+	string "Tar options"
+	default ""
+	help
+	  Options to pass to tar when extracting the sources.
+	  E.g. " -v --exclude='*.svn*'" to exclude all .svn internal files
+	  and to be verbose.
+
+config BR2_DL_DIR
+	string "Download dir"
+	default "$(BASE_DIR)/dl"
+	help
+	  Directory to store all the source files that we need to fetch.
+
+config BR2_SOURCEFORGE_MIRROR
+	string "Sourceforge mirror site"
+	default "easynews"
+	help
+	  Sourceforge has a system of mirror sites.  Some sites may be closer
+	  to your location, and sometimes mirror sites go down and are no longer
+	  available.  This option allows you to select your preferred Sourceforge
+	  mirror site.
+
+	  The list of mirrors is available here:
+	  http://prdownloads.sourceforge.net/index-sf.html?download
+	  
+config BR2_STAGING_DIR
+	string "Toolchain and header file location?"
+	default "$(BUILD_DIR)/staging_dir"
+	help
+	  This is the location where the toolchain will be installed.  The
+	  toolchain will not work if it is moved from this location.
+	  Therefore, if you wish to package up a uClibc toolchain, it is
+	  important that is is set to the final location where the toolchain
+	  will be used.
+
+	  Most people will leave this set to the default value of
+	  "$(BUILD_DIR)/staging_dir".
+
+config BR2_TOPDIR_PREFIX
+	string "Custom build dir prefix"
+	default ""
+	help
+	  Add a custom string to the beginning of the build directories.
+
+	  build_ARCH -> [PREFIX]_build_ARCH
+	  toolchain_build_ARCH -> [PREFIX]_toolchain_build_ARCH
+
+config BR2_TOPDIR_SUFFIX
+	string "Custom build dir suffix"
+	default ""
+	help
+	  Add a custom string to the end of the build directories.
+
+	  build_ARCH -> build_ARCH_[SUFFIX]
+	  toolchain_build_ARCH -> toolchain_build_ARCH_[SUFFIX] 
+
+config BR2_GNU_BUILD_SUFFIX
+	string "GNU build hostname suffix"
+	default "pc-linux-gnu"
+	help
+	  The string used to pass to configure scripts via the
+	  --build= option.  Just specify the suffix here, the leading
+	  arch will be filled in automatically.
+
+	  Here's some copy and paste build host options for you:
+	      linux:   pc-linux-gnu
+	      cygwin:  pc-cygwin
+	      os x:    apple-darwin7 / apple-darwin8
+
+config BR2_GNU_TARGET_SUFFIX
+	string "GNU target suffix"
+	default "linux-uclibcgnueabi" if BR2_ARM_EABI
+	default "linux-uclibc"
+	help
+	  The string used to pass to configure scripts via the
+	  --target= option.  Just specify the suffix here, the leading
+	  arch will be filled in automatically.
+
+	  Most users will want to stick with the default setting, though
+	  other users (most notably ARM EABI) like to add on to this in
+	  order to stay in line with gcc conventions.
+
+	  Default options are:
+	      linux-uclibcgnueabi for ARM EABI
+	      linux-uclibc for the rest
+
+config BR2_JLEVEL
+	int "Number of jobs to run simultaneously"
+	default "1"
+	help
+	  Number of jobs to run simultaneously
+
+endmenu
+
+source "toolchain/Config.in"
+
+source "package/Config.in"
+
+source "target/Config.in"

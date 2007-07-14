@@ -1,0 +1,25 @@
+#! /bin/sh
+#
+# devices	This creates the required devices on start-up.
+#
+
+#. /etc/default/rcS
+
+case "$1" in
+	start|"")
+		/sbin/devfsd /dev
+		/bin/ln -s /dev/fb/0 /dev/fb0
+		/bin/mknod /dev/GPIO c 253 0
+		/bin/ln -s /dev/sound/dsp /dev/dsp
+		/bin/ln -s /dev/sound/mixer /dev/mixer
+		/bin/ln -s /dev/misc/batt /dev/batt
+		/bin/ln -s /dev/misc/cx25874 /dev/cx25874
+		/bin/ln -s /dev/misc/dualcpu /dev/dualcpu
+		/bin/ln -s /dev/misc/rtc /dev/rtc
+		/bin/ln -s /dev/misc/vpp /dev/vpp
+		;;
+	stop)
+		;;
+	*)
+		;;
+esac

@@ -1,0 +1,35 @@
+menu "Package Selection for the target"
+
+
+comment "The default minimal system"
+source "package/busybox/Config.in"
+source "package/fakeroot/Config.in"
+
+comment "Libraries"
+source "package/o2xlibs/Config.in"
+source "package/ncurses/Config.in"
+source "package/openssl/Config.in"
+
+comment "Applications"
+source "package/gmenu2x/Config.in"
+
+comment "System"
+source "package/bash/Config.in"
+source "package/bzip2/Config.in"
+source "package/coreutils/Config.in"
+source "package/gzip/Config.in"
+source "package/less/Config.in"
+source "package/lighttpd/Config.in"
+source "package/mkdosfs/Config.in"
+source "package/module-init-tools/Config.in"
+source "package/modutils/Config.in"
+source "package/nano/Config.in"
+source "package/tftpd/Config.in"
+source "package/tinylogin/Config.in"
+source "package/tinyx/Config.in"
+source "package/utelnetd/Config.in"
+
+comment "Development"
+source "package/samba/Config.in"
+
+endmenu

@@ -1,0 +1,14 @@
+#
+
+choice
+	prompt "Toolchain type"
+	default BR2_TOOLCHAIN_EXTERNAL
+	help
+	  Select which toolchain to use to build the system.
+
+config BR2_TOOLCHAIN_EXTERNAL
+	bool
+	prompt "External toolchain"
+endchoice
+
+source "toolchain/external-toolchain/Config.in"

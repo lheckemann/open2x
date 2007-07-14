@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Load networking applications
+/sbin/utelnetd -p 23 -l /bin/sh -d
+#/sbin/oftpd -m 1 root /

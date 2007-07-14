@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Close all networking applications (like telnet)
+killall -HUP utelnetd
+#killall -9 oftpd
+

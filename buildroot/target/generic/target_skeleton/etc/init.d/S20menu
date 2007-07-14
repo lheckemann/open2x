@@ -1,0 +1,18 @@
+#!/bin/sh	
+
+case "$1" in
+  start)
+	echo "Launching menu..."
+	if [ -x "/mnt/sd/autorun.gpu" ]; then
+		cd /mnt/sd/
+		./autorun.gpu&
+	else
+		cd /usr/menu/
+  		./gmenu2x&
+	fi
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+

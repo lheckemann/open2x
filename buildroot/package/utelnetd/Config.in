@@ -1,0 +1,5 @@
+config BR2_PACKAGE_UTELNETD
+	bool "utelnetd"
+	default n
+	help
+	  A tiny telnet server for embedded devices.
