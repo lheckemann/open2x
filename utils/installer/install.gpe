@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Run the installer image script
+cd /mnt/sd
+./installer&
+
+#umount /mnt/nand # Unmount the NAND so the image can be deleted
+mount /mnt/yaffs # Mount the filesystem that hosts the NAND image
+
+# Extract tarball
+cd /mnt/yaffs
+rm -f *.img
+tar -x -v -f /mnt/sd/open2xfs.tar
+chmod -R 1777 /mnt/yaffs # Set permissions
+
+# Write changes to disk and unmount
+sync
+cd /
+umount /mnt/yaffs
+
+# Do whatever to signify the end of the script
+killall -9 installer
+/mnt/sd/reboot
