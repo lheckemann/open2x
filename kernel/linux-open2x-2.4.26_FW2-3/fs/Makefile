@@ -25,8 +25,8 @@ subdir-y			+= partitions
 # Do not add any filesystems before this line
 subdir-$(CONFIG_EXT3_FS)	+= ext3    # Before ext2 so root fs can be ext3
 subdir-$(CONFIG_JBD)		+= jbd
-subdir-$(CONFIG_CRAMFS)		+= cramfs
 subdir-$(CONFIG_EXT2_FS)	+= ext2
+subdir-$(CONFIG_CRAMFS)		+= cramfs
 subdir-$(CONFIG_RAMFS)		+= ramfs
 subdir-$(CONFIG_CODA_FS)	+= coda
 subdir-$(CONFIG_INTERMEZZO_FS)	+= intermezzo
@@ -67,7 +67,8 @@ subdir-$(CONFIG_SUN_OPENPROMFS)	+= openpromfs
 subdir-$(CONFIG_BEFS_FS)	+= befs
 subdir-$(CONFIG_JFS_FS)		+= jfs
 subdir-$(CONFIG_XFS_FS)		+= xfs
-subdir-$(CONFIG_YAFFS)	+= yaffs
+subdir-$(CONFIG_YAFFS_FS)	+= yaffs
+subdir-$(CONFIG_YAFFS2_FS)	+= yaffs2
 
 obj-$(CONFIG_BINFMT_AOUT)	+= binfmt_aout.o
 obj-$(CONFIG_BINFMT_EM86)	+= binfmt_em86.o

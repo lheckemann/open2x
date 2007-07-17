@@ -1794,16 +1794,12 @@ int block_read_full_page(struct page *page, get_block_t *get_block)
 	nr = 0;
 	i = 0;
 
-	/* printk("iblock:%d   lblock:%d  blocks:%d \n",iblock,lblock,blocks); */		
-
 	do {
 		if (buffer_uptodate(bh))
 			continue;
 		
-		if (!buffer_mapped(bh))
-		{
-			if (iblock < lblock) 
-			{
+		if (!buffer_mapped(bh)) {
+			if (iblock < lblock) {
 				if (get_block(inode, iblock, bh, 0))
 					SetPageError(page);
 			}
@@ -1835,16 +1831,14 @@ int block_read_full_page(struct page *page, get_block_t *get_block)
 	}
 
 	/* Stage two: lock the buffers */
-	for (i = 0; i < nr; i++) 
-	{
+	for (i = 0; i < nr; i++) {
 		struct buffer_head * bh = arr[i];
 		lock_buffer(bh);
 		set_buffer_async_io(bh);
 	}
 
 	/* Stage 3: start the IO */
-	for (i = 0; i < nr; i++) 
-	{
+	for (i = 0; i < nr; i++) {
 		struct buffer_head * bh = arr[i];
 		if (buffer_uptodate(bh))
 			end_buffer_io_async(bh, 1);
@@ -2889,10 +2883,8 @@ void __init buffer_init(unsigned long mempages)
 		hash_table = (struct buffer_head **)
 		    __get_free_pages(GFP_ATOMIC, order);
 	} while (hash_table == NULL && --order > 0);
-#ifdef CONFIG_MACH_GP2X_DEBUG	
 	printk(KERN_INFO "Buffer cache hash table entries: %d (order: %d, %ld bytes)\n",
 	       nr_hash, order, (PAGE_SIZE << order));
-#endif
 
 	if (!hash_table)
 		panic("Failed to allocate buffer hash table\n");

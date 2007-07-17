@@ -1055,11 +1055,11 @@ void __init mnt_init(unsigned long mempages)
 	 */
 	nr_hash = 1UL << hash_bits;
 	hash_mask = nr_hash-1;
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 	printk(KERN_INFO "Mount cache hash table entries: %d"
 		" (order: %ld, %ld bytes)\n",
 		nr_hash, order, (PAGE_SIZE << order));
-#endif
+
 	/* And initialize the newly allocated array */
 	d = mount_hashtable;
 	i = nr_hash;

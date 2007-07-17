@@ -1321,10 +1321,10 @@ void __init inode_init(unsigned long mempages)
 		inode_hashtable = (struct list_head *)
 			__get_free_pages(GFP_ATOMIC, order);
 	} while (inode_hashtable == NULL && --order >= 0);
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 	printk(KERN_INFO "Inode cache hash table entries: %d (order: %ld, %ld bytes)\n",
 			nr_hash, order, (PAGE_SIZE << order));
-#endif
+
 	if (!inode_hashtable)
 		panic("Failed to allocate inode hash table\n");
 

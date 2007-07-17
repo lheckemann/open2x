@@ -1218,10 +1218,8 @@ static void __init dcache_init(unsigned long mempages)
 			__get_free_pages(GFP_ATOMIC, order);
 	} while (dentry_hashtable == NULL && --order >= 0);
 
-#ifdef CONFIG_MACH_GP2X_DEBUG
 	printk(KERN_INFO "Dentry cache hash table entries: %d (order: %ld, %ld bytes)\n",
 			nr_hash, order, (PAGE_SIZE << order));
-#endif
 
 	if (!dentry_hashtable)
 		panic("Failed to allocate dcache hash table\n");
