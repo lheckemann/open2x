@@ -706,7 +706,6 @@ CONFIG_JFFS2_FS_NAND=y
 CONFIG_CRAMFS=m
 CONFIG_TMPFS=y
 CONFIG_RAMFS=y
-CONFIG_YAFFS=y
 # CONFIG_ISO9660_FS is not set
 # CONFIG_JOLIET is not set
 # CONFIG_ZISOFS is not set
@@ -737,6 +736,8 @@ CONFIG_EXT2_FS=y
 # CONFIG_XFS_RT is not set
 # CONFIG_XFS_TRACE is not set
 # CONFIG_XFS_DEBUG is not set
+CONFIG_YAFFS_FS=y
+# CONFIG_YAFFS2_FS is not set
 
 #
 # Network File Systems
