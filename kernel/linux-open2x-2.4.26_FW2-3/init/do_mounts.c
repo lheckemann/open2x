@@ -389,11 +389,9 @@ out:
 	putname(fs_names);
 	sys_chdir("/root");
 	ROOT_DEV = current->fs->pwdmnt->mnt_sb->s_dev;
-#ifdef CONFIG_MACH_GP2X_DEBUG	
 	printk("VFS: Mounted root (%s filesystem)%s.\n",
 		current->fs->pwdmnt->mnt_sb->s_type->name,
 		(current->fs->pwdmnt->mnt_sb->s_flags & MS_RDONLY) ? " readonly" : "");
-#endif
 }
  
 #ifdef CONFIG_ROOT_NFS
@@ -927,13 +925,13 @@ void prepare_namespace(void)
 		}
 	} else if (is_floppy && rd_doload && rd_load_disk(0))
 		ROOT_DEV = MKDEV(RAMDISK_MAJOR, 0);
-	PROGRESS(48, "mounting root filesystem");
+	PROGRESS(48, "Mounting root filesystem");
 	mount_root();
 out:
 	sys_umount("/dev", 0);
 	sys_mount(".", "/", NULL, MS_MOVE, NULL);
 	sys_chroot(".");
-	PROGRESS(49, "mounting devfs filesystem");
+	PROGRESS(49, "Mounting devfs filesystem");
 	mount_devfs_fs ();
 }
 

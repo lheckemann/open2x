@@ -134,9 +134,9 @@ static void __init setup_processor(void)
 #ifdef MULTI_CPU
 	processor = *list->proc;
 #endif
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 	printk("CPU: %s revision %d\n", cpu_name, (int)processor_id & 15);
-#endif
+
 	sprintf(system_utsname.machine, "%s%c", list->arch_name, ENDIANNESS);
 	sprintf(elf_platform, "%s%c", list->elf_name, ENDIANNESS);
 	elf_hwcap = list->elf_hwcap;
@@ -165,10 +165,9 @@ static struct machine_desc * __init setup_machine(unsigned int nr)
 		       "to continue.\n", nr);
 		while (1);
 	}
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 	printk("Machine: %s\n", list->name);
-/*	printk("Machine: %s\n", "GP2X"); */
-#endif
+
 	return list;
 }
 

@@ -741,9 +741,8 @@ void __init free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 		for (i = 0; i < MAX_NR_ZONES; i++)
 			realtotalpages -= zholes_size[i];
 
-#ifdef CONFIG_MACH_GP2X_DEBUG			
 	printk("On node %d totalpages: %lu\n", nid, realtotalpages);
-#endif
+
 	/*
 	 * Some architectures (with lots of mem and discontinous memory
 	 * maps) have to search for a good mem_map area:
@@ -775,9 +774,7 @@ void __init free_area_init_core(int nid, pg_data_t *pgdat, struct page **gmap,
 		if (zholes_size)
 			realsize -= zholes_size[j];
 
-#ifdef CONFIG_MACH_GP2X_DEBUG
 		printk("zone(%lu): %lu pages.\n", j, size);
-#endif	
 		zone->size = size;
 		zone->realsize = realsize;
 		zone->name = zone_names[j];

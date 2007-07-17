@@ -16,3 +16,4 @@
 #define linux_logo_banner "ARM Linux version " UTS_RELEASE
 
 #include <linux/linux_logo.h>
+

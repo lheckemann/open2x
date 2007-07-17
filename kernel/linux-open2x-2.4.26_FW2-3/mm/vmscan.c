@@ -832,9 +832,7 @@ int kswapd(void *unused)
 
 static int __init kswapd_init(void)
 {
-#ifdef CONFIG_MACH_GP2X_DEBUG	
 	printk("Starting kswapd\n");
-#endif	
 	swap_setup();
 	kernel_thread(kswapd, NULL, CLONE_FS | CLONE_FILES | CLONE_SIGNAL);
 	return 0;

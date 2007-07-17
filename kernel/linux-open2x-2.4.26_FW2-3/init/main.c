@@ -176,9 +176,8 @@ void __init calibrate_delay(void)
 	int lps_precision = LPS_PREC;
 
 	loops_per_jiffy = (1<<12);
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 	printk("Calibrating delay loop... ");
-#endif	
 	while (loops_per_jiffy <<= 1) {
 		/* wait for "start of" clock tick */
 		ticks = jiffies;
@@ -205,12 +204,11 @@ void __init calibrate_delay(void)
 		if (jiffies != ticks)	/* longer than 1 tick */
 			loops_per_jiffy &= ~loopbit;
 	}
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 /* Round the value and print it */	
 	printk("%lu.%02lu BogoMIPS\n",
 		loops_per_jiffy/(500000/HZ),
 		(loops_per_jiffy/(5000/HZ)) % 100);
-#endif
 }
 
 static int __init debug_kernel(char *str)
@@ -369,13 +367,9 @@ asmlinkage void __init start_kernel(void)
  * enable them
  */
 	lock_kernel();
-#ifdef CONFIG_MACH_GP2X_DEBUG		
 	printk(linux_banner);
-#endif	
 	setup_arch(&command_line);
-#ifdef CONFIG_MACH_GP2X_DEBUG	
 	printk("Kernel command line: %s\n", saved_command_line);
-#endif	
 	parse_options(command_line);
 	trap_init();
 	init_IRQ();
@@ -440,9 +434,8 @@ asmlinkage void __init start_kernel(void)
 	proc_root_init();
 #endif
 	check_bugs();
-#ifdef CONFIG_MACH_GP2X_DEBUG	
 	printk("POSIX conformance testing by UNIFIX\n");
-#endif
+
 	/* 
 	 *	We count on the initial thread going ok 
 	 *	Like idlers init is an unlocked kernel thread, which will
@@ -491,7 +484,7 @@ static void __init do_basic_setup(void)
 	 */
 	child_reaper = current;
 
-	PROGRESS(1,"booting...");
+	PROGRESS(1,"Booting System...");
 
 #if defined(CONFIG_MTRR)	/* Do this after SMP initialization */
 /*
@@ -548,7 +541,7 @@ static void __init do_basic_setup(void)
 #endif
 
 	/* Networking initialization needs a process context */
-	PROGRESS(3,"initializing network context");
+	PROGRESS(3,"Initialising network context");
 	sock_init();
 
 	start_context_thread();
@@ -610,10 +603,10 @@ static int init(void * unused)
 	 * trying to recover a really broken machine.
 	 */
 
-	PROGRESS(50, "starting init");
+	PROGRESS(50, "Starting init");
 	#ifdef CONFIG_LPP
 	fbcon_register_progress();
-#endif
+	#endif
 
 	if (execute_command)
 		run_init_process(execute_command);

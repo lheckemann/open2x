@@ -17,9 +17,10 @@
 
 #ifdef __KERNEL__
 
-//KWJ Because of USB GARGET
+/* GP2X USB GADGET */
 #define USB_DEVICE_SELF_POWERED 0
 #define USB_ENDPOINT_HALT 0
+
 struct usb_ep;
 
 /**
@@ -459,7 +460,6 @@ struct usb_gadget_ops {
 	int	(*set_selfpowered) (struct usb_gadget *, int value);
 	int	(*ioctl)(struct usb_gadget *,
 	unsigned code, unsigned long param);
-	
 };
 
 /**
@@ -494,8 +494,7 @@ struct usb_gadget {
 	struct usb_ep			*ep0;
 	struct list_head		ep_list;	/* of usb_ep */
 	enum usb_device_speed		speed;
-	//KWJ
-	unsigned is_dualspeed:1;
+	unsigned			is_dualspeed:1;
 	const char			*name;
 
 	struct __gadget_device {

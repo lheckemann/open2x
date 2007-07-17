@@ -28,18 +28,15 @@
 #define _IOC_SIZEBITS	14
 #define _IOC_DIRBITS	2
 
-#define _IOC_NRMASK	((1 << _IOC_NRBITS)-1)				// xxxxxxxx xxxxxxxx xxxxxxxx 00000000 : nr
-#define _IOC_TYPEMASK	((1 << _IOC_TYPEBITS)-1)		// xxxxxxxx xxxxxxxx 00000000 xxxxxxxx : type
-#define _IOC_SIZEMASK	((1 << _IOC_SIZEBITS)-1)		// xx000000 00000000 xxxxxxxx xxxxxxxx : size
-#define _IOC_DIRMASK	((1 << _IOC_DIRBITS)-1)			// 00xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx : diretion
+#define _IOC_NRMASK	((1 << _IOC_NRBITS)-1)
+#define _IOC_TYPEMASK	((1 << _IOC_TYPEBITS)-1)
+#define _IOC_SIZEMASK	((1 << _IOC_SIZEBITS)-1)
+#define _IOC_DIRMASK	((1 << _IOC_DIRBITS)-1)
 
 #define _IOC_NRSHIFT	0
 #define _IOC_TYPESHIFT	(_IOC_NRSHIFT+_IOC_NRBITS)			
 #define _IOC_SIZESHIFT	(_IOC_TYPESHIFT+_IOC_TYPEBITS)	
 #define _IOC_DIRSHIFT	(_IOC_SIZESHIFT+_IOC_SIZEBITS)		
-
-
-
 
 /*
  * Direction bits.

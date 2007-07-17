@@ -37,11 +37,9 @@ static void __init build_tag_list(struct param_struct *params, void *taglist)
 {
 	struct tag *tag = taglist;
 
-	if (params->u1.s.page_size != PAGE_SIZE) {
-#ifdef CONFIG_MACH_GP2X_DEBUG		
+	if (params->u1.s.page_size != PAGE_SIZE) {	
 		printk(KERN_WARNING "Warning: bad configuration page, "
-		       "trying to continue\n");
-#endif		
+		       "trying to continue\n");	
 		return;
 	}
 

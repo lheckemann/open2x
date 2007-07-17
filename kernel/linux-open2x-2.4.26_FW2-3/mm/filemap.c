@@ -1442,12 +1442,9 @@ void do_generic_file_read(struct file * filp, loff_t *ppos, read_descriptor_t * 
  * Then, at least MIN_READAHEAD if read ahead is ok,
  * and at most MAX_READAHEAD in all cases.
  */
-	if (!index && offset + desc->count <= (PAGE_CACHE_SIZE >> 1))
-	{
+	if (!index && offset + desc->count <= (PAGE_CACHE_SIZE >> 1)) {
 		filp->f_ramax = 0;
-	} 
-	else 
-	{
+	} else {
 		unsigned long needed;
 
 		needed = ((offset + desc->count) >> PAGE_CACHE_SHIFT) + 1;
@@ -1461,19 +1458,16 @@ void do_generic_file_read(struct file * filp, loff_t *ppos, read_descriptor_t * 
 			filp->f_ramax = max_readahead;
 	}
 
-	for (;;) 
-	{
+	for (;;) {
 		struct page *page, **hash;
 		unsigned long end_index, nr, ret;
 
-		end_index = inode->i_size >> PAGE_CACHE_SHIFT;  /* 12 bit 4k */
-			
-		if (index > end_index) break;
+		end_index = inode->i_size >> PAGE_CACHE_SHIFT;
 
+		if (index > end_index)
+			break;
 		nr = PAGE_CACHE_SIZE;
-		
-		if (index == end_index) 
-		{
+		if (index == end_index) {
 			nr = inode->i_size & ~PAGE_CACHE_MASK;
 			if (nr <= offset)
 				break;
@@ -1494,8 +1488,8 @@ found_page:
 		page_cache_get(page);
 		spin_unlock(&pagecache_lock);
 
-		if (!Page_Uptodate(page)) goto page_not_up_to_date;
-		
+		if (!Page_Uptodate(page))
+			goto page_not_up_to_date;
 		generic_file_readahead(reada_ok, filp, inode, page);
 page_ok:
 		/* If users can be writing to this page using arbitrary
@@ -1743,8 +1737,7 @@ int file_read_actor(read_descriptor_t * desc, struct page *page, unsigned long o
 	left = __copy_to_user(desc->buf, kaddr + offset, size);
 	kunmap(page);
 
-	if (left) 
-	{
+	if (left) {
 		size -= left;
 		desc->error = -EFAULT;
 	}
@@ -1780,12 +1773,10 @@ ssize_t generic_file_read(struct file * filp, char * buf, size_t count, loff_t *
 		goto o_direct;
 
 	retval = -EFAULT;
-	if (access_ok(VERIFY_WRITE, buf, count)) 
-	{
+	if (access_ok(VERIFY_WRITE, buf, count)) {
 		retval = 0;
 
-		if (count) 
-		{
+		if (count) {
 			read_descriptor_t desc;
 
 			desc.written = 0;
@@ -3414,10 +3405,9 @@ void __init page_cache_init(unsigned long mempages)
 		page_hash_table = (struct page **)
 			__get_free_pages(GFP_ATOMIC, order);
 	} while(page_hash_table == NULL && --order > 0);
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 	printk("Page-cache hash table entries: %d (order: %ld, %ld bytes)\n",
 	       (1 << page_hash_bits), order, (PAGE_SIZE << order));
-#endif	
 	if (!page_hash_table)
 		panic("Failed to allocate page hash table\n");
 	memset((void *)page_hash_table, 0, PAGE_HASH_SIZE * sizeof(struct page *));

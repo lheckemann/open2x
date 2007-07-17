@@ -1668,10 +1668,10 @@ extern void bluez_init(void);
 void __init sock_init(void)
 {
 	int i;
-#ifdef CONFIG_MACH_GP2X_DEBUG
+
 	printk(KERN_INFO "Linux NET4.0 for Linux 2.4\n");
 	printk(KERN_INFO "Based upon Swansea University Computer Society NET3.039\n");
-#endif
+
 	/*
 	 *	Initialize all address (protocol) families. 
 	 */

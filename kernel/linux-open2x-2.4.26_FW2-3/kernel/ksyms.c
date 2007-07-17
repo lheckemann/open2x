@@ -68,8 +68,8 @@ extern int request_dma(unsigned int dmanr, char * deviceID);
 extern void free_dma(unsigned int dmanr);
 extern spinlock_t dma_spin_lock;
 extern int panic_timeout;
-extern asmlinkage long sys_umount(char * name, int flags);
-extern asmlinkage long sys_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data);
+extern asmlinkage long sys_umount(char * name, int flags); /* GP2X SD Driver */
+extern asmlinkage long sys_mount(char * dev_name, char * dir_name, char * type, unsigned long flags, void * data); /* GP2X SD Driver */
 
 #ifdef CONFIG_MODVERSIONS
 const struct module_symbol __export_Using_Versions
@@ -361,8 +361,8 @@ EXPORT_SYMBOL(unregister_filesystem);
 EXPORT_SYMBOL(kern_mount);
 EXPORT_SYMBOL(__mntput);
 EXPORT_SYMBOL(may_umount);
-EXPORT_SYMBOL(sys_mount);
-EXPORT_SYMBOL(sys_umount);
+EXPORT_SYMBOL(sys_mount); /* GP2X SD Driver */
+EXPORT_SYMBOL(sys_umount); /* GP2X SD Driver */
 
 
 /* executable format registration */

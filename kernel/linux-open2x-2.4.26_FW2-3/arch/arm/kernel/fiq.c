@@ -122,23 +122,23 @@ void set_fiq_regs(struct pt_regs *regs)
 	register unsigned long tmp, tmp2;
 	__asm__ volatile (
 #ifdef CONFIG_CPU_26
-	"mov	%0, pc
-	bic	%1, %0, #0x3
-	orr	%1, %1, %3
-	teqp	%1, #0		@ select FIQ mode
-	mov	r0, r0
-	ldmia	%2, {r8 - r14}
-	teqp	%0, #0		@ return to SVC mode
-	mov	r0, r0"
+	"mov	%0, pc                                  \n"
+	"bic	%1, %0, #0x3                            \n"
+	"orr	%1, %1, %3                              \n"
+	"teqp	%1, #0		@ select FIQ mode       \n"
+	"mov	r0, r0                                  \n"
+	"ldmia	%2, {r8 - r14}                          \n"
+	"teqp	%0, #0		@ return to SVC mode    \n"
+	"mov	r0, r0                                  \n"
 #endif
 #ifdef CONFIG_CPU_32
-	"mrs	%0, cpsr
-	mov	%1, %3
-	msr	cpsr_c, %1	@ select FIQ mode
-	mov	r0, r0
-	ldmia	%2, {r8 - r14}
-	msr	cpsr_c, %0	@ return to SVC mode
-	mov	r0, r0"
+	"mrs	%0, cpsr                                \n"
+	"mov	%1, %3                                  \n"
+	"msr	cpsr_c, %1	@ select FIQ mode       \n"
+	"mov	r0, r0                                  \n"
+	"ldmia	%2, {r8 - r14}                          \n"
+	"msr	cpsr_c, %0	@ return to SVC mode    \n"
+	"mov	r0, r0                                  \n"
 #endif
 	: "=&r" (tmp), "=&r" (tmp2)
 	: "r" (&regs->ARM_r8), "I" (I_BIT | F_BIT | FIQ_MODE)
@@ -154,23 +154,23 @@ void get_fiq_regs(struct pt_regs *regs)
 	register unsigned long tmp, tmp2;
 	__asm__ volatile (
 #ifdef CONFIG_CPU_26
-	"mov	%0, pc
-	bic	%1, %0, #0x3
-	orr	%1, %1, %3
-	teqp	%1, #0		@ select FIQ mode
-	mov	r0, r0
-	stmia	%2, {r8 - r14}
-	teqp	%0, #0		@ return to SVC mode
-	mov	r0, r0"
+	"mov	%0, pc                               \n"
+	"bic	%1, %0, #0x3                         \n"
+	"orr	%1, %1, %3                           \n"
+	"teqp	%1, #0		@ select FIQ mode    \n"
+	"mov	r0, r0                               \n"
+	"stmia	%2, {r8 - r14}                       \n"
+	"teqp	%0, #0		@ return to SVC mode \n"
+	"mov	r0, r0                               \n"
 #endif
 #ifdef CONFIG_CPU_32
-	"mrs	%0, cpsr
-	mov	%1, %3
-	msr	cpsr_c, %1	@ select FIQ mode
-	mov	r0, r0
-	stmia	%2, {r8 - r14}
-	msr	cpsr_c, %0	@ return to SVC mode
-	mov	r0, r0"
+	"mrs	%0, cpsr                             \n"
+	"mov	%1, %3                               \n"
+	"msr	cpsr_c, %1	@ select FIQ mode    \n"
+	"mov	r0, r0                               \n"
+	"stmia	%2, {r8 - r14}                       \n"
+	"msr	cpsr_c, %0	@ return to SVC mode \n"
+	"mov	r0, r0                               \n"
 #endif
 	: "=&r" (tmp), "=&r" (tmp2)
 	: "r" (&regs->ARM_r8), "I" (I_BIT | F_BIT | FIQ_MODE)
