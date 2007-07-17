@@ -1,7 +1,7 @@
 /*-----------------------------------------------------------------------------
 	ac97 test program header
 	file name : AC97.h
-	by Nam Tae Woo 
+	by Nam Tae Woo
 -------------------------------------------------------------------------------
 	2003/10/16		modify for common environmemt
 	2004/02/11		modify filename : test_ac97.h  ->  AC97test.h
@@ -25,13 +25,13 @@
 #define PA_SOUND_DMA_BASE1  	(PA_FB1_BASE1+FB1_MEM_SIZE1) 	// 0x0300_0000+1M+2.5M+2.5M 0.5M(0x0008_0000)
 
 /* GP2X SOUND LOGO NANDFLASH  WAV BASE */
-#define WAV_BASE				0x1A0000				
+#define WAV_BASE				0x1A0000
 
 
 //#define	IO_BASE				0xC0000000	// I/O base address
 #define LOCKTIMEREG			(*((volatile U16*)(0x0C1A + IO_BASE)))
-#define GPIOL_ALTFNSELL		(*((volatile U16*)(0x1036 + IO_BASE)))    		       
-#define GPIOL_ALTFNSELH		(*((volatile U16*)(0x1056 + IO_BASE)))   	     
+#define GPIOL_ALTFNSELL		(*((volatile U16*)(0x1036 + IO_BASE)))
+#define GPIOL_ALTFNSELH		(*((volatile U16*)(0x1056 + IO_BASE)))
 #define SYSCLKENREG         (*((volatile U16*)(0x0904 + IO_BASE)))
 #define FPLLSETVREG         (*((volatile U16*)(0x0910 + IO_BASE)))
 #define ASCLKENREG          (*((volatile U16*)(0x090C + IO_BASE)))
@@ -53,8 +53,5 @@
 //#define	INTPENDREG			(*((volatile U32*)(0x0810+IO_BASE)))	// interrupt pending reg. (32-bit)
 
 void PlayerSoundLogo(int flag);
-
-
-
 
 #endif

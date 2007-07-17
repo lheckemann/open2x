@@ -7,8 +7,8 @@
 // File       : proto_dma.h
 // Description: low level interface of MMSP2 DMA Controller
 // Author     : Goofy
-// Export     : 
-// History    : 
+// Export     :
+// History    :
 //		2003/11/17 Brian	DMA_PERIPHERAL_INDEX_EXTxx Ãß°¡
 //		2003/10/27 Goofy	Redefine types
 //		2003/10/20 Brian	Insert "#define DMA_CHANNEL_COUNT	16" for convenience
@@ -51,11 +51,11 @@
 
 #define DMA_CHANNEL_COUNT		16
 
-typedef enum 
+typedef enum
 {
 	DMA_PERIPHERAL_INDEX_UART0_RX	= 0,
 	DMA_PERIPHERAL_INDEX_UART0_TX,
-	DMA_PERIPHERAL_INDEX_UART1_RX,	
+	DMA_PERIPHERAL_INDEX_UART1_RX,
 	DMA_PERIPHERAL_INDEX_UART1_TX,
 	DMA_PERIPHERAL_INDEX_UART2_RX,
 	DMA_PERIPHERAL_INDEX_UART2_TX,
@@ -141,7 +141,5 @@ void	DMA_SetInterruptEnb( U32 iChannel, U32 dwType );
 CBOOL	DMA_GetInterruptPend( U32 iChannel );
 void	DMA_ClrInterruptPend( U32 iChannel );
 U16		DMA_GetInterruptPendAll( void );
-
-
 
 #endif // __PROTO_DMA_H__

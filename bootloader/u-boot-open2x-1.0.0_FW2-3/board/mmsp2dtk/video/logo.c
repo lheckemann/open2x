@@ -18,7 +18,10 @@ Comments: ORIGNAL SOUCE => MAGIC EYES DISPLAY DRIVE
 #include "../video/proto_mlc.h"
 #include "../video/proto_pwrman.h"
 #include "../video/mmsp2-regs.h"
-#include "../video/logo_open2x.h"
+
+#ifdef CONFIG_GP2X_SPLASH
+	#include "logo_open2x.h"
+#endif
 
 //[*]----------------------------------------------------------------------------------------------------[*]
 #define LCD_WIDTH 	320
@@ -53,12 +56,12 @@ void DPC_SetFrameSize(U16 Width, U16 Height)
 //[*]----------------------------------------------------------------------------------------------------[*]
 void DPC_SetHSyncParm(U16 HorSyncWidth, U16 HorFrontPorch, U16 HorBackPorch, CBOOL HorPolarity)
 {
-	// Horizontal Sync WIdth
+	/* Horizontal Sync Width */
 	DPC->DPC_HS_WIDTH 	&= ~HSWID;
 	DPC->DPC_HS_WIDTH 	|= FInsrt(HorSyncWidth - 1,BF_HSWID);	// T2
 	DPC->DPC_HS_END 	= (HorFrontPorch/2) - 1;	// T7
 	DPC->DPC_HS_STR 	= (HorFrontPorch/2) + (HorFrontPorch%1) - 1; //T8
-	// Horizontal Back Porch
+	/* Horizontal Back Porch */
 	DPC->DPC_DE &= ~DESTR;
 	DPC->DPC_DE |= FInsrt((HorBackPorch - 1),BF_DESTR);
 	if(HorPolarity)	DPC->DPC_FPIPOL1 |= HSPOL;
@@ -283,7 +286,24 @@ void DPC_InitHardware
 //int do_bmpload_sub(unsigned char *, int, int, int);
 //void DPC_InitHardware(DPC_OPER_MODE Mode, U16 IsInterlace, U16 IsPALMode, U16 IntEn, U16 IntHSyncEdgePos, U16 IntVSyncEdgePos, U16 ClockSource);
 //[*]----------------------------------------------------------------------------------------------------[*]
-#if 0
+const unsigned int _pins_of_gpio[] = {
+	[GRP_NUM(GPIO_A0)] = 16,
+	[GRP_NUM(GPIO_B0)] = 16,
+	[GRP_NUM(GPIO_C0)] = 16,
+	[GRP_NUM(GPIO_D0)] = 14,
+	[GRP_NUM(GPIO_E0)] = 16,
+	[GRP_NUM(GPIO_F0)] = 10,
+	[GRP_NUM(GPIO_G0)] = 16,
+	[GRP_NUM(GPIO_H0)] = 7,
+	[GRP_NUM(GPIO_I0)] = 16,
+	[GRP_NUM(GPIO_J0)] = 16,
+	[GRP_NUM(GPIO_K0)] = 8,
+	[GRP_NUM(GPIO_L0)] = 15,
+	[GRP_NUM(GPIO_M0)] = 9,
+	[GRP_NUM(GPIO_N0)] = 8,
+	[GRP_NUM(GPIO_O0)] = 6,
+};
+
 void GPIO_Initialize(void)
 {
 	pGPIO_REG = MMSP20_GetBase_GPIO();
@@ -354,7 +374,6 @@ void set_gpio_ctrl(unsigned int num, unsigned int func, unsigned int pu)
 
 	writew(temp, addr_l);
 }
-#endif
 //[*]----------------------------------------------------------------------------------------------------[*]
 void DPC_Initialize( void )
 {
@@ -635,25 +654,22 @@ void init_lcd(void)
 	DPC->DPC_FPIATV3 = 0xffff;
 	DPC->DPC_CNTL |= ENB;
 
+	sdk2x_LcdSetPrintBase(PA_FB0_BASE);
 	return;
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
+/* Display startup logo */
 void show_logo(void)
 {
 	int x = 0;
 	int y = 0;
 	int i=0;
-
-#if 0	//24bit table
 	unsigned char r,g,b;
 	unsigned char *fbaddr = (unsigned char*)PA_FB0_BASE;
-#else	//16bit table
-	unsigned short *fbaddr = (unsigned short*)PA_FB0_BASE;
-#endif
+
 
 	init_lcd();
-
-#if 0	//24bit table
+#ifdef CONFIG_GP2X_SPLASH
 	for(y=0; y<240; y++)
 	{
 		for(x=0; x<320; x++)
@@ -668,19 +684,26 @@ void show_logo(void)
 			fbaddr += 2;
 		}
 	}
-#else  //16bit table
+#else
+	/* Just blank the screen */
 	for(y=0; y<240; y++)
 	{
 		for(x=0; x<320; x++)
 		{
-			fbaddr[i] = gp2xlogo[i];
-			i++;
+			*fbaddr++ = 0x00;
+			*fbaddr++ = 0x00;
 		}
 	}
-#endif
 
+	sdk2x_LcdTextOut (100, 20, "Booting...", 0xFFFF);
+
+	sdk2x_LcdTextOut (100, 20, "Press START for boot menu.", 0xFFFF);
+
+#endif
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
+/* Removed as we dont show a screen anymore, we give the user status info */
+/*
 void show_Firmware(void)
 {
 	int x = 0;
@@ -691,54 +714,33 @@ void show_Firmware(void)
 	int img_x = (320-233)/2;
 	int img_y = (240-98)/2;
 
-	unsigned short *fbaddr = (unsigned short*)PA_FB0_BASE;
-
-#if 1
-		/*16bit GP2X DATA FORMAT */
-	unsigned short *fbmem = (unsigned short*)PA_FB1_BASE;
-	nand_read_jffs2_func(fbmem, 0x50000, 0x10000); //64kbyte realsize:45kbyte
-	init_lcd();
-
-	for(y=0; y<240; y++)
-	{
-		for(x=0; x<320; x++)
-		{
-			if((img_x<x && x<=img_x+233) && (img_y<y && y<=img_y+98))
-				*fbaddr++=*fbmem++;
-			else
-				*fbaddr++=0;
-		}
-	}
-
-#else
-		/* 24bit BMP FORMAT */
-	unsigned char *fbmem = (unsigned char*)PA_FB1_BASE;
 	unsigned char r,g,b;
-	nand_read_jffs2_func(fbmem, 0x50000, 0x14000); //80kbyte real_size:68kbyte
+	unsigned char *fbaddr = (unsigned char*)PA_FB0_BASE;
+
+
 	init_lcd();
 
-	fbmem+=54;  /*skip header */
 	for(y=0; y<240; y++)
 	{
 		for(x=0; x<320; x++)
 		{
+			//imgFirmware
 			if((img_x<x && x<=img_x+233) && (img_y<y && y<=img_y+98))
 			{
-				b = *fbmem++;
-				g = *fbmem++;
-				r = *fbmem++;
+				r = imgFirmware[i++];
+				g = imgFirmware[i++];
+				b = imgFirmware[i++];
 
-				r = r>>3;
-				g = g>>2;
-				b = b>>3;
-
-				*fbaddr++ = (b<<11) | (g<<5) | r;
+				fbaddr[0] = ((g & 0x1c) << 3) | ((b & 0xf8) >> 3);
+				fbaddr[1] = (r & 0xf8) | (g & 0xe0) >> 5;
+				fbaddr += 2;
 			}
-			else *fbaddr++=0;
+			else
+			{
+				fbaddr[0] = fbaddr[1] = 0x00;
+				fbaddr += 2;
+			}
 		}
 	}
-
-#endif
-
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+*/

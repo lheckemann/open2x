@@ -3,15 +3,15 @@
 //	MagicEyes Digital Co. Proprietary & Confidential
 //
 //	MMSP 2.0 BASE
-//	
+//
 //	- Macro definition
 //
-//	Charlie Myung, 
+//	Charlie Myung,
 //
 //	history
 //		2003.10.02 : Add Bit Operation Macros by Goofy
 //
-//	
+//
 
 #ifndef	_MMSP2MACRO_H
 #define	_MMSP2MACRO_H

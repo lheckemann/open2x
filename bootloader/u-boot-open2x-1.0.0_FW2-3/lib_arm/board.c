@@ -1,4 +1,3 @@
-//[*]----------------------------------------------------------------------------------------------------[*]
 /*
  * (C) Copyright 2002
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
@@ -25,47 +24,46 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  */
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 #include <common.h>
 #include <command.h>
 #include <malloc.h>
 #include <devices.h>
 #include <version.h>
 #include <net.h>
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 #if (CONFIG_COMMANDS & CFG_CMD_NAND)
 void nand_init (void);
 #endif
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 ulong monitor_flash_len;
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 #ifdef CONFIG_HAS_DATAFLASH
 extern int  AT91F_DataflashInit(void);
 extern void dataflash_print_info(void);
 #endif
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 #ifndef CONFIG_IDENT_STRING
 #define CONFIG_IDENT_STRING ""
 #endif
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 const char version_string[] =
 	U_BOOT_VERSION" (" __DATE__ " - " __TIME__ ")"CONFIG_IDENT_STRING;
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 #ifdef CONFIG_DRIVER_CS8900
 extern void cs8900_get_enetaddr (uchar * addr);
 #endif
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 #ifdef CONFIG_DRIVER_LAN91C96
 #include "../drivers/lan91c96.h"
 #endif
-//[*]----------------------------------------------------------------------------------------------------[*]
 /*
  * Begin and End of memory area for malloc(), and current "brk"
  */
 static ulong mem_malloc_start = 0;
 static ulong mem_malloc_end = 0;
 static ulong mem_malloc_brk = 0;
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 static
 void mem_malloc_init (ulong dest_addr)
 {
@@ -76,7 +74,7 @@ void mem_malloc_init (ulong dest_addr)
 	memset ((void *) mem_malloc_start, 0,
 			mem_malloc_end - mem_malloc_start);
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 void *sbrk (ptrdiff_t increment)
 {
 	ulong old = mem_malloc_brk;
@@ -89,7 +87,7 @@ void *sbrk (ptrdiff_t increment)
 
 	return ((void *) old);
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 /************************************************************************
  * Init Utilities							*
  ************************************************************************
@@ -97,7 +95,7 @@ void *sbrk (ptrdiff_t increment)
  * or dropped completely,
  * but let's get it working (again) first...
  */
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 static int init_baudrate (void)
 {
 	DECLARE_GLOBAL_DATA_PTR;
@@ -110,7 +108,7 @@ static int init_baudrate (void)
 
 	return (0);
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 static int display_banner (void)
 {
 #ifdef CONFIG_SILENT_CONSOLE
@@ -132,12 +130,12 @@ static int display_banner (void)
 #endif
 
 #ifdef CONFIG_MMSP20
-//	show_MMSP2_CLK();
+	show_MMSP2_CLK();
 #endif
 
 	return (0);
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 /*
  * WARNING: this code looks "cleaner" than the PowerPC version, but
  * has the disadvantage that you either get nothing, or everything.
@@ -145,7 +143,6 @@ static int display_banner (void)
  * gives a simple yet clear indication which part of the
  * initialization if failing.
  */
-//[*]----------------------------------------------------------------------------------------------------[*]
 static int display_dram_config (void)
 {
 	DECLARE_GLOBAL_DATA_PTR;
@@ -165,7 +162,7 @@ static int display_dram_config (void)
 
 	return (0);
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 static void display_flash_config (ulong size)
 {
 #ifdef CONFIG_SILENT_CONSOLE
@@ -177,7 +174,8 @@ static void display_flash_config (ulong size)
 	puts ("Flash: ");
 	print_size (size, "\n");
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
+
 /*
  * Breath some life into the board...
  *
@@ -201,9 +199,8 @@ static void display_flash_config (ulong size)
  * argument, and returns an integer return code, where 0 means
  * "continue" and != 0 means "fatal error, hang the system".
  */
-//[*]----------------------------------------------------------------------------------------------------[*]
 typedef int (init_fnc_t) (void);
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 init_fnc_t *init_sequence[] = {
 	cpu_init,		/* basic cpu dependent setup */
 	board_init,		/* basic board dependent setup */
@@ -222,7 +219,7 @@ init_fnc_t *init_sequence[] = {
 #endif
 	NULL,
 };
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 void start_armboot (void)
 {
 	DECLARE_GLOBAL_DATA_PTR;
@@ -238,17 +235,13 @@ void start_armboot (void)
 
 	/* Pointer is writable since we allocated a register for it */
 	gd = &gd_data;
-
 	memset ((void *)gd, 0, sizeof (gd_t));
-
 	gd->bd = &bd_data;
-
 	memset (gd->bd, 0, sizeof (bd_t));
 
 	monitor_flash_len = _armboot_end_data - _armboot_start;
 
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr) {
-//		printf("init[%x]\n",init_fnc_ptr);
 		if ((*init_fnc_ptr)() != 0) {
 			hang ();
 		}
@@ -337,12 +330,6 @@ void start_armboot (void)
 	cs8900_get_enetaddr (gd->bd->bi_enetaddr);
 #endif
 
-#ifdef CONFIG_DRIVER_SMC91111
-	if (getenv ("ethaddr")) {
-		smc_set_mac_addr(gd->bd->bi_enetaddr);
-	}
-#endif
-
 #ifdef CONFIG_DRIVER_LAN91C96
 	if (getenv ("ethaddr")) {
 		smc_set_mac_addr(gd->bd->bi_enetaddr);
@@ -363,12 +350,12 @@ void start_armboot (void)
 #ifdef BOARD_POST_INIT
 	board_post_init ();
 #endif
-	
+
+	/* GP2X Boot bling */
 	display_logo();
-	sound_logo();
-	
-	board_late_init();
-	
+	//sound_logo();
+	//board_late_init();
+
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;;) {
 		main_loop ();
@@ -376,13 +363,13 @@ void start_armboot (void)
 
 	/* NOTREACHED - no way out of command loop except booting */
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 void hang (void)
 {
 	puts ("### ERROR ### Please RESET the board ###\n");
 	for (;;);
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 #ifdef CONFIG_MODEM_SUPPORT
 /* called from main loop (common/main.c) */
 extern void  dbg(const char *fmt, ...);
@@ -446,7 +433,7 @@ int mdm_init (void)
 
 	return 0;
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
+
 /* 'inline' - We have to do it fast */
 static inline void mdm_readline(char *buf, int bufsiz)
 {
@@ -479,6 +466,4 @@ static inline void mdm_readline(char *buf, int bufsiz)
 		}
 	}
 }
-//[*]----------------------------------------------------------------------------------------------------[*]
 #endif	/* CONFIG_MODEM_SUPPORT */
-//[*]----------------------------------------------------------------------------------------------------[*]

@@ -3,10 +3,10 @@
 //	MagicEyes Digital Co. Proprietary & Confidential
 //
 //	MMSP 2.0 BASE
-//	
+//
 //	- Type definition
 //
-//	Charlie Myung, 
+//	Charlie Myung,
 //
 //	history
 //			2003/10/24 Jonathan typedef int S32 -> typedef long S32
@@ -48,9 +48,9 @@
 	typedef unsigned char	U8;
 	typedef unsigned short	U16;
 	typedef unsigned long	U32;
-	
+
 	typedef int				CBOOL;
-	
+
 	typedef enum
 	{
 		CFALSE = 0,
@@ -78,7 +78,5 @@ typedef struct _deviceinfo_ {
 	U32	IORegionSize;
 	U32	Cap;
 } MES_DEVINFO;
-
-
 
 #endif	// _TYPEDEFS_H

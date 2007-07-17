@@ -3,13 +3,13 @@
 //	MagicEyes Digital Co. Proprietary & Confidential
 //
 //	MMSP 2.0 BASE
-//	
+//
 //	- Constant for system setting
 //
-//	Charlie Myung, 
+//	Charlie Myung,
 //
 //	history
-//		2004/01/09 Tony  DMA_CH08 이 08(8진수) 로 정의되어 있는문제 수정 
+//		2004/01/09 Tony  DMA_CH08 이 08(8진수) 로 정의되어 있는문제 수정
 //
 
 #ifndef	_MMSP2CONST_H
@@ -21,7 +21,7 @@
 // System Constants
 //------------------------------------------------------------------------
 #define	NUM_OF_IRQ			32
-#define	NUM_OF_DMA			16			
+#define	NUM_OF_DMA			16
 //
 #define	CPU_ARM920			0x0920
 #define	CPU_ARM940			0x0940
@@ -89,7 +89,7 @@
 #define	DMAIO_AC97OUT		0x0007		// AC97 audio left/right out
 #define	DMAIO_AC97SOUT		0x0008		// AC97 audio s-left/s-right out
 #define	DMAIO_AC97IN		0x0009		// AC97 audio left/right in
-// DMA command register 0       	
+// DMA command register 0
 #define	BRSTOPRSIZE_8W		0x8000		// 8 words
 #define	BRSTOPRSIZE_4W		0x4000		// 4 words
 #define	BRSTOPRSIZE_1W		0x0000		// 1 word
@@ -126,6 +126,5 @@
 #define	REQPEND				0x0004		// pending request
 #define	ENDINTR				0x0002
 #define	STOPINTR			0x0001
-
 
 #endif

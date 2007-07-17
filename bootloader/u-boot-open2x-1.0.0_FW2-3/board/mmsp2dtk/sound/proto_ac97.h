@@ -12,13 +12,13 @@
 #define	AC_POWERDOWN			(*((volatile U16*)(0x0F26 +IO_BASE)))
 
 // irq enable value
-#define AC97_INT_CODECREADY		1<<7 
-#define AC97_INT_WRDONE			1<<6 
-#define AC97_INT_RDDONE			1<<5 
-#define AC97_INT_FOUDFLOW		1<<4 
-#define AC97_INT_ROUDFLOW		1<<3 
-#define AC97_INT_CLUDFLOW		1<<2 
-#define AC97_INT_PIOVFLOW		1<<1 
+#define AC97_INT_CODECREADY		1<<7
+#define AC97_INT_WRDONE			1<<6
+#define AC97_INT_RDDONE			1<<5
+#define AC97_INT_FOUDFLOW		1<<4
+#define AC97_INT_ROUDFLOW		1<<3
+#define AC97_INT_CLUDFLOW		1<<2
+#define AC97_INT_PIOVFLOW		1<<1
 #define AC97_INT_MIOVFLOW		1
 
 // channel config value
@@ -37,23 +37,23 @@
 #define AC97_IN20				0x03
 
 // irq status
-#define AC97_PEND_CODECREADY	1<<7 
-#define AC97_PEND_WRDONE		1<<6 
-#define AC97_PEND_RDDONE		1<<5 
-#define AC97_PEND_FOUDFLOW		1<<4 
-#define AC97_PEND_ROUDFLOW		1<<3 
-#define AC97_PEND_CLUDFLOW		1<<2 
-#define AC97_PEND_PIOVFLOW		1<<1 
+#define AC97_PEND_CODECREADY	1<<7
+#define AC97_PEND_WRDONE		1<<6
+#define AC97_PEND_RDDONE		1<<5
+#define AC97_PEND_FOUDFLOW		1<<4
+#define AC97_PEND_ROUDFLOW		1<<3
+#define AC97_PEND_CLUDFLOW		1<<2
+#define AC97_PEND_PIOVFLOW		1<<1
 #define AC97_PEND_MIOVFLOW		1
 
 // irq clear
-#define AC97_CLR_CODECREADY		1<<7 
-#define AC97_CLR_WRDONE			1<<6 
-#define AC97_CLR_RDDONE			1<<5 
-#define AC97_CLR_FOUDFLOW		1<<4 
-#define AC97_CLR_ROUDFLOW		1<<3 
-#define AC97_CLR_CLUDFLOW		1<<2 
-#define AC97_CLR_PIOVFLOW		1<<1 
+#define AC97_CLR_CODECREADY		1<<7
+#define AC97_CLR_WRDONE			1<<6
+#define AC97_CLR_RDDONE			1<<5
+#define AC97_CLR_FOUDFLOW		1<<4
+#define AC97_CLR_ROUDFLOW		1<<3
+#define AC97_CLR_CLUDFLOW		1<<2
+#define AC97_CLR_PIOVFLOW		1<<1
 #define AC97_CLR_MIOVFLOW		1
 
 // control
@@ -79,7 +79,7 @@ typedef struct
 
 // function
 void AC97_GetDeviceInfo (MES_DEVINFO *pDevInfo);
-void AC97_Initialize (U32 VirAddr);	
+void AC97_Initialize (U32 VirAddr);
 void AC97_SetInterruptEnb (U16 IntEnb);
 void AC97_SetConfig (U16 ExtChannel, U16 OutDatWidth, U16 InDatWidth);
 CBOOL AC97_Enable (U16 TimeOut);
@@ -95,5 +95,4 @@ CBOOL AC97_WriteCodecReg (U32 RegOffset, U16 WrData, U16 TimeOut);
 U32 AC97_ReadCodecReg (U32 RegOffset, U16 TimeOut);
 CBOOL AC97_IsBusy (void);
 
-
-#endif	
+#endif

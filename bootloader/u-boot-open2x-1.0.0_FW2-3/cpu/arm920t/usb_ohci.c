@@ -43,6 +43,8 @@
 #include <usb.h>
 #include "usb_ohci.h"
 
+#include <mmsp20.h>
+
 #define OHCI_USE_NPS		/* force NoPowerSwitching mode */
 #undef OHCI_VERBOSE_DEBUG	/* not always helpful */
 
@@ -1529,23 +1531,22 @@ static void hc_release_ohci (ohci_t *ohci)
  */
 static char ohci_inited = 0;
 
+/* Enable or disable the USB Host controller clock source */
+void set_USBH_Clock(int enable)
+{
+    MMSP20_CLOCK_POWER * const clk_power = MMSP20_GetBase_CLOCK_POWER();
+
+    if (enable)
+        clk_power->COMCLKENREG |= 0x01;
+    else
+        clk_power->COMCLKENREG &= ~0x01;
+}
+
 int usb_lowlevel_init(void)
 {
-	S3C24X0_CLOCK_POWER * const clk_power = S3C24X0_GetBase_CLOCK_POWER();
-	S3C24X0_GPIO * const gpio = S3C24X0_GetBase_GPIO();
-
-	/*
-	 * Set the 48 MHz UPLL clocking. Values are taken from
-	 * "PLL value selection guide", 6-23, s3c2400_UM.pdf.
-	 */
-	clk_power->UPLLCON = ((40 << 12) + (1 << 4) + 2);
-	gpio->MISCCR |= 0x8; /* 1 = use pads related USB for USB host */
-
-	/*
-	 * Enable USB host clock.
-	 */
-	clk_power->CLKCON |= (1 << 4);
-
+	/* Enable the USB Host Controller Clocks */
+        set_USBH_Clock(1);
+	
 	memset (&gohci, 0, sizeof (ohci_t));
 	memset (&urb_priv, 0, sizeof (urb_priv_t));
 
@@ -1573,7 +1574,7 @@ int usb_lowlevel_init(void)
 	gohci.disabled = 1;
 	gohci.sleeping = 0;
 	gohci.irq = -1;
-	gohci.regs = (struct ohci_regs *)S3C24X0_USB_HOST_BASE;
+	gohci.regs = (struct ohci_regs *)0xc0004300;
 
 	gohci.flags = 0;
 	gohci.slot_name = "s3c2400";
@@ -1581,7 +1582,7 @@ int usb_lowlevel_init(void)
 	if (hc_reset (&gohci) < 0) {
 		hc_release_ohci (&gohci);
 		/* Initialization failed */
-		clk_power->CLKCON &= ~(1 << 4);
+        	set_USBH_Clock(0);
 		return -1;
 	}
 
@@ -1593,7 +1594,7 @@ int usb_lowlevel_init(void)
 		err ("can't start usb-%s", gohci.slot_name);
 		hc_release_ohci (&gohci);
 		/* Initialization failed */
-		clk_power->CLKCON &= ~(1 << 4);
+        	set_USBH_Clock(0);
 		return -1;
 	}
 
@@ -1608,8 +1609,6 @@ int usb_lowlevel_init(void)
 
 int usb_lowlevel_stop(void)
 {
-	S3C24X0_CLOCK_POWER * const clk_power = S3C24X0_GetBase_CLOCK_POWER();
-
 	/* this gets called really early - before the controller has */
 	/* even been initialized! */
 	if (!ohci_inited)
@@ -1618,8 +1617,7 @@ int usb_lowlevel_stop(void)
 	/* call hc_release_ohci() here ? */
 	hc_reset (&gohci);
 	/* may not want to do this */
-	clk_power->CLKCON &= ~(1 << 4);
+        set_USBH_Clock(0);
 	return 0;
 }
-
 #endif /* CONFIG_USB_OHCI */

@@ -133,6 +133,7 @@ ALL = u-boot.srec u-boot.bin System.map
 
 all:		$(ALL)
 		-cp u-boot.bin gp2xboot.img
+		$(U_BOOT_MKIMAGE)/mkimage -A arm -O linux -T kernel -C none -a 00D00000 -e 00D00000 -n "Open2x - Relocated Bootloader" -d u-boot.bin gp2xkernel.img
 
 u-boot.srec:	u-boot
 		$(OBJCOPY) ${OBJCFLAGS} -O srec $< $@
@@ -1029,3 +1030,7 @@ backup:
 	gtar --force-local -zcvf `date "+$$F-%Y-%m-%d-%T.tar.gz"` $$F
 
 #########################################################################
+
+krnlimg:
+	tools/mkimage -A arm -O linux -T kernel -C none -a 00800000 -e 00800000 -n "bldr as krnl" -d gp2xboot.img kernel.img
+

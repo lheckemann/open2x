@@ -1,8 +1,8 @@
 /*
  *  armboot - Startup Code for ARM920 CPU-core
  *
- *  Copyright (c) 2001	Marius Gr?er <mag@sysgo.de>
- *  Copyright (c) 2002	Alex Z?ke <azu@sysgo.de>
+ *  Copyright (c) 2001	Marius Gröger <mag@sysgo.de>
+ *  Copyright (c) 2002	Alex Züpke <azu@sysgo.de>
  *  Copyright (c) 2002	Gary Jennejohn <gj@denx.de>
  *
  * See file CREDITS for list of people who contributed to this
@@ -79,6 +79,7 @@ _data_abort:		.word data_abort
 _not_used:		.word not_used
 _irq:			.word irq
 _fiq:			.word fiq
+
 	.balignl 16,0xdeadbeef
 
 
@@ -140,15 +141,14 @@ NFDATA:		.word	0x9c000000
 NFCMD:		.word	0x9C000010
 NFADDR:		.word	0x9C000018
 
-MEMCFGW:		.word	0xC0003A00
+MEMCFGW:	.word	0xC0003A00
 MEMNANDCTRLW:	.word	0xC0003A3A
 MEMNANDTIMEW:	.word	0xC0003A3C
 
-BL_BASE:	.word	0x03E00000 	/* base address of the bootloader 62.5MB */ 
+BL_BASE:	.word	TEXT_BASE /*0x03F00000*/ 	/* base address of the bootloader */
 NAND_BASE:	.word	0x00000000	/* start address of image in NAND flash */
-NAND_TOP:	.word	0x00050000	/* end address of image in NAND flash */
-
-
+NAND_TOP:	.word	0x00080000	/* end address of image in NAND flash */
+NAND_PAGE_MASK:	.word	0xFFFFFE00	/* end address of image in NAND flash */
 #endif
 
 /*
@@ -171,7 +171,6 @@ reset:
 #define INTMSK		0x14400008
 /* clock divisor register */
 #define CLKDIVN		0x14800014
-
 #elif defined(CONFIG_S3C2410)
 #define pWTCON		0x53000000
 /* Interupt-Controller base addresses */
@@ -201,13 +200,12 @@ reset:
 	mov     r1, #0x0
 	str     r1, [r0]
 
-/*
- * mask all IRQs by setting all bits in the INTMR - default
- */
+	/*
+	 * mask all IRQs by setting all bits in the INTMR - default
+	 */
 	mov 	r1, #0xffffffff	
 	ldr	r0, =INTMSK
 	str	r1, [r0]
-
 #if defined(CONFIG_S3C2410)
 	ldr	r1, =0x3ff
 	ldr	r0, =INTSUBMSK
@@ -219,7 +217,6 @@ reset:
 #else
 	/* FCLK:HCLK:PCLK = 1:2:4 */
 	/* default FCLK is 120 MHz ! */
-
 	ldr	r0, =CLKDIVN
 	mov	r1, #3
 	str	r1, [r0]
@@ -257,9 +254,7 @@ reset:
 	and	r0, r0, #0x0
 	add	r0, r0, #0x700
 	add	r0, r0, #0xF0
-/*	add	r0, r0, #0x8	*/
 	add	r0, r0, #0x0F
-	
 	strh	r0, [r1]
 
 #if 1
@@ -270,12 +265,58 @@ reset:
 	strh r4,[r1]	
 #endif
 
+
+	/* ART103: 
+	   Ramp up the PLL settings (199MHz to ARM920T) :D 
+	
+#define PLL_BASE_ADR 0xC0000900
+#define FPLL_VAL 0x4904
+#define UPLL_VAL 0x6002
+#define APLL_VAL 0xFFFF9802
+
+#define SYSCLKEN_BASE_ADDR 0xC0000C00
+#define CLKMGRREG_VAL	0x3
+#define SYSCLKENREG_VAL	0xABFE
+
+	ldr r1, =PLL_BASE_ADR
+	ldr	r0, =FPLL_VAL
+	strh r0, [r1, #0x10]	
+	ldr r0, =UPLL_VAL
+	strh r0, [r1, #0x14]	
+	ldr r0, =APLL_VAL
+	strh r0, [r1, #0x18]	
+	
+	ldr r0, =CLKMGRREG_VAL
+	ldr r1, =SYSCLKEN_BASE_ADDR
+	strh r0, [r1, #12]
+	
+	ldr r1, =PLL_BASE_ADR
+	ldr r0, =SYSCLKENREG_VAL
+	strh r0, [r1, #0x04]
+*/
+	
 	/* Detecting type - 3 or 4 address type */
 
-	ldr	r5, BL_BASE		@ R5 contains current RAM address
+	ldr	r5, BL_BASE	@ R5 contains current RAM address
 	ldr	r6, NAND_BASE	@ R6 contains current flash address
-	ldr	r9, NAND_TOP	@ R9 contains top of the flash address
+	ldr	r9, _armboot_end_data	/* ART103: Only copy as much as we need */
+	sub	r9, r9, r5
+	add	r9, r9, #0x200
+	ldr	r0, NAND_PAGE_MASK
+	and	r9, r9, r0
+	/*ldr	r9, NAND_TOP	@ R9 contains top of the flash address*/
 
+	/* ART103: */
+	/* Check to see if we are running in RAM already */
+	/* If we are, then no need to copy out of NAND, as */
+	/* probably JTAG debug :) */
+	
+	ldr 	r0, =read_command
+	ldr 	r1, BL_BASE
+	and		r0, r0, r1
+	cmp		r0, r1
+	beq		nand_relocate   
+	
 /* Read loop */
 read_command:
 	ldr 	r1, MEMNANDCTRLW
@@ -348,10 +389,10 @@ relocate:
 	/*
 	 * relocate armboot to RAM
 	 */
-	adr	r0, _start			/* r0 <- current position of code */
+	adr	r0, _start		/* r0 <- current position of code */
 	ldr	r2, _armboot_start
 	ldr	r3, _armboot_end
-	sub	r2, r3, r2			/* r2 <- size of armboot */
+	sub	r2, r3, r2		/* r2 <- size of armboot */
 	ldr	r1, _TEXT_BASE		/* r1 <- destination address */
 #if defined(CONFIG_EPLAY)
 	add	r1, r1, #0x20
@@ -435,6 +476,7 @@ apll_val:		.long	APLLSETVREG_VAL
  *
  *************************************************************************
  */
+
 
 cpu_init_crit:
 	/*

@@ -4,7 +4,7 @@
 #include "../sound/typedef.h"
 
 typedef struct {
-    volatile U16 PWRMODE;		  // 0x0900 + IO_BASE 			
+    volatile U16 PWRMODE;		  // 0x0900 + IO_BASE
     volatile U16 CLKCHGST;         // 0x0902 + IO_BASE
     volatile U16 SYSCLKEN;         // 0x0904 + IO_BASE
     volatile U16 Reserved0;

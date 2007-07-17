@@ -1,0 +1,33 @@
+Open2x Bootloader (U-Boot).
+---------------------------
+
+Please refer to http://wiki.open2x.org/open2x/wiki/index.php?title=Bootloader before you
+do ANYTHING with these files.
+
+This archive should contain 2 folders.
+
+/boot-as-boot/ with gp2xboot.img inside
+
+and 
+
+/boot-as-kernel/ with gp2xkernel.img inside
+
+This files are versions of the GP2X bootloader configured as a real bootloader and 
+kernel (for testing purposes). 
+
+Warning: Please do not flash either of these files unless you REALLY know what you are doing
+as these files can render your GP2X bricked.
+
+Links:
+
+Patches:
+
+http://sourceforge.net/tracker/?group_id=150350&atid=777121
+
+Bug Reports:
+
+http://sourceforge.net/tracker/?group_id=150350&atid=777119
+
+Regards,
+
+John Willis

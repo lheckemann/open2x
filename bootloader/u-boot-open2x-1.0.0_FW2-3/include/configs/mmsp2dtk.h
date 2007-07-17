@@ -1,6 +1,6 @@
 /*
  * (C) Copyright 2004
- * Magic eye MMSP2 DTK board 
+ * Magic eye MMSP2 DTK board
  * DIGNSYS Inc. < www.dignsys.com >
  * Kane Ahn < hbahn@dignsys.com >
  */
@@ -60,6 +60,12 @@
 #define CONFIG_DOS_PARTITION 1
 #define CONFIG_SUPPORT_VFAT 1
 
+/* Boot Progress Bar */
+#define CONFIG_SHOW_BOOT_PROGRESS
+
+/* With or without splash screen? */
+#define CONFIG_GP2X_SPLASH
+
 /***********************************************************
  * Command definition
  ***********************************************************/
@@ -70,7 +76,7 @@
 			CFG_CMD_LOADUB   | \
 			/*CFG_CMD_EEPROM |*/ \
 			/*CFG_CMD_I2C	 |*/ \
-			/*CFG_CMD_USB	 |*/ \
+			CFG_CMD_USB	     | \
 			CFG_CMD_FAT      | \
 			CFG_CMD_SD       | \
 			CFG_CMD_MMC      | \
@@ -88,27 +94,31 @@
 #define	CONFIG_IPADDR		192.168.1.225
 #define	CONFIG_SERVERIP		192.168.1.230
 #define	CONFIG_BOOTFILE		"bios.bin"
-//#define	CONFIG_BOOTCOMMAND	"nand read 0x1000000 0x80000 0xE0000; bootm" 
-#define	CONFIG_BOOTCOMMAND	"bootm" 
-/* #define	CONFIG_BOOTCOMMAND	"nand read 0x1000000 0xD0000 0x130000; bootm" */	
-/*#define	CONFIG_BOOTCOMMAND	"tftp; bootm" */
+//#define	CONFIG_BOOTCOMMAND	"fatload mmc 0 0x1000000 kernel.img; bootm; nand read 0x1000000 0x80000 0x180000; bootm"
+//#define	CONFIG_BOOTCOMMAND	"nand read 0x1000000 0x80000 0x100000; bootm"
+//#define	CONFIG_BOOTCOMMAND	"tftp; bootm" */
+#define	CONFIG_BOOTCOMMAND	"bootm"
+
+#if (CFG_CMD_USB)
+	#define CONFIG_USB_OHCI
+#endif
 
 #if (CONFIG_COMMANDS & CFG_CMD_LOADUB)
-#define CONFIG_DRIVER_USB_DEVICE
-#define CONFIG_LOADUB_PATH  "/tftpboot/"    /* loadub default path */
+	#define CONFIG_DRIVER_USB_DEVICE
+	#define CONFIG_LOADUB_PATH  "/tftpboot/"    /* loadub default path */
 #endif
 
 #if (CONFIG_COMMANDS & CFG_CMD_KGDB)
-#define CONFIG_KGDB_BAUDRATE	115200		/* speed to run kgdb serial port */
-/* what's this ? it's not used anywhere */
-#define CONFIG_KGDB_SER_INDEX	1		/* which serial port to use */
+	#define CONFIG_KGDB_BAUDRATE	115200		/* speed to run kgdb serial port */
+	/* what's this ? it's not used anywhere */
+	#define CONFIG_KGDB_SER_INDEX	1		/* which serial port to use */
 #endif
 
 /*
  * Miscellaneous configurable options
  */
 #define	CFG_LONGHELP				/* undef to save memory		*/
-#define	CFG_PROMPT		"GP2X# "	/* Monitor Command Prompt	*/
+#define	CFG_PROMPT		"Open2X# "	/* Monitor Command Prompt	*/
 #define	CFG_CBSIZE		256		/* Console I/O Buffer Size	*/
 #define	CFG_PBSIZE (CFG_CBSIZE+sizeof(CFG_PROMPT)+16) /* Print Buffer Size */
 #define	CFG_MAXARGS		16		/* max number of command args	*/
@@ -135,8 +145,8 @@
  */
 #define CONFIG_STACKSIZE	(128*1024)	/* regular stack */
 #ifdef CONFIG_USE_IRQ
-#define CONFIG_STACKSIZE_IRQ	(4*1024)	/* IRQ stack */
-#define CONFIG_STACKSIZE_FIQ	(4*1024)	/* FIQ stack */
+	#define CONFIG_STACKSIZE_IRQ	(4*1024)	/* IRQ stack */
+	#define CONFIG_STACKSIZE_FIQ	(4*1024)	/* FIQ stack */
 #endif
 
 /*-----------------------------------------------------------------------
@@ -148,7 +158,7 @@
 
 #define PHYS_FLASH_1		0x00000000 /* Flash Bank #1 */
 
-#define CFG_FLASH_BASE		PHYS_FLASH_1 
+#define CFG_FLASH_BASE		PHYS_FLASH_1
 
 /*-----------------------------------------------------------------------
  * FLASH organization
@@ -166,10 +176,10 @@
 #endif
 
 #ifdef CONFIG_AMD_LV400
-#define PHYS_FLASH_SIZE		0x00080000 /* 512KB */
-#define CFG_MAX_FLASH_SECT	(11)	/* max number of sectors on one chip */
-#define CFG_ENV_ADDR		(CFG_FLASH_BASE + 0x070000) /* addr of environment */
-#endif 
+	#define PHYS_FLASH_SIZE		0x00080000 /* 512KB */
+	#define CFG_MAX_FLASH_SECT	(11)	/* max number of sectors on one chip */
+	#define CFG_ENV_ADDR		(CFG_FLASH_BASE + 0x070000) /* addr of environment */
+#endif
 
 /* timeout values are in ticks */
 
@@ -230,29 +240,12 @@
 /*-----------------------------------------------------------------------
  * environment organization
  */
-#undef	CFG_ENV_IS_IN_FLASH	0
-#define	CFG_ENV_IS_IN_NAND	1
+#undef	CFG_ENV_IS_IN_FLASH
+#define	CFG_ENV_IS_IN_NAND
 
-#if 0
-#undef CFG_ENV_ADDR
-#define CFG_ENV_ADDR		0x20000		/* addr of environment in NAND */
-#define CFG_ENV_SIZE		0x4000		/* Total Size of Environment Sector */
-#define CFG_NAND_ENV_BUFFER	0x03F00000	/* The environment buffer in system memory */
-#endif
-
-#if 1
-#undef CFG_ENV_ADDR
-#define CFG_ENV_ADDR		0x70000		/* addr of environment in NAND */
-#define CFG_ENV_SIZE		0x4000		/* Total Size of Environment Sector */
-#define CFG_NAND_ENV_BUFFER	0x03F80000	/* The environment buffer in system memory */
-#endif
-
-#if 0
-#undef CFG_ENV_ADDR
-#define CFG_ENV_ADDR		0xB0000		/* addr of environment in NAND */
-#define CFG_ENV_SIZE		0x4000		/* Total Size of Environment Sector */
-#define CFG_NAND_ENV_BUFFER	0x03F80000	/* The environment buffer in system memory */
-#endif
-
+	#undef CFG_ENV_ADDR
+	#define CFG_ENV_ADDR		0x70000		/* addr of environment in NAND */
+	#define CFG_ENV_SIZE		0x4000		/* Total Size of Environment Sector */
+	#define CFG_NAND_ENV_BUFFER	0x03Ea0000	/* The environment buffer in system memory */
 
 #endif	/* __CONFIG_H */

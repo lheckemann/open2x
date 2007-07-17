@@ -5,9 +5,9 @@
 Project : GPX__BOOT__SOUND
 Version : 1.0
 Date    : 2006-3-15(hyun)
-Author  : Hyun sog juk 
-Company : GamePark Holdings, Korea                 
-Comments: ORIGNAL SOUCE => MAGIC EYES TEST SOUND  
+Author  : Hyun sog juk
+Company : GamePark Holdings, Korea
+Comments: ORIGNAL SOUCE => MAGIC EYES TEST SOUND
 **************************************************************************/
 
 #include <common.h>
@@ -71,7 +71,7 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 static void SetAC97Codec (int jackFlag);
 void HandlerAC97Dma(void);
 void RunAC97(int jackFlag);
-void PMR_Initialize1 ( U32 Address ); 
+void PMR_Initialize1 ( U32 Address );
 void PMR_GetAudioStorageClkCtrl ( tAudStrClkCtrl *pAUDSTRCLKCTRL );
 void PMR_SetAudioStorageClkCtrl ( tAudStrClkCtrl *pAUDSTRCLKCTRL );
 void PMR_GetAC97I2SClk   ( tACLKInfo *pACLKINFO );
@@ -79,19 +79,19 @@ void PMR_SetAC97I2SClk     ( tACLKInfo *pACLKINFO );
 
 struct WAVE_HEADER
 {
- U8 riff_id[4];  
- U32 riff_size;  
- U8 wave_id[4];  
- U8 format_id[4]; 
- U32 format_size; 
- U16 format_type; 
- U16 ChannelNo;  
- U32 SamplesPerSec; 
- U32 AvgBytesPerSec; 
- U16 BytesPerSample;  
- U16 BitsPerSample;  
- U8 data_id[4];  
- U32 data_size;  
+ U8 riff_id[4];
+ U32 riff_size;
+ U8 wave_id[4];
+ U8 format_id[4];
+ U32 format_size;
+ U16 format_type;
+ U16 ChannelNo;
+ U32 SamplesPerSec;
+ U32 AvgBytesPerSec;
+ U16 BytesPerSample;
+ U16 BitsPerSample;
+ U8 data_id[4];
+ U32 data_size;
 }waveheader;
 
 
@@ -101,38 +101,38 @@ void PlayerSoundLogo(int flag)
 	U8 mode, samplerate;
 	U32 filesize,memaddr;
 	int ret;
-	
+
 	ret = nand_read_jffs2_func(PA_SOUND_DMA_BASE1, WAV_BASE, 0x40000);
 
 	memcpy(&waveheader ,PA_SOUND_DMA_BASE1 ,sizeof(waveheader));
-	
+
 	if( (waveheader.data_size > 0x3c000) ||  (waveheader.ChannelNo > 2) || (waveheader.format_type != 0x01)
-										 ||  (waveheader.BitsPerSample > 16) )																								
+										 ||  (waveheader.BitsPerSample > 16) )
 	{
-		printf("Wav file format error\n");	
+		printf("WAV file format error\n");
 		printf("format_type:0x%x\n", waveheader.format_type);
-		printf("ChannelNo :%d\n",	 waveheader.ChannelNo);	
+		printf("ChannelNo :%d\n",	 waveheader.ChannelNo);
 		printf("SamplesPerSec:%d\n", waveheader.SamplesPerSec);
 		printf("AvgBytesPerSec:%d\n", waveheader.AvgBytesPerSec);
 		printf("BytesPerSample:%d\n", waveheader.BytesPerSample);
 		printf("BitsPerSample:%d\n", waveheader.BitsPerSample);
 		printf("data_size:%x\n", waveheader.data_size);
 		return;
-	}	
-													
+	}
+
 	filesize=waveheader.data_size;
 	memaddr=(U32) (PA_SOUND_DMA_BASE1 + sizeof(waveheader) );
-	
-	mode=1;											/* out */		
-	SamplingRate = 2;								/* 0=44khz 2=22khz*/	
+
+	mode=1;											/* out */
+	SamplingRate = 2;								/* 0=44khz 2=22khz*/
 	WaveFileSize = filesize - 0x800;
 	AC97_FADDR	= memaddr;
-	
+
 	if( mode==0 )
 	{
 		AC97_LINEIN = 1;
 		AC97_PCMOUT = 1;
-		AC97_WAVOUT = 0;	
+		AC97_WAVOUT = 0;
 	}
 	else if( mode==1 )
 	{
@@ -140,9 +140,9 @@ void PlayerSoundLogo(int flag)
 		AC97_PCMOUT = 0;
 		AC97_WAVOUT = 1;
 	}
-	
+
 	RunAC97(flag);
-		
+
 }
 
 
@@ -179,7 +179,7 @@ static void InitAC97Pwrman(void)
 	com2reg : 0xffff (64k bytes)
 	srcaddr : external memory
 	trgaddr : ac97 base address (0xc000_0e00)
-	
+
 < input dma channel setting >
 	com0reg : burst=4word, increment src addr=0, flowsrc=1,
 			  src data format=word, src peri width=half word,
@@ -195,9 +195,9 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 
 	TDMAC_ChannelData *pChannelData;
 	MES_DEVINFO devinfo;
-	
+
 	DMA_GetDeviceInfo( &devinfo );
-	/* DMA ADDR를 레지스터에 기록하고 DMA 핸들러를 인터럽트 백터 핸들러에 기록한다 */ 
+	/* DMA ADDR를 레지스터에 기록하고 DMA 핸들러를 인터럽트 백터 핸들러에 기록한다 */
 	DMA_Initialize( devinfo.IOBaseAddress );
 
 	// setting front out channel DMA
@@ -222,7 +222,7 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 	pChannelData->dwDataSize = (U16)SIZE_64KB;
 	pChannelData->dwBurstType = DMA_BURSTTYPE_4WORD;
 	pChannelData->dwIntType = DMA_INTTYPE_END;
-	
+
 	DMA_SetChannel(pChannelData);
 
 
@@ -237,7 +237,7 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 		{pChannelData->Source.dwAddr = AC97_IADDR;}
 	else
 		{pChannelData->Source.dwAddr = AC97_RADDR;}
-	
+
 	pChannelData->Source.bFlyBy = CFALSE;
 
 	pChannelData->Target.dwType = DMA_MEMTYPE_IO_HWORD;
@@ -249,10 +249,10 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 	pChannelData->dwDataSize = (U16)SIZE_64KB;
 	pChannelData->dwBurstType = DMA_BURSTTYPE_4WORD;
 	pChannelData->dwIntType = DMA_INTTYPE_END;
-	
+
 	DMA_SetChannel(pChannelData);
 #endif
-	
+
 #if AC97_CENTEROUT
 	// setting center/lfe out channel dma
 	pChannelData = &(DMAChannelData[AC97_CDMA_CH]);
@@ -271,7 +271,7 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 	pChannelData->dwDataSize = (U16)SIZE_64KB;
 	pChannelData->dwBurstType = DMA_BURSTTYPE_4WORD;
 	pChannelData->dwIntType = DMA_INTTYPE_END;
-	
+
 	DMA_SetChannel(pChannelData);
 #endif
 
@@ -292,7 +292,7 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 	pChannelData->dwDataSize = (U16)SIZE_64KB;
 	pChannelData->dwBurstType = DMA_BURSTTYPE_4WORD;
 	pChannelData->dwIntType = DMA_INTTYPE_END;
-	
+
 	DMA_SetChannel(pChannelData);
 
 	// setting mic in channel dma
@@ -312,7 +312,7 @@ static void InitAC97Dma (U32 FrontDmaCh, U32 RearDmaCh, U32 CenterDmaCh,U32 InDm
 	pChannelData->dwDataSize = (U16)SIZE_64KB;
 	pChannelData->dwBurstType = DMA_BURSTTYPE_4WORD;
 	pChannelData->dwIntType = DMA_INTTYPE_END;
-	
+
 	DMA_SetChannel(pChannelData);
 
 }
@@ -363,14 +363,14 @@ static void SetAC97Codec(int jackFlag)
 #else
 	CmdResult = AC97_WriteCodecReg (0x1a,0x0404,wtimeout);	// record line in
 #endif
-	
+
 	CmdResult = AC97_WriteCodecReg (0x1c,0x0000,wtimeout);	// rec gain
 	CmdResult = AC97_WriteCodecReg (0x1e,0x000f,wtimeout);	// mic gain
 #endif
 
 
 #ifdef SOUND_CHIP_WM9711
-	CmdResult =	AC97_WriteCodecReg (0x24,0x1C67,wtimeout);	//power down enable	
+	CmdResult =	AC97_WriteCodecReg (0x24,0x1C67,wtimeout);	//power down enable
 	CmdResult = AC97_WriteCodecReg (0x26,0x8100,wtimeout);	// power
 #else
 	CmdResult = AC97_WriteCodecReg (0x26,0x8000,wtimeout);	// power
@@ -383,7 +383,7 @@ static void SetAC97Codec(int jackFlag)
 
 	// variable sampling rate setting
 	// modify dennis
-	
+
 	switch( SamplingRate )
 	{
 		case 0:
@@ -418,7 +418,7 @@ static void SetAC97Codec(int jackFlag)
 
 
 // print codec register value
-#if 0	
+#if 0
 	for (offset=0; offset<=0x38; offset=offset+2)
 	{
 		rdata = AC97_ReadCodecReg (offset, rtimeout);
@@ -441,18 +441,18 @@ void RunAC97(int jackFlag)
 		printf("Mode Setting Error\n");
 		return;
 	}
-	
+
 	InitAC97Pwrman();
 
-	InitIRQ(); 
+	InitIRQ();
 
-	InitAC97Dma(AC97_FDMA_CH, AC97_RDMA_CH, AC97_CDMA_CH, 
+	InitAC97Dma(AC97_FDMA_CH, AC97_RDMA_CH, AC97_CDMA_CH,
 				AC97_IDMA_CH, AC97_MDMA_CH);
-	
+
 	/* Get DMA HANDLER */
 	InitAC97Irq();
 	AC97_Initialize(0);		/* get base pointer */
-	
+
 	AC97_SetConfig (0, AC97_OUT16, AC97_IN16);
 
 	if((AC97_Enable(AC97_TIMEOUT))==CFALSE)		// codec not ready
@@ -462,7 +462,7 @@ void RunAC97(int jackFlag)
 	}
 	SetAC97Codec(jackFlag);
 	AC97_SetInterruptEnb(AC97_INT_FOUDFLOW | AC97_INT_MIOVFLOW);
-	
+
 	if( AC97_LINEIN )
 		{DMA_RunChannel(AC97_IDMA_CH);}		// enable pcm in dma
 
@@ -472,21 +472,20 @@ void RunAC97(int jackFlag)
 
 	if( AC97_WAVOUT )
 		{DMA_RunChannel(AC97_FDMA_CH);}		//dma_run
-	
+
 	if( AC97_PCMOUT )
 	{
 		DMA_RunChannel(AC97_FDMA_CH);
-		DMA_RunChannel(AC97_RDMA_CH);	
+		DMA_RunChannel(AC97_RDMA_CH);
 	}
-	
+
 	kernel_load=0;
 	while ( DMA_GetSrcAddr(AC97_FDMA_CH) <= (AC97_FADDR + WaveFileSize) )
 	{
 		if(!kernel_load)
 		{
 			/* Read to kernel */
-			//nand_read_func(0x1000000, 0x80000,0xE0000); //900kbyte		
-			nand_read_func(0x1000000, 0x80000,0xB0000);	//700kybte MAX	
+			nand_read_func(0x1000000, 0x80000,0xB0000);	//700kybte MAX
 			kernel_load=1;
 		}
 	}
@@ -508,8 +507,8 @@ static void InitAC97Irq (void)
 	MaskIRQ(IRQ_DMAINT);
 	irq_install_handler(IRQ_DMAINT, (interrupt_handler_t *)HandlerAC97Dma, NULL);
 	UnmaskIRQ(IRQ_DMAINT);	// unmask dma irq
-#else	
-	
+#else
+
 	MaskIRQ(IRQ_DMAINT);	// mask dma irq
 	for (ch = AC97_FDMA_CH; ch <= AC97_MDMA_CH; ch++)
 	{
@@ -536,7 +535,7 @@ void HandlerAC97Dma (void)
 		{
 			DMA_ClrInterruptPend(ch);
 			DMA_SetDataSize(ch, (U32)SIZE_64KB);
-			
+
 			if( AC97_WAVOUT )
 			{
 				if (ch == AC97_FDMA_CH)
@@ -545,7 +544,7 @@ void HandlerAC97Dma (void)
 #if 0
 					if (DMA_GetSrcAddr(ch) >= SIZE_OF_TEST_WAVEFILE)
 					{
-						return;	
+						return;
 					}
 #endif
 				}
@@ -554,7 +553,7 @@ void HandlerAC97Dma (void)
 			{
 				switch (ch)
 				{
-					case 0 : 
+					case 0 :
 					if( AC97_LINEIN )
 					{
 						if (DMA_GetSrcAddr(ch) >= AC97_IADDR + SIZE_128KB + 1)
@@ -571,7 +570,7 @@ void HandlerAC97Dma (void)
 						}
 						break;
 					}
-					case 1 : 
+					case 1 :
 					if( AC97_LINEIN )
 					{
 						if (DMA_GetSrcAddr(ch) >= AC97_IADDR + SIZE_128KB + 1)
@@ -587,31 +586,31 @@ void HandlerAC97Dma (void)
 							DMA_SetSrcAddr(ch, (U32) AC97_RADDR);
 						}
 						break;
-					}	
-					case 2 : 
+					}
+					case 2 :
 						if (DMA_GetSrcAddr(ch) >= AC97_CADDR + SIZE_128KB + 1)
 						{
 							DMA_SetSrcAddr(ch, (U32) AC97_CADDR);
 						}
 						break;
-					case 3 : 
+					case 3 :
 						if (DMA_GetTrgAddr(ch) >= AC97_IADDR + SIZE_128KB + 1)
 						{
 							DMA_SetTrgAddr(ch, (U32) AC97_IADDR);
 						}
 						break;
-					case 4 : 
+					case 4 :
 						if (DMA_GetTrgAddr(ch) >= AC97_MADDR + SIZE_128KB + 1)
 						{
 							DMA_SetTrgAddr(ch, (U32) AC97_MADDR);
 						}
 						break;
-					default : 
+					default :
 						printf("invalid dma channel \n");
 						return;
 				}
 			}
-			
+
 			DMA_SetInterruptEnb(ch, DMA_INTTYPE_END);
 			DMA_RunChannel(ch);
 		}
@@ -623,9 +622,9 @@ void HandlerAC97Dma (void)
 ----------------------------------------------------------------------------------------------*/
 PMR_REG *pPMR_REG1;
 
-void PMR_Initialize1 ( U32 Address ) 
+void PMR_Initialize1 ( U32 Address )
 {
-	pPMR_REG1 = (PMR_REG *)(Address);	
+	pPMR_REG1 = (PMR_REG *)(Address);
 }
 
 
@@ -643,14 +642,14 @@ void PMR_GetAudioStorageClkCtrl ( tAudStrClkCtrl *pAUDSTRCLKCTRL )
 
 void PMR_SetAudioStorageClkCtrl ( tAudStrClkCtrl *pAUDSTRCLKCTRL )
 {
-	pPMR_REG1->ASCLKEN = 	(pAUDSTRCLKCTRL->PCLK_CDROM 	<< 13) | 
+	pPMR_REG1->ASCLKEN = 	(pAUDSTRCLKCTRL->PCLK_CDROM 	<< 13) |
 							(pAUDSTRCLKCTRL->BCLK_IDEIF 	<< 12) |
-							(pAUDSTRCLKCTRL->MSCLK 			<< 9 ) | 
+							(pAUDSTRCLKCTRL->MSCLK 			<< 9 ) |
 							(pAUDSTRCLKCTRL->PCLK_SD 		<< 8 ) |
 							(pAUDSTRCLKCTRL->SPDIFOUTCLK 	<< 3 ) |
 							(pAUDSTRCLKCTRL->SPDIFINCLK 	<< 2 ) |
 							(pAUDSTRCLKCTRL->I2SCLK 		<< 1 ) |
-							(pAUDSTRCLKCTRL->AC97CLK 		<< 0 ); 
+							(pAUDSTRCLKCTRL->AC97CLK 		<< 0 );
 }
 
 

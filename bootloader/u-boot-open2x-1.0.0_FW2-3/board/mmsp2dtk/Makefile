@@ -25,10 +25,13 @@ include $(TOPDIR)/config.mk
 
 LIB	= lib$(BOARD).a
 
-OBJS	:= mmsp2dtk.o flash.o sd.o
+OBJS	:= mmsp2dtk.o flash.o #sd.o
 OBJS	+=./video/logo.o
 OBJS    +=./sound/sound_logo.o ./sound/mmsp2dma.o ./sound/proto_ac97.o ./sound/irq_manager.o 
-SOBJS	:= memsetup.o ./sound/assemfunc.o #nand.o 
+OBJS 	+= sdk2x_sd_hw.o sdk2x_system.o sdk2x_timer.o sdk2x_lcd.o sdk2x_font.o 
+
+SOBJS	:= memsetup.o ./sound/assemfunc.o #nand.o
+
 $(LIB):	$(OBJS) $(SOBJS)
 	$(AR) crv $@ $(OBJS) $(SOBJS)
 

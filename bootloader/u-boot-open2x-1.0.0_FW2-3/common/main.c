@@ -33,6 +33,8 @@
 #endif
 
 #include <post.h>
+#include <../board/mmsp2dtk/video/hardware.h>
+#include <mmsp2dtk/sdk2x_system.h>
 
 #if defined(CONFIG_BOOT_RETRY_TIME) && defined(CONFIG_RESET_TO_RETRY)
 extern int do_reset (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);		/* for do_reset() prototype */
@@ -72,8 +74,9 @@ int do_mdm_init = 0;
 extern void mdm_init(void); /* defined in board.c */
 #endif
 
-
+/* GP2X */
 extern int mmc_init_once;
+extern int kernel_load; // /board/mmsp2dtk/sound/sound_logo.c
 
 /***************************************************************************
  * Watch for 'delay' seconds for autoboot stop or autoboot delay string.
@@ -300,9 +303,6 @@ static __inline__ int abortboot(int bootdelay)
 #endif	/* CONFIG_BOOTDELAY >= 0  */
 
 /****************************************************************************/
-ulong g_filesize = 0;
-extern int kernel_load; // /board/mmsp2dtk/sound/sound_logo.c
-/****************************************************************************/
 
 void main_loop (void)
 {
@@ -390,8 +390,6 @@ void main_loop (void)
 	}
 #endif /* CONFIG_PREBOOT */
 
-
-
 #if defined(CONFIG_BOOTDELAY) && (CONFIG_BOOTDELAY >= 0)
 	s = getenv ("bootdelay");
 	bootdelay = s ? (int)simple_strtol(s, NULL, 10) : CONFIG_BOOTDELAY;
@@ -402,215 +400,215 @@ void main_loop (void)
 	init_cmd_timeout ();
 # endif	/* CONFIG_BOOT_RETRY_TIME */
 
-
 #ifdef CONFIG_BOOTCOUNT_LIMIT
-	if (bootlimit && (bootcount > bootlimit)) 
-	{
-		printf ("Warning: Bootlimit (%u) exceeded. Using altbootcmd.\n", (unsigned)bootlimit);
+	if (bootlimit && (bootcount > bootlimit)) {
+		printf ("Warning: Bootlimit (%u) exceeded. Using altbootcmd.\n",
+		        (unsigned)bootlimit);
 		s = getenv ("altbootcmd");
 	}
 	else
 #endif /* CONFIG_BOOTCOUNT_LIMIT */
 	{
 		s = getenv ("bootcmd");
-		
-	
-	// SD 카드가 있는지 검사한다.
-	// 1이면 SD가 있는 경우다.
-	if(mmc_init_once == 1)
+	}
+
+/* GP2X Stuff */
+
+	/* Routine to check if RIGHT Trigger is held and if so, try and boot kernel off the SD card */
+	if (SDK2X_KEY_RIGHT & sdk2x_SysReadKeys()) /* Check to see if the Right trigger key is pressed */
 	{
-		int size = 0;
-		char *gp2xbootimg[] 	= { "fatload", "mmc", "0", "0x1000000", "gp2xboot.img"		};
-		char *gp2xkernelimg[] 	= { "fatload", "mmc", "0", "0x1000000", "gp2xkernel.img"	};
-		/*char *gp2xfileimg[] 	= { "fatload", "mmc", "0", "0x1000000", "gp2xfile.img"		};*/
-		char *gp2xsoundlogo[]   = { "fatload", "mmc", "0", "0x1000000", "gp2xsound.wav"     };
-		char *gp2xfileimg[] 	= { "fatload", "mmc", "0", "0x1000000", "gp2xyaffs.img"		};
-		unsigned char bShowLogo = 0; 
-		
-		printf("BOOT UPDATE ----------------------------\n");
-		// uboot.img 파일이 있는지 찾는다.
-		size = do_fat_fsload(NULL, 0, 5, gp2xbootimg);
-		printf("1 : g_filesize %x\n", g_filesize);
-		if(size != -1)
-		{
-			// uboot를 찾으면 업데이트 한다.
-			int ret_gp2xboot_erase = 0;
-			int ret_gp2xboot_write = 0;
-			ulong length = 0x4000 * ((size/0x4000)+1);		// 0x4000 단위로 나누고 이걸 1더해서 곱하면 0x4000의 배수가 된다.
-			printf("gp2xboot.img Update %d 0x%x \n", size, length);
-			
-			if(bShowLogo == 0)
-			{
-				bShowLogo = 1;
-				display_Firmware();
-			}
-			
-			do
-			{
-				do 
-				{
-					ret_gp2xboot_erase = nand_erase_func(0, 0x80000);
-				}
-				while(ret_gp2xboot_erase);		// 0이면 지원진 것이다.
+		unsigned char *fbaddr = (unsigned char*)PA_FB0_BASE;
+		int x, y, size;
 
-				ret_gp2xboot_write = nand_write_func(0x1000000, 0, length);
-			}while(ret_gp2xboot_write);	// 0이면 쓴 것이다.
-			
-			//do_nand(NULL, 0, 4, gp2xbootimg_erase);
-			//do_nand(NULL, 0, 4, gp2xbootimg_write);
+		//for(y=0; y<240; y++)
+		//{
+		//	for(x=0; x<320; x++)
+		//	{
+		//		*fbaddr++ = 0x00;
+		//		*fbaddr++ = 0x00;
+		//	}
+		//}
+		//sdk2x_LcdTextOut (0, 10, "Attempting to load kernel.img", 0xFFFF);
+		//sdk2x_LcdTextOut (0, 20, "from SD/SDHC card.", 0xFFFF);
+
+		sdk2x_LcdTextOut (80, 93, "Booting SD card.", 0xFFFF);
+
+		/* Catch all, incase no image found */
+		sprintf(s, "reset");
+		if (0 != sdk2x_SdHwInit())
+		{
+			/* Just blank the screen */
+			for(y=0; y<240; y++)
+			{
+				for(x=0; x<320; x++)
+				{
+					*fbaddr++ = 0x00;
+					*fbaddr++ = 0x00;
+				}
+			}
+			sdk2x_LcdTextOut (0, 40, "No FAT file system on card.", 0xF800);
+			sdk2x_MSleep(5000);
+			sprintf(s, "reset\0");
 		}
 		else
 		{
-			printf("gp2xboot.img not found\n");
-		}
-		
-		printf("KERNEL UPDATE ----------------------------\n");
-		size = -1;
-		size = do_fat_fsload(NULL, 0, 5, gp2xkernelimg);
-		printf("2 : g_filesize %x\n", g_filesize);
-		if(size != -1)
-		{
-			// kernel를 찾으면 업데이트 한다.
-			int ret_gp2xkernel_erase = 0;
-			int ret_gp2xkernel_write = 0;
-			ulong length = 0x4000 * ((size/0x4000)+1);		// 0x4000 단위로 나누고 이걸 1더해서 곱하면 0x4000의 배수가 된다.
-			printf("gp2xkernel.img Update %d 0x%x \n", size, length);
-
-			if(bShowLogo == 0)
+			/* Commands to load images from SD */
+			char *SDboot[] 	= { "fatload", "mmc", "0", "0x1000000", "kernel.img"};
+			size = do_fat_fsload(NULL, 0, 5, SDboot);
+			if (size < 0)
 			{
-				bShowLogo = 1;
-				display_Firmware();
-			}
-
-			do
-			{
-				do 
+				/* Just blank the screen */
+				for(y=0; y<240; y++)
 				{
-					ret_gp2xkernel_erase = nand_erase_func(0x80000, 0x120000);
-					//ret_gp2xkernel_erase = nand_erase_func(0x80000, length);
+					for(x=0; x<320; x++)
+					{
+						*fbaddr++ = 0x00;
+						*fbaddr++ = 0x00;
+					}
 				}
-				while(ret_gp2xkernel_erase);		// 0이면 지원진 것이다.
-
-				ret_gp2xkernel_write = nand_write_func(0x1000000, 0x80000, length);
-				//ret_gp2xkernel_write = nand_write_func(0x1000000, 0xD0000, length);
-			}while(ret_gp2xkernel_write);	// 0이면 쓴 것이다.
-			//do_nand(NULL, 0, 4, gp2xbootimg_erase);
-			//do_nand(NULL, 0, 4, gp2xbootimg_write);
-		}
-		else
-		{
-			printf("gp2xkernel.img not found\n");
-		}
-
-#if 1
-		printf("WAVE FILE  WRITE ----------------------------\n");
-		size = -1;
-		size = do_fat_fsload(NULL, 0, 5, gp2xsoundlogo);
-		printf("2 : g_filesize %x\n", g_filesize);
-		if(size > 0x50000)
-		{
-			printf("Sound big size error\n");
-			size=-1;
-		}
-		if(size != -1)
-		{
-			// kernel를 찾으면 업데이트 한다.
-			int ret_gp2xsound_erase = 0;
-			int ret_gp2xsound_write = 0;
-			ulong length = 0x4000 * ((size/0x4000)+1);		// 0x4000 단위로 나누고 이걸 1더해서 곱하면 0x4000의 배수가 된다.
-			printf("gp2xsound.wav Update %d 0x%x \n", size, length);
-
-			if(bShowLogo == 0)
-			{
-				bShowLogo = 1;
-				display_Firmware();
+				sdk2x_LcdTextOut (0, 40, "Failed to load kernel.img from card.", 0xF800);
+				sdk2x_MSleep(5000);
+				sprintf(s, "reset\0");
 			}
-
-			do
+			else
 			{
-				do 
-				{
-					
-					ret_gp2xsound_erase = nand_erase_func(0x1A0000, 0x60000);
-				}
-				while(ret_gp2xsound_erase);		// 0이면 지원진 것이다.
-
-				
-				//ret_gp2xsound_write = nand_write_func(0x1000000, 0x1A0000, length);
-				ret_gp2xsound_write = nand_write_jffs2_func(0x1000000, 0x1A0000, length);
-			}while(ret_gp2xsound_write);	// 0이면 쓴 것이다.
-			
-		}
-		else
-		{
-			printf("gp2xsound.wav not found\n");
-		}
-
-#endif
-
-		printf("FILE UPDATE ----------------------------\n");
-		size = -1;
-		size = do_fat_fsload(NULL, 0, 5, gp2xfileimg);
-		printf("3 : g_filesize %x\n", g_filesize);
-		if(size != -1)
-		{
-			// disk file을 찾으면 업데이트 한다.
-			int ret_gp2xfile_erase = 0;
-			int ret_gp2xfile_write = 0;
-			ulong length = 0x4000 * ((size/0x4000)+1);		// 0x4000 단위로 나누고 이걸 1더해서 곱하면 0x4000의 배수가 된다.
-			printf("gp2xfile.img Update %d 0x%x \n", size, length);
-
-			if(bShowLogo == 0)
-			{
-				bShowLogo = 1;
-				display_Firmware();
+				sdk2x_LcdTextOut (80, 104, "Running kernel.img.", 0x07E0);
+				sprintf(s, "bootm\0");
 			}
-			do
-			{
-				do 
-				{
-					ret_gp2xfile_erase = nand_erase_func(0x200000, 0x1E00000);	 //32MB - 2MB(Boot+kernel)=30MB
-				}
-				while(ret_gp2xfile_erase);		// 0이면 지원진 것이다.
-				ret_gp2xfile_write = nand_write_yaffs_func(0x1000000, 0x220000, length); //A	
-				//ret_gp2xfile_write = nand_write_yaffs_func(0x1000000, 0x240000, length); //B	
-				
-				if(ret_gp2xfile_write) 	/* REWRITE */
-					ret_gp2xfile_write=nand_write_yaffs_func(0x1000000, 0x220000, length); 	//A
-			//		ret_gp2xfile_write=nand_write_yaffs_func(0x1000000, 0x240000, length);  //B
-
-			}while(ret_gp2xfile_write);	// 0이면 쓴 것이다.
-
-			//do_nand(NULL, 0, 4, gp2xbootimg_erase);
-			//do_nand(NULL, 0, 4, gp2xbootimg_write);
 		}
-		else
-		{
-			printf("gp2xfile.img not found\n");
-		}
-		
-		kernel_load = 0;
 	}
+
+	/* Routine to check if START is held and if so, bring up the boot menu */
+	if (SDK2X_KEY_START & sdk2x_SysReadKeys()) /* Check to see if the menu key is pressed */
+	{
+		unsigned char *fbaddr = (unsigned char*)PA_FB0_BASE;
+		int x, y, size;
+
+		int selected = 0, cancelled = 0, option = 1, change = 1, keys = 0;
+		#define MENU_MAX_OPTIONS 4
+
+/* Just blank the screen */
+//		for(y=0; y<240; y++)
+//		{
+//			for(x=0; x<320; x++)
+//			{
+//				*fbaddr++ = 0x00;
+//				*fbaddr++ = 0x00;
+//			}
+//		}
+		//sdk2x_LcdTextOut (100, 20, "Open2x Bootloader", 0xFFFF);
+		//sdk2x_LcdTextOut (100, 27, "-----------------", 0xFFFF);
+		//sdk2x_LcdTextOut (100, 40, "                 ", 0xFFFF);
+
+		/* Wait for the user to chose an image or cancel */
+		while (!selected && !cancelled)
+		{
+			keys = sdk2x_SysReadKeys();
+
+			if (keys & SDK2X_KEY_JSDN)
+			{
+				option++;
+				if (option > MENU_MAX_OPTIONS)
+					option = 1;
+				change = 1;
+			}
+			else if (keys & SDK2X_KEY_JSUP)
+			{
+				option--;
+				if (option < 1)
+					option = MENU_MAX_OPTIONS;
+				change = 1;
+			}
+			else if (keys & (SDK2X_KEY_JSPRESS | SDK2X_KEY_B | SDK2X_KEY_SELECT))
+			{
+				selected = 1;
+			}
+			else if (keys & SDK2X_KEY_X)
+			{
+				cancelled = 1;
+			}
+
+			if (change)
+			{
+				change = 0;
+				sdk2x_LcdTextOut (80, 93, "Boot from SD/SDHC card", (option == 1)?0xF800:0xFFFF);
+				sdk2x_LcdTextOut (80, 104, "Boot from NAND",   (option == 2)?0xF800:0xFFFF);
+				sdk2x_LcdTextOut (80, 115, "Serial prompt",    (option == 3)?0xF800:0xFFFF);
+				sdk2x_LcdTextOut (80, 126, "Upgrade firmware", (option == 4)?0xF800:0xFFFF);
+				sdk2x_MSleep(20);
+			}
+
+			if (keys == sdk2x_SysReadKeys())
+				sdk2x_MSleep(200);
+
+		}
+		if (!cancelled)
+		{
+			sdk2x_LcdTextOut (80, 93, "Boot from SD/SDHC card", (option == 1)?0x07E0:0x0000);
+			sdk2x_LcdTextOut (80, 104, "Boot from NAND",   (option == 2)?0x07E0:0x0000);
+			sdk2x_LcdTextOut (80, 115, "Serial prompt",    (option == 3)?0x07E0:0x0000);
+			sdk2x_LcdTextOut (80, 126, "Upgrade firmware", (option == 4)?0x07E0:0x0000);
+
+			switch (option)
+			{
+				case 1:
+					/* Catch all, incase no image found */
+					sprintf(s, "reset");
+					if (0 != sdk2x_SdHwInit())
+					{
+						sdk2x_LcdTextOut (108, 159, "No FAT F/S on card.", 0xF800);
+						sdk2x_MSleep(5000);
+					}
+					else
+					{
+						/* Commands to load images from SD */
+						char *menuSDboot[] 	= { "fatload", "mmc", "0", "0x1000000", "kernel.img"};
+
+						size = do_fat_fsload(NULL, 0, 5, menuSDboot);
+						if (size < 0)
+						{
+							sdk2x_LcdTextOut (108, 159, "No kernel.img found.", 0xF800);
+							sdk2x_MSleep(5000);
+						}
+						else
+						{
+							sprintf(s, "bootm\0");
+						}
+					}
+					break;
+
+				case 2:
+					sprintf(s, "nand read 0x1000000 0x80000 0x100000; bootm\0");
+					break;
+
+				case 3:
+					sdk2x_LcdTextOut (108, 159, "Serial prompt active.", 0xF800);
+					bootdelay = -1;
+					break;
+
+				case 4:
+					attempt_firmware_upgrade();
+					sprintf(s, "reset\0");
+					break;
+			}
+		}
 	}
-	
 	/* Read to kernel */
 	if(!kernel_load)
 		nand_read_func(0x1000000, 0x80000,0xB0000);
 
-	printf("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
 	debug ("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
 
-	if(bootdelay >= 0 && s && !abortboot (bootdelay)) 
-	{
+	if (bootdelay >= 0 && s && !abortboot (bootdelay)) {
 # ifdef CONFIG_AUTOBOOT_KEYED
 		int prev = disable_ctrlc(1);	/* disable Control C checking */
 # endif
 
-		// 여기서 bootcmd가 실행된다.
 # ifndef CFG_HUSH_PARSER
 		run_command (s, 0);
 # else
-		parse_string_outer(s, FLAG_PARSE_SEMICOLON | FLAG_EXIT_FROM_LOOP);
+		parse_string_outer(s, FLAG_PARSE_SEMICOLON |
+				    FLAG_EXIT_FROM_LOOP);
 # endif
 
 # ifdef CONFIG_AUTOBOOT_KEYED
@@ -619,15 +617,14 @@ void main_loop (void)
 	}
 
 # ifdef CONFIG_MENUKEY
-	if (menukey == CONFIG_MENUKEY) 
-	{
+	if (menukey == CONFIG_MENUKEY) {
 	    s = getenv("menucmd");
-	    if (s) 
-	    {
+	    if (s) {
 # ifndef CFG_HUSH_PARSER
 		run_command (s, bd, 0);
 # else
-		parse_string_outer(s, FLAG_PARSE_SEMICOLON | FLAG_EXIT_FROM_LOOP);
+		parse_string_outer(s, FLAG_PARSE_SEMICOLON |
+				    FLAG_EXIT_FROM_LOOP);
 # endif
 	    }
 	}
@@ -658,7 +655,6 @@ void main_loop (void)
 			reset_cmd_timeout();
 		}
 #endif
-		// 여기서 커맨드를 입력 받는다.
 		len = readline (CFG_PROMPT);
 
 		flag = 0;	/* assume no special flags for now */

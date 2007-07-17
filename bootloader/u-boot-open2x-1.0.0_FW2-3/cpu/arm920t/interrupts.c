@@ -64,8 +64,6 @@ typedef struct irqcont {
 	volatile unsigned long INTOFST;
 } IRQ_CONTROLLER;
 
-
-
 /* macro to read the 16 bit timer */
 
 #if defined(CONFIG_MMSP20) 
@@ -119,8 +117,8 @@ int disable_interrupts (void)
 static struct irq_action irq_handlers[NR_IRQS];
 void irq_install_handler (int irq, interrupt_handler_t * handler, void *arg)
 {
-	
-	if (irq < 0 || irq >= NR_IRQS) 
+
+	if (irq < 0 || irq >= NR_IRQS)
 	{
 		printf ("irq_install_handler: bad irq number %d\n", irq);
 		return;
@@ -134,14 +132,14 @@ void irq_install_handler (int irq, interrupt_handler_t * handler, void *arg)
 
 	irq_handlers[irq].handler = handler;
 	irq_handlers[irq].arg = arg;
-	
+
 	enable_interrupts ();
-	
+
 }
 
 void irq_free_handler (int irq)
 {
-	if (irq < 0 || irq >= NR_IRQS) 
+	if (irq < 0 || irq >= NR_IRQS)
 	{
 		printf ("irq_free_handler: bad irq number %d\n", irq);
 		return;
@@ -149,7 +147,7 @@ void irq_free_handler (int irq)
 
 	irq_handlers[irq].handler = NULL;
 	irq_handlers[irq].arg = NULL;
-	
+
 	disable_interrupts();
 }
 #else
@@ -249,18 +247,17 @@ void do_fiq (struct pt_regs *pt_regs)
 	bad_mode ();
 }
 
-
 void do_irq (struct pt_regs *pt_regs)
 {
-#if 1	
+#if 1
 	int irq = 0;
 	IRQ_CONTROLLER* IRQReg=(IRQ_CONTROLLER*)(0xC0000800);
-	
-	while( (IRQReg->INTPEND & (unsigned long)(1 << irq)) == 0 ) 
+
+	while( (IRQReg->INTPEND & (unsigned long)(1 << irq)) == 0 )
 	{
 		irq++;
 	};
-	
+
 	if (irq >= NR_IRQS)
 	{
 		printf("ERROR IRQ NUMBER\n");
@@ -270,11 +267,11 @@ void do_irq (struct pt_regs *pt_regs)
 	if(irq != 9)
 	{
 		IRQReg->SRCPEND	|= (unsigned long)(1 << irq);			// Clear SRCPENDREG
-		IRQReg->INTPEND	|= (unsigned long)(1 << irq);			// Clear INTPENDREG 
+		IRQReg->INTPEND	|= (unsigned long)(1 << irq);			// Clear INTPENDREG
 		return;
 	}
-	
-	
+
+
 	if (irq_handlers[irq].handler != NULL)
 		(*irq_handlers[irq].handler) (irq_handlers[irq].arg);
 	else {
@@ -282,7 +279,7 @@ void do_irq (struct pt_regs *pt_regs)
 		disable_interrupts();
 		return;
 	}
-	
+
 	IRQReg->SRCPEND	|= (unsigned long)(1 << irq);			// Clear SRCPENDREG
 	IRQReg->INTPEND	|= (unsigned long)(1 << irq);			// Clear INTPENDREG
 
@@ -296,7 +293,6 @@ void do_irq (struct pt_regs *pt_regs)
 #endif
 
 }
-
 
 static ulong timestamp;
 static ulong lastdec;

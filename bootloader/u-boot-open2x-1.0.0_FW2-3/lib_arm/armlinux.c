@@ -26,8 +26,6 @@
 #include <image.h>
 #include <zlib.h>
 #include <asm/byteorder.h>
-
-
 #ifdef CONFIG_HAS_DATAFLASH
 #include <dataflash.h>
 #endif

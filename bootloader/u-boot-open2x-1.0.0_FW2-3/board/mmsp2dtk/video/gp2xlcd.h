@@ -4,8 +4,8 @@
 //[*]----------------------------------------------------------------------------------------------------[*]
 //[*]----------------------------------------------------------------------------------------------------[*]
 //[*]----------------------------------------------------------------------------------------------------[*]
+#include "hardware.h"
 
-#if 0
 #define le16_to_cpu __le16_to_cpu
 #define __le16_to_cpu(x) ((__u16)(x))
 
@@ -30,24 +30,7 @@
 #define DUALCPU_MEM_SIZE	    (HEX_1M)  		// 1M
 
 
-const unsigned int _pins_of_gpio[] = {
-	[GRP_NUM(GPIO_A0)] = 16,
-	[GRP_NUM(GPIO_B0)] = 16,
-	[GRP_NUM(GPIO_C0)] = 16,
-	[GRP_NUM(GPIO_D0)] = 14,
-	[GRP_NUM(GPIO_E0)] = 16,
-	[GRP_NUM(GPIO_F0)] = 10,
-	[GRP_NUM(GPIO_G0)] = 16,
-	[GRP_NUM(GPIO_H0)] = 7,
-	[GRP_NUM(GPIO_I0)] = 16,
-	[GRP_NUM(GPIO_J0)] = 16,
-	[GRP_NUM(GPIO_K0)] = 8,
-	[GRP_NUM(GPIO_L0)] = 15,
-	[GRP_NUM(GPIO_M0)] = 9,
-	[GRP_NUM(GPIO_N0)] = 8,
-	[GRP_NUM(GPIO_O0)] = 6,
-};
-#endif
+extern const unsigned int _pins_of_gpio[];
 
 void show_logo(void);
 

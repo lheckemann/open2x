@@ -1,6 +1,6 @@
 /*
- * (C) Copyright 2003
- * David Müller ELSOFT AG Switzerland. d.mueller@elsoft.ch
+ * (C) Copyright 2000-2003
+ * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -21,39 +21,13 @@
  * MA 02111-1307 USA
  */
 
-/*
- * Date & Time support for the built-in MMSP20 RTC
- */
+#ifndef _MMC_H_
+#define _MMC_H_
+#include <mmsp2dtk/sdk2x_sd_hw.h>
 
-#include <common.h>
-#include <command.h>
+int mmc_init(int verbose);
+int mmc_read(ulong src, uchar *dst, int size);
+int mmc_write(uchar *src, ulong dst, int size);
+int mmc2info(ulong addr);
 
-#if defined(CONFIG_RTC_MMSP20) && (CONFIG_COMMANDS & CFG_CMD_DATE)
-
-#include <rtc.h>
-#include <mmsp20.h>
-/*#define	DEBUG*/
-
-
-/* this not support julian */
-void rtc_get (struct rtc_time *tmp)
-{
-	MMSP20_RTC * const rtc = MMSP20_GetBase_RTC();
-	
-}
-void rtc_set (struct rtc_time *tmp)
-{
-	MMSP20_RTC * const rtc = MMSP20_GetBase_RTC();
-
-}
-
-void rtc_reset (void)
-{
-	MMSP20_RTC * const rtc = MMSP20_GetBase_RTC();
-
-	rtc->RTCTSETREG = 0x00000000;
-}
-
-/* ------------------------------------------------------------------------- */
-
-#endif	/* CONFIG_RTC_MMSP20 && CFG_CMD_DATE */
+#endif /* _MMC_H_ */

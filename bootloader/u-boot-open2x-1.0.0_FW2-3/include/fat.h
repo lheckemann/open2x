@@ -177,7 +177,7 @@ typedef struct {
 	__u16	rootdir_sect;	/* Start sector of root directory */
 	__u16	clust_size;	/* Size of clusters in sectors */
 	__u16	data_begin;	/* The sector of the first cluster */
-	__u8	fatbuf[FATBUFSIZE]; /* Current FAT buffer */
+	__u32	fatbuf[FATBUFSIZE/4]; /* Current FAT buffer */
 	int	fatbufnum;	/* Used by get_fatent, init to -1 */
 } fsdata;
 

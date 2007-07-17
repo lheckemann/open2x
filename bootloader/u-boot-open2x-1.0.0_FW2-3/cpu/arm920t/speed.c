@@ -68,14 +68,14 @@ static ulong get_PLLCLK(int pllreg)
     ulong r,m,p,s;
     ulong i;
 
-	
+
     if (pllreg == FPLL)
-	r = clk_power->FPLLVSETREG;   
+	r = clk_power->FPLLVSETREG;
     else if (pllreg == UPLL)
 	r = clk_power->UPLLVSETREG;
     else if (pllreg == APLL)
 	r = clk_power->APLLVSETREG;
-    else 
+    else
 	hang();
 
     m = ((r & 0xFF00) >> 8) + 8;   	/* m = MDIV + * */
@@ -89,7 +89,7 @@ ulong get_FCLK(void)
 {
    	MMSP20_CLOCK_POWER * const clk_power = MMSP20_GetBase_CLOCK_POWER();
     	ulong i;
-	
+
 	i = clk_power->SYSCSETREG;
 	i = (i & 0x07) + 1;
 	return ( get_PLLCLK(FPLL) / i );
@@ -98,7 +98,7 @@ ulong get_DCLK(void)
 {
    	MMSP20_CLOCK_POWER * const clk_power = MMSP20_GetBase_CLOCK_POWER();
     	ulong i;
-	
+
 	i = clk_power->SYSCSETREG;
 	i = ((i >> 6) & 0x07) + 1;
 	return ( get_PLLCLK(FPLL) / i );
@@ -117,7 +117,7 @@ ulong get_UCLK(void)
 {
    	MMSP20_CLOCK_POWER * const clk_power = MMSP20_GetBase_CLOCK_POWER();
     	ulong i;
-	
+
 	i = clk_power->PWMODEREG;
 	i = ((i >> 7) & 0x01) ;
 	return ((i) ? 0 : get_PLLCLK(UPLL));
@@ -126,7 +126,7 @@ ulong get_ACLK(void)
 {
    	MMSP20_CLOCK_POWER * const clk_power = MMSP20_GetBase_CLOCK_POWER();
     	ulong i;
-	
+
 	i = clk_power->PWMODEREG;
 	i = (i >> 8) & 0x01;
 	return ((i) ? 0 : get_PLLCLK(APLL));
@@ -134,7 +134,7 @@ ulong get_ACLK(void)
 ulong get_UART1_CLK(void)
 {
 	MMSP20_CLOCK_POWER * const clk_power = MMSP20_GetBase_CLOCK_POWER();
-	
+
 	unsigned int clk_source = (clk_power->URTCSETREG[0] >> 14) & 0x03;
 	unsigned int divide = (clk_power->URTCSETREG[0] >> 8 ) & 0x03F;
 
@@ -159,33 +159,34 @@ void show_MMSP2_CLK(void)
 	MMSP20_CLOCK_POWER * const clk_power = MMSP20_GetBase_CLOCK_POWER();
 	unsigned int clk_source = (clk_power->URTCSETREG[0] >> 14) & 0x03;
 
-    printf("MP2520F    FPLLCLK: %9lu Hz\n", get_PLLCLK(FPLL) );
-	printf("MP2520F    UPLLCLK: %9lu Hz\n", get_PLLCLK(UPLL) );
-	printf("MP2520F    APLLCLK: %9lu Hz\n", get_PLLCLK(APLL) );
+	printf("CPU Clocks\n");
+    printf("MP2520F:    FPLLCLK: %9lu MHz\n", get_PLLCLK(FPLL)/100000000 );
+	printf("MP2520F:    UPLLCLK: %9lu MHz\n", get_PLLCLK(UPLL)/100000000 );
+	printf("MP2520F:    APLLCLK: %9lu MHz\n", get_PLLCLK(APLL)/100000000 );
 
-        printf("MP2520F UART 1 CLK: %9lu Hz\n", get_UART1_CLK() );
+//        printf("MP2520F UART 1 CLK: %9lu Hz\n", get_UART1_CLK() );
 
-	switch (clk_source){
-	   case (1):	/* FPLL 01b */
-        printf("     uart 1 clock src ==> FPLL\n");
-		break;
-	   case (2):    /* UPLL 10b */
-        printf("     uart 1 clock src ==> UPLL\n");
-		break;
-	   case (3):    /* APLL 11b */
-        printf("     uart 1 clock src ==> APLL\n");
-		break;
-	   default :
-        printf("     uart 1 clock src ==> ?(don't know)\n");
-		break;
-	}
+//	switch (clk_source){
+//	   case (1):	/* FPLL 01b */
+  //      printf("     uart 1 clock src ==> FPLL\n");
+//		break;
+//	   case (2):    /* UPLL 10b */
+  //      printf("     uart 1 clock src ==> UPLL\n");
+		//break;
+//	   case (3):    /* APLL 11b */
+//        printf("     uart 1 clock src ==> APLL\n");
+//		break;
+//	   default :
+//        printf("     uart 1 clock src ==> ?(don't know)\n");
+//		break;
+//	}
 
-        printf("MP2520F       FCLK: %9lu Hz\n", get_FCLK() );
-        printf("MP2520F       UCLK: %9lu Hz\n", get_UCLK() );
-        printf("MP2520F       ACLK: %9lu Hz\n", get_ACLK() );
-        printf("MP2520F       DCLK: %9lu Hz = FCLK/n\n", get_DCLK() );
-        printf("MP2520F       BCLK: %9lu Hz = DCLK/2\n", get_BCLK() );
-        printf("MP2520F       PCLK: %9lu Hz = BCLK/2 = DCLK/4\n", get_PCLK() );
+        printf("MP2520F:       FCLK: %9lu Hz\n", get_FCLK() );
+        printf("MP2520F:       UCLK: %9lu Hz\n", get_UCLK() );
+        printf("MP2520F:       ACLK: %9lu Hz\n", get_ACLK() );
+        printf("MP2520F:       DCLK: %9lu Hz = FCLK/n\n", get_DCLK() );
+        printf("MP2520F:       BCLK: %9lu Hz = DCLK/2\n", get_BCLK() );
+        printf("MP2520F:       PCLK: %9lu Hz = BCLK/2 = DCLK/4\n", get_PCLK() );
 }
 
 #else
@@ -207,7 +208,6 @@ static ulong get_PLLCLK(int pllreg)
 
     return((CONFIG_SYS_CLK_FREQ * m) / (p << s));
 }
-
 
 /* return FCLK frequency */
 ulong get_FCLK(void)
@@ -236,4 +236,5 @@ ulong get_UCLK(void)
 {
     return(get_PLLCLK(UPLL));
 }
+
 #endif

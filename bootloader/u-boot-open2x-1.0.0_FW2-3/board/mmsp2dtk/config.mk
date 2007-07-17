@@ -18,6 +18,12 @@
 # we load ourself to 03F8'0000
 # download area is 0300'0000
 #
+
+#Default base for the GP2X.
+#TEXT_BASE = 0x03E00000
+
+#Not Sure
 #TEXT_BASE = 0x03F00000
-#TEXT_BASE = 0x03E80000 
-TEXT_BASE = 0x03E00000 
+
+#Used for Kernel style builds - Relocate to a position where we shouldn't interfere with the real U-Boot, or the kernel.
+TEXT_BASE = 0x00D00000
