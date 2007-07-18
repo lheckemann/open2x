@@ -236,7 +236,6 @@ struct usb_ep * __init usb_ep_autoconfig (
 
 	type = desc->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK;
 
-	printk("ooooooooooooooo\n");
 	/* First, apply chip-specific "best usage" knowledge.
 	 * This might make a good usb_gadget_ops hook ...
 	 */
@@ -280,8 +279,7 @@ struct usb_ep * __init usb_ep_autoconfig (
 		if (ep_matches (gadget, ep, desc))
 			return ep;
 	}
-	
-	printk("111111111111111\n");
+
 	/* Fail */
 	return 0;
 }

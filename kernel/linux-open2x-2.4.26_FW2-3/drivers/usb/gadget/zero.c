@@ -192,7 +192,6 @@ MODULE_PARM_DESC (loopdefault, "true to have default config be loopback");
  * before trying to wake up the host after suspend.
  */
 static unsigned autoresume = 5;
-/* static unsigned autoresume = 0; */
 MODULE_PARM (autoresume, "i");
 
 /*-------------------------------------------------------------------------*/
@@ -556,7 +555,7 @@ static void source_sink_complete (struct usb_ep *ep, struct usb_request *req)
 {
 	struct zero_dev	*dev = ep->driver_data;
 	int		status = req->status;
-	
+
 	if (ep == NULL || req == NULL)
 	{
 		printk("Bad complete call in zero %u %u\n", ep, req);
@@ -687,6 +686,7 @@ set_source_sink_config (struct zero_dev *dev, int gfp_flags)
 }
 
 /*-------------------------------------------------------------------------*/
+
 static void loopback_complete (struct usb_ep *ep, struct usb_request *req)
 {
 	struct zero_dev	*dev;
@@ -1112,7 +1112,6 @@ zero_autoresume (unsigned long _dev)
 	/* normally the host would be woken up for something
 	 * more significant than just a timer firing...
 	 */
-	printk("autoresume\n");
 	status = usb_gadget_wakeup (dev->gadget);
 	DBG (dev, "wakeup --> %d\n", status);
 }
@@ -1225,7 +1224,6 @@ autoconf_fail:
 
 #ifdef CONFIG_USB_GADGET_DUALSPEED
 	/* assume ep0 uses the same value for both speeds ... */
-	
 	dev_qualifier.bMaxPacketSize0 = device_desc.bMaxPacketSize0;
 
 	/* and that all endpoints are dual-speed */
@@ -1234,7 +1232,7 @@ autoconf_fail:
 #endif
 
 	usb_gadget_set_selfpowered (gadget);
-	
+
 	init_timer (&dev->resume);
 	dev->resume.function = zero_autoresume;
 	dev->resume.data = (unsigned long) dev;

@@ -26,6 +26,7 @@
 #ifndef __user
 #define __user
 #endif
+
 #include <linux/config.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -61,6 +62,10 @@
 
 #include "gadget_chips.h"
 
+
+#define USE_STATUS_EP 1
+// #undef USE_STATUS_EP
+
 /*-------------------------------------------------------------------------*/
 
 /*
@@ -85,7 +90,7 @@
  */
 
 #define DRIVER_DESC		"Ethernet Gadget"
-#define DRIVER_VERSION		"St Patrick's Day 2004"
+#define DRIVER_VERSION		"October 24 2006"
 
 static const char shortname [] = "ether";
 static const char driver_desc [] = DRIVER_DESC;
@@ -691,6 +696,7 @@ fs_source_desc = {
 
 	.bEndpointAddress =	USB_DIR_IN,
 	.bmAttributes =		USB_ENDPOINT_XFER_BULK,
+	.wMaxPacketSize =	__constant_cpu_to_le16 (64),    
 };
 
 static struct usb_endpoint_descriptor
@@ -700,6 +706,7 @@ fs_sink_desc = {
 
 	.bEndpointAddress =	USB_DIR_OUT,
 	.bmAttributes =		USB_ENDPOINT_XFER_BULK,
+	.wMaxPacketSize =	__constant_cpu_to_le16 (64),    
 };
 
 static const struct usb_descriptor_header *fs_eth_function [10] = {
@@ -710,7 +717,9 @@ static const struct usb_descriptor_header *fs_eth_function [10] = {
 	(struct usb_descriptor_header *) &union_desc,
 	(struct usb_descriptor_header *) &ether_desc,
 	/* NOTE: status endpoint may need to be removed */
+#ifdef USE_STATUS_EP
 	(struct usb_descriptor_header *) &fs_status_desc,
+#endif
 	/* data interface, with altsetting */
 	(struct usb_descriptor_header *) &data_nop_intf,
 	(struct usb_descriptor_header *) &data_intf,
@@ -740,7 +749,9 @@ static const struct usb_descriptor_header *fs_rndis_function [] = {
 	(struct usb_descriptor_header *) &call_mgmt_descriptor,
 	(struct usb_descriptor_header *) &acm_descriptor,
 	(struct usb_descriptor_header *) &union_desc,
+#ifdef USE_STATUS_EP    
 	(struct usb_descriptor_header *) &fs_status_desc,
+#endif
 	/* data interface has no altsetting */
 	(struct usb_descriptor_header *) &rndis_data_intf,
 	(struct usb_descriptor_header *) &fs_source_desc,
@@ -793,7 +804,6 @@ dev_qualifier = {
 
 	.bcdUSB =		__constant_cpu_to_le16 (0x0200),
 	.bDeviceClass =		USB_CLASS_COMM,
-
 	.bNumConfigurations =	1,
 };
 
@@ -805,7 +815,9 @@ static const struct usb_descriptor_header *hs_eth_function [10] = {
 	(struct usb_descriptor_header *) &union_desc,
 	(struct usb_descriptor_header *) &ether_desc,
 	/* NOTE: status endpoint may need to be removed */
+#ifdef USE_STATUS_EP    
 	(struct usb_descriptor_header *) &hs_status_desc,
+#endif
 	/* data interface, with altsetting */
 	(struct usb_descriptor_header *) &data_nop_intf,
 	(struct usb_descriptor_header *) &data_intf,
@@ -835,7 +847,9 @@ static const struct usb_descriptor_header *hs_rndis_function [] = {
 	(struct usb_descriptor_header *) &call_mgmt_descriptor,
 	(struct usb_descriptor_header *) &acm_descriptor,
 	(struct usb_descriptor_header *) &union_desc,
+#ifdef USE_STATUS_EP    
 	(struct usb_descriptor_header *) &hs_status_desc,
+#endif
 	/* data interface has no altsetting */
 	(struct usb_descriptor_header *) &rndis_data_intf,
 	(struct usb_descriptor_header *) &hs_source_desc,
@@ -972,7 +986,9 @@ static inline int ether_alt_ep_setup (struct eth_dev *dev, struct usb_ep *ep)
 		dev->out = d;
 
 	/* optional status/notification endpoint */
-	} else if (EP_STATUS_NAME &&
+	}
+#ifdef USE_STATUS_EP        
+        else if (EP_STATUS_NAME &&
 			strcmp (ep->name, EP_STATUS_NAME) == 0) {
 		int			result;
 
@@ -985,6 +1001,7 @@ static inline int ether_alt_ep_setup (struct eth_dev *dev, struct usb_ep *ep)
 		dev->status_ep = ep;
 		dev->status = d;
 	}
+#endif
 	return 0;
 }
 #endif
@@ -1045,6 +1062,7 @@ set_ether_config (struct eth_dev *dev, int gfp_flags)
 #endif
 
 #ifdef	CONFIG_USB_ETH_RNDIS
+#ifdef USE_STATUS_EP
 		if (dev->rndis && strcmp (ep->name, EP_STATUS_NAME) == 0) {
 			const struct usb_endpoint_descriptor	*d;
 			d = ep_desc (gadget, &hs_status_desc, &fs_status_desc);
@@ -1056,6 +1074,7 @@ set_ether_config (struct eth_dev *dev, int gfp_flags)
 				continue;
 			}
 		} else
+#endif
 #endif
 
 		{
@@ -1079,8 +1098,10 @@ set_ether_config (struct eth_dev *dev, int gfp_flags)
 	/* on error, disable any endpoints  */
 	if (result < 0) {
 #if defined(DEV_CONFIG_CDC) || defined(CONFIG_USB_ETH_RNDIS)
+#ifdef USE_STATUS_EP            
 		if (dev->status_ep)
 			(void) usb_ep_disable (dev->status_ep);
+#endif
 #endif
 		dev->status_ep = 0;
 		dev->status = 0;
@@ -1287,6 +1308,8 @@ static void eth_status_complete (struct usb_ep *ep, struct usb_request *req)
 	usb_ep_free_request (ep, req);
 }
 
+#ifdef USE_STATUS_EP
+
 static void issue_start_status (struct eth_dev *dev)
 {
 	struct usb_request	*req;
@@ -1341,6 +1364,7 @@ free_req:
 		goto free_req;
 	}
 }
+#endif
 
 #endif
 
@@ -1378,7 +1402,8 @@ static void eth_setup_complete (struct usb_ep *ep, struct usb_request *req)
 
 static void rndis_response_complete (struct usb_ep *ep, struct usb_request *req)
 {
-	if (req->status || req->actual != req->length)
+        struct eth_dev          *dev = ep->driver_data;
+	if (req->status || req->actual != req->length)    
 		DEBUG (dev, "rndis response complete --> %d, %d/%d\n",
 		       req->status, req->actual, req->length);
 
@@ -1434,6 +1459,7 @@ eth_setup (struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 		case USB_DT_DEVICE_QUALIFIER:
 			if (!gadget->is_dualspeed)
 				break;
+                        DEBUG(dev, "Returning USB_DT_DEVICE_QUALIFIER\n");
 			value = min (ctrl->wLength, (u16) sizeof dev_qualifier);
 			memcpy (req->buf, &dev_qualifier, value);
 			break;
@@ -1519,8 +1545,14 @@ eth_setup (struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 				netif_carrier_on (dev->net);
                                 // Debug SL, this request was causing a 2272 problem...
                                 // It is optional so leave it out
-				// if (dev->status_ep)
-				// 	issue_start_status (dev);
+#ifdef USE_STATUS_EP                            
+				if (dev->status_ep)
+                                    	usb_ep_disable (dev->status_ep);
+                                        usb_ep_enable (dev->status_ep, dev->status);
+				 	// issue_start_status (dev);
+                            
+                                        DEBUG (dev, "issue_start_status skipping\n");
+#endif
 				if (netif_running (dev->net)) {
 					spin_unlock (&dev->lock);
 					eth_start (dev, GFP_ATOMIC);
@@ -1867,9 +1899,10 @@ quiesce:
 		dev_kfree_skb_any (skb);
 	if (!netif_running (dev->net)) {
 clean:
-		/* nobody reading rx_reqs, so no dev->lock */
+		spin_lock(&dev->lock);
 		list_add (&req->list, &dev->rx_reqs);
-		req = 0;
+		spin_unlock(&dev->lock);
+		req = NULL;
 	}
 	if (req)
 		rx_submit (dev, req, GFP_ATOMIC);
@@ -2103,6 +2136,7 @@ static void rndis_send_media_state (struct eth_dev *dev, int connect)
 
 static void rndis_control_ack_complete (struct usb_ep *ep, struct usb_request *req)
 {
+        struct eth_dev          *dev = ep->driver_data;
 	if (req->status || req->actual != req->length)
 		DEBUG (dev, "rndis control ack complete --> %d, %d/%d\n",
 		       req->status, req->actual, req->length);
@@ -2303,7 +2337,6 @@ eth_bind (struct usb_gadget *gadget)
 #ifndef	CONFIG_USB_ETH_RNDIS
 	rndis = 0;
 #endif
-
 	/* Because most host side USB stacks handle CDC Ethernet, that
 	 * standard protocol is _strongly_ preferred for interop purposes.
 	 * (By everyone except Microsoft.)
@@ -2437,7 +2470,6 @@ autoconf_fail:
 		}
 	}
 #endif
-
 	/* one config:  cdc, else minimal subset */
 	if (!cdc) {
 		eth_config.bNumInterfaces = 1;
@@ -2450,6 +2482,7 @@ autoconf_fail:
 	if (rndis)
 		device_desc.bNumConfigurations = 2;
 
+
 #ifdef	CONFIG_USB_GADGET_DUALSPEED
 	if (rndis)
 		dev_qualifier.bNumConfigurations = 2;
@@ -2457,7 +2490,8 @@ autoconf_fail:
 		dev_qualifier.bDeviceClass = USB_CLASS_VENDOR_SPEC;
 
 	/* assumes ep0 uses the same value for both speeds ... */
-	dev_qualifier.bMaxPacketSize0 = device_desc.bMaxPacketSize0;
+        // debug SL
+        dev_qualifier.bMaxPacketSize0 = gadget->ep0->maxpacket;
 
 	/* and that all endpoints are dual-speed */
 	hs_source_desc.bEndpointAddress = fs_source_desc.bEndpointAddress;
@@ -2468,8 +2502,7 @@ autoconf_fail:
 				fs_status_desc.bEndpointAddress;
 #endif
 #endif	/* DUALSPEED */
-
-	device_desc.bMaxPacketSize0 = gadget->ep0->maxpacket;
+        device_desc.bMaxPacketSize0 = gadget->ep0->maxpacket;
 	usb_gadget_set_selfpowered (gadget);
 
  	net = alloc_etherdev (sizeof *dev);
