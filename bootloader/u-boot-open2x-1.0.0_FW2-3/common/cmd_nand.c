@@ -102,37 +102,47 @@ static int        NanD_IdentChip(struct nand_chip *nand, int floor, int chip);
 static void       NanD_ScanChips(struct nand_chip *nand);
 static void       NanD_ReadBuf(struct nand_chip *nand, u_char *data_buf, int cntr);
 struct nand_chip nand_dev_desc[CFG_MAX_NAND_DEVICE] = {{0}};
+
 /* Current NAND Device	*/
 static int curr_device = -1;
-/* ------------------------------------------------------------------------- */
+
+
+/* YAFFS NAND write support */
+/* Borrows from http://kelp.or.kr/korweblog/stories.php?story=04/06/30/7742286&cmode=&comment_sort=asc&sc=-1 */
+
 static int nand_write_page_yaffs (struct nand_chip *nand,
                             int page, int col, int last, u_char * ecc_code)
 {
         int i;
         unsigned long nandptr = nand->IO_ADDR;
-        /* Prepad for partial page programming !!! */
+
+        /* Prepad for partial page programming! */
         for (i = 0; i < col; i++)
                 nand->data_buf[i] = 0xff;
-        /* Postpad for partial page programming !!! oob is already padded */
+
+        /* Postpad for partial page programming! OOB is already padded */
         for (i = last; i < nand->oobblock; i++)
                 nand->data_buf[i] = 0xff;
+
         /* Send command to begin auto page programming */
         NanD_Command(nand, NAND_CMD_READ0);
         NanD_Command(nand, NAND_CMD_SEQIN);
 #ifdef CONFIG_MMSP20
-	NanD_OnlyAddress(nand, ADDR_COLUMN_PAGE, (page << nand->page_shift) + col);
+		NanD_OnlyAddress(nand, ADDR_COLUMN_PAGE, (page << nand->page_shift) + col);
 #else
         NanD_Address(nand, ADDR_COLUMN_PAGE, (page << nand->page_shift) + col);
 #endif
+
         /* Write out complete page of data */
         for (i = 0; i < (nand->oobblock + nand->oobsize); i++)
                 WRITE_NAND(nand->data_buf[i], nand->IO_ADDR);
+
         /* Send command to actually program the data */
         NanD_Command(nand, NAND_CMD_PAGEPROG);
 #ifdef CONFIG_MMSP20
        	NanD_WaitReady(nand, 0);
 #endif
-	udelay(300); 
+		udelay(300);
         NanD_Command(nand, NAND_CMD_STATUS);
 #ifdef NAND_NO_RB
         { u_char ret_val;
@@ -165,7 +175,8 @@ static int nand_write_page_yaffs (struct nand_chip *nand,
         else
                 NanD_Command(nand, NAND_CMD_READ1);
         NanD_Address(nand, ADDR_COLUMN_PAGE, (page << nand->page_shift) + col);
-	udelay(9);
+		udelay(9);
+
         /* Loop through and verify the data */
         for (i = col; i < last; i++) {
                if (nand->data_buf[i] != readb (nand->IO_ADDR)) {
@@ -176,87 +187,101 @@ static int nand_write_page_yaffs (struct nand_chip *nand,
 #endif
         return 0;
 }
+
+
 static int nand_write_yaffs (struct nand_chip* nand, size_t to, size_t len,
                            size_t * retlen, const u_char * buf, u_char * ecc_code)
 {
-        int i, page, col, cnt, ret = 0;
-	int pages_per_block = (nand->erasesize) / (nand->oobblock);
+		int i, page, col, cnt, ret = 0;
+		int pages_per_block = (nand->erasesize) / (nand->oobblock);
+
         /* Do not allow write past end of device */
         if ((to + len) > nand->totlen) {
-                printf ("%s: Attempt to write past end of page\n", __FUNCTION__);
+                printf ("%s: Attempt to write past end of page.\n", __FUNCTION__);
                 return -1;
         }
+
         /* Shift to get page */
         page = ((int) to) >> nand->page_shift;
+
         /* Get the starting column */
         col = to & (nand->oobblock - 1);
+
         /* Initialize return length value */
         *retlen = 0;
+
         /* Select the NAND device */
-#ifdef CONFIG_OMAP1510
-        archflashwp(0,0);
-#endif
         NAND_ENABLE_CE(nand);  /* set pin low */
+
         /* Check the WP bit */
         NanD_Command(nand, NAND_CMD_STATUS);
         if (!(READ_NAND(nand->IO_ADDR) & 0x80)) {
-                printf ("%s: Device is write protected!!!\n", __FUNCTION__);
+                printf ("%s: Device is write protected!\n", __FUNCTION__);
                 ret = -1;
                 goto out;
         }
+
         /* Loop until all data is written */
-	/* yaffs image contains oob_data ( size : 16 Bytes in each page ) 
-	   so additional length should be checked.  */
+		/* YAFFS image contains oob_data (size : 16 Bytes in each page)
+			so additional length should be checked.  */
         while (*retlen < len + (pages_per_block << 4)) {
+
                 /* Invalidate cache, if we write to this page */
                 if (nand->cache_page == page)
                         nand->cache_page = -1;
+
                 /* Write data into buffer */
                 if ((col + len) >= nand->oobblock)
-		/* write including oob_data in yaffs image */
+
+						/* write including oob_data in YAFFS image */
                         for (i = col, cnt = 0; i < nand->oobblock + nand->oobsize; i++, cnt++)
                                 nand->data_buf[i] = buf[(*retlen + cnt)];
                 else
                         for (i = col, cnt = 0; cnt < (len - *retlen); i++, cnt++)
                                 nand->data_buf[i] = buf[(*retlen + cnt)];
+
                 /* We use the same function for write and writev !) */
                 ret = nand_write_page_yaffs (nand, page, col, i, NULL);
                 if (ret)
                         goto out;
+
                 /* Next data start at page boundary */
                 col = 0;
+
                 /* Update written bytes count */
                 *retlen += cnt;
+
                 /* Increment page address */
                 page++;
         }
-        /* Return happy */
+        /* Return - Happy the NAND is written OK */
         *retlen = len;
+
 out:
         /* De-select the NAND device */
         NAND_DISABLE_CE(nand);  /* set pin high */
-#ifdef CONFIG_OMAP1510
-        archflashwp(0,1);
-#endif
         return ret;
 }
+
+/* End of main YAFFS write routines */
+
 int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 {
     int rcode = 0;
-    switch (argc) 
+    switch (argc)
     {
     case 0:
     case 1:
 		printf ("Usage:\n%s\n", cmdtp->usage);
 		return 1;
     case 2:
-		if(strcmp(argv[1],"info") == 0) 
+		if(strcmp(argv[1],"info") == 0)
 		{
 			int i;
-	
+
 			putc ('\n');
-	
-			for (i=0; i<CFG_MAX_NAND_DEVICE; ++i) 
+
+			for (i=0; i<CFG_MAX_NAND_DEVICE; ++i)
 			{
 				if(nand_dev_desc[i].ChipID == NAND_ChipID_UNKNOWN)
 					continue; /* list only known devices */
@@ -264,11 +289,11 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 				nand_print(&nand_dev_desc[i]);
 			}
 			return 0;
-	
-		} 
-		else if (strcmp(argv[1], "device") == 0) 
+
+		}
+		else if (strcmp(argv[1], "device") == 0)
 		{
-			if ((curr_device < 0) || (curr_device >= CFG_MAX_NAND_DEVICE)) 
+			if ((curr_device < 0) || (curr_device >= CFG_MAX_NAND_DEVICE))
 			{
 				puts ("\nno devices available\n");
 				return 1;
@@ -276,11 +301,11 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			printf ("\nDevice %d: ", curr_device);
 			nand_print(&nand_dev_desc[curr_device]);
 			return 0;
-	
-		} 
-		else if (strcmp(argv[1], "bad") == 0) 
+
+		}
+		else if (strcmp(argv[1], "bad") == 0)
 		{
-			if ((curr_device < 0) || (curr_device >= CFG_MAX_NAND_DEVICE)) 
+			if ((curr_device < 0) || (curr_device >= CFG_MAX_NAND_DEVICE))
 			{
 				puts ("\nno devices available\n");
 				return 1;
@@ -288,58 +313,58 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			printf ("\nDevice %d bad blocks:\n", curr_device);
 			nand_print_bad(&nand_dev_desc[curr_device]);
 			return 0;
-	
+
 		}
 		printf ("Usage:\n%s\n", cmdtp->usage);
 		return 1;
     case 3:
-		if(strcmp(argv[1], "device") == 0) 
+		if(strcmp(argv[1], "device") == 0)
 		{
 			int dev = (int)simple_strtoul(argv[2], NULL, 10);
-	
+
 			printf ("\nDevice %d: ", dev);
-			if(dev >= CFG_MAX_NAND_DEVICE) 
+			if(dev >= CFG_MAX_NAND_DEVICE)
 			{
 				puts ("unknown device\n");
 				return 1;
 			}
 			nand_print(&nand_dev_desc[dev]);
 			/*nand_print (dev);*/
-	
-			if(nand_dev_desc[dev].ChipID == NAND_ChipID_UNKNOWN) 
+
+			if(nand_dev_desc[dev].ChipID == NAND_ChipID_UNKNOWN)
 			{
 				return 1;
 			}
-	
+
 			curr_device = dev;
-	
+
 			puts ("... is now current device\n");
-	
+
 			return 0;
 		}
-		else if(strcmp(argv[1], "erase") == 0 && strcmp(argv[2], "clean") == 0) 
+		else if(strcmp(argv[1], "erase") == 0 && strcmp(argv[2], "clean") == 0)
 		{
 			struct nand_chip* nand = &nand_dev_desc[curr_device];
 			ulong off = 0;
 			ulong size = nand->totlen;
 			int ret;
-	
+
 			//printf ("\nNAND erase: device %d offset %ld, size %ld ... ",
 			printf("\nNAND erase: device %d offset 0x%x, size 0x%x ... ", curr_device, off, size);
-	
+
 			ret = nand_erase (nand, off, size, 1);
-	
+
 			printf("%s\n", ret ? "ERROR" : "OK");
-	
+
 			return ret;
 		}
-	
+
 		printf ("Usage:\n%s\n", cmdtp->usage);
 		return 1;
     default:
 		/* at least 4 args */
-		
-		if (strncmp(argv[1], "read", 4) == 0 || strncmp(argv[1], "write", 5) == 0) 
+
+		if (strncmp(argv[1], "read", 4) == 0 || strncmp(argv[1], "write", 5) == 0)
 		{
 			ulong addr = simple_strtoul(argv[2], NULL, 16);
 			ulong off  = simple_strtoul(argv[3], NULL, 16);
@@ -347,8 +372,8 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			int cmd    = (strncmp(argv[1], "read", 4) == 0) ? NANDRW_READ : NANDRW_WRITE;
 			int ret, total;
 			char* cmdtail = strchr(argv[1], '.');
-	
-			if (cmdtail && !strncmp(cmdtail, ".oob", 2)) 
+
+			if (cmdtail && !strncmp(cmdtail, ".oob", 2))
 			{
 				/* read out-of-band data */
 				if (cmd & NANDRW_READ) {
@@ -356,7 +381,7 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 							    off, size, &total,
 							    (u_char*)addr);
 				}
-				else 
+				else
 				{
 					ret = nand_write_oob(nand_dev_desc + curr_device,
 							     off, size, &total,
@@ -372,7 +397,7 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 					cmd |= NANDRW_JFFS2_SKIP;	/* skip bad blocks (on read too) */
 			}
 	                else if (cmdtail && !strncmp(cmdtail, ".yaffs", 2))
-	                        cmd |= NANDRW_YAFFS;   
+	                        cmd |= NANDRW_YAFFS;
 #ifdef SXNI855T
 			/* need ".e" same as ".j" for compatibility with older units */
 			else if (cmdtail && !strcmp(cmdtail, ".e"))
@@ -382,19 +407,19 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 				printf ("Usage:\n%s\n", cmdtp->usage);
 				return 1;
 			}
-	
+
 	//		printf ("\nNAND %s: device %d offset %ld, size %ld ... ",
 			printf ("\nNAND %s: device %d offset 0x%x, size 0x%x ... ",
 				(cmd & NANDRW_READ) ? "read" : "write",
 				curr_device, off, size);
-	
+
 			ret = nand_rw(nand_dev_desc + curr_device, cmd, off, size,
 				     &total, (u_char*)addr);
-	
+
 			printf (" %d bytes %s: %s\n", total,
 				(cmd & NANDRW_READ) ? "read" : "written",
 				ret ? "ERROR" : "OK");
-	
+
 			return ret;
 		} else if (strcmp(argv[1],"erase") == 0 &&
 			   (argc == 4 || strcmp("clean", argv[2]) == 0)) {
@@ -402,21 +427,21 @@ int do_nand(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 			ulong off = simple_strtoul(argv[2 + clean], NULL, 16);
 			ulong size = simple_strtoul(argv[3 + clean], NULL, 16);
 			int ret;
-	
+
 	//		printf ("\nNAND erase: device %d offset %ld, size %ld ... ",
 			printf ("\nNAND erase: device %d offset 0x%x, size 0x%x ... ",
 				curr_device, off, size);
-	
+
 			ret = nand_erase (nand_dev_desc + curr_device, off, size, clean);
-	
+
 			printf("%s\n", ret ? "ERROR" : "OK");
-	
+
 			return ret;
 		} else {
 			printf ("Usage:\n%s\n", cmdtp->usage);
 			rcode = 1;
 		}
-	
+
 		return rcode;
     }
 }
@@ -645,7 +670,7 @@ static int nand_rw (struct nand_chip* nand, int cmd,
 		}
 		else
                 {
-		        dprintf("nand_rw_3\n");                
+		        dprintf("nand_rw_3\n");
 			ret = nand_write_ecc(nand, start,
 					    min(len, eblk + erasesize - start),
 					    &n, (u_char*)buf, eccbuf);
@@ -713,7 +738,7 @@ static inline int NanD_Command(struct nand_chip *nand, unsigned char command)
 		} while((ret_val & 0x40) != 0x40);
 	}
 #endif
-#ifdef CONFIG_MMSP20 
+#ifdef CONFIG_MMSP20
         return 0;
 #else
 	return NanD_WaitReady(nand, 0);
@@ -972,29 +997,29 @@ static void NanD_ScanChips(struct nand_chip *nand)
 static void NanD_ReadBuf(struct nand_chip *nand, u_char *data_buf, int cntr)
 {
 	unsigned long nandptr = nand->IO_ADDR;
-	MMSP20_DMAS *dmach0 = 0xC00002a0; 
-	MMSP20_DMAREQ *dch0 = 0xC0000100; 
+	MMSP20_DMAS *dmach0 = 0xC00002a0;
+	MMSP20_DMAREQ *dch0 = 0xC0000100;
 	unsigned int timer;
-	
+
 	//sdk2x_SysTimerEnable();
 	//timer = MSP_TCOUNT;
-	
+
 	/* We can only do DMA in chunks of 64kBytes, however this function should never be called with more than 512 / 1024 bytes. */
 	if ((cntr >= 64) && (cntr < 0xFFFF))
 	{
-		/* ART103: 
+		/* ART103:
 		   Set up the DMA controller to read the data from the NAND */
-		   
+
 		/* Make sure we are stopped / reset */
-		dmach0->DMACONS = 0x00; 
-		
+		dmach0->DMACONS = 0x00;
+
 		/* Burst 8 words, No Src Increment, Immediate Start, Word Format (LS), Target Increment, No Wait, Word Format,   */
 		dmach0->DMACOM0 = (2 << 14) | (1 << 5);
 		//dmach0->DMACOM0 = (1 << 5);
-		
+
 		/* No SRC Inc, Target Inc */
 		dmach0->DMACOM1 = (1 << 0);
-		
+
 		/* Set up the Source address */
 		dmach0->SRCLADDR = (nand->IO_ADDR) & 0xFFFF;
 		dmach0->SRCHADDR = ((nand->IO_ADDR) >> 16) & 0xFFFF;
@@ -1006,19 +1031,19 @@ static void NanD_ReadBuf(struct nand_chip *nand, u_char *data_buf, int cntr)
 		/* Set up the target address (Don't need to do this every time, as it is done automatically) */
 		dmach0->TRGLADDR = ((unsigned int)data_buf) & 0xFFFF;
 		dmach0->TRGHADDR = (((unsigned int)data_buf) >> 16) & 0xFFFF;
-		
+
 		/* Transfer This many bytes */
 		dmach0->DMACOM2 = cntr;
 
 		/* Start the transfer, and wait for finish */
 		dmach0->DMACONS = (1 << 9) | (1 << 10); /* Enable the transfer complete interrupt */
 		while (!(dmach0->DMACONS & (1 << 1)));	/* Wait for the interrupt */
-		dmach0->DMACONS &= ~(1<<1); /* Clear the interrupt */ 
-			
+		dmach0->DMACONS &= ~(1<<1); /* Clear the interrupt */
+
 	}
 	else
 	{
-		
+
 		while (cntr >= 16) {
 			*data_buf++ = READ_NAND(nandptr);
 			*data_buf++ = READ_NAND(nandptr);
@@ -1045,7 +1070,7 @@ static void NanD_ReadBuf(struct nand_chip *nand, u_char *data_buf, int cntr)
 	}
 	//timer = MSP_TCOUNT - timer;
 	//printf("NAND Transfer Timer: %d ticks elapsed\n", timer);
-	
+
 }
 /*
  * NAND read with ECC
@@ -1084,15 +1109,15 @@ static int nand_read_ecc(struct nand_chip *nand, size_t start, size_t len,
 		/* Do we have this page in cache ? */
 		if (nand->cache_page == page)
 			goto readdata;
+
 		/* Send the read command */
 		NanD_Command(nand, NAND_CMD_READ0);
-		// dprintf("nand_read_ecc_2, addressing\n");
 		NanD_Address(nand, ADDR_COLUMN_PAGE, (page << nand->page_shift) + col);
-		// dprintf("nand_read_ecc_3, readbuf\n");
-		udelay(9);
+		udelay(9); /* YAFFS Hacks */
+
 		/* Read in a page + oob data */
 		NanD_ReadBuf(nand, nand->data_buf, nand->oobblock + nand->oobsize);
-		// dprintf("nand_read_ecc_4, readbuf\n");
+
 		/* copy data into cache, for read out of cache and if ecc fails */
 		if (nand->data_cache)
 			memcpy (nand->data_cache, nand->data_buf, nand->oobblock + nand->oobsize);
@@ -1236,12 +1261,13 @@ static int nand_write_page (struct nand_chip *nand,
 	/* Write out complete page of data */
 	for (i = 0; i < (nand->oobblock + nand->oobsize); i++)
 		WRITE_NAND(nand->data_buf[i], nand->IO_ADDR);
+
 	/* Send command to actually program the data */
 	NanD_Command(nand, NAND_CMD_PAGEPROG);
 #ifdef CONFIG_MMSP20
        	NanD_WaitReady(nand, 0);
 #endif
-	udelay(300);
+	udelay(300); /* YAFFS Hacks */
 	NanD_Command(nand, NAND_CMD_STATUS);
 #ifdef NAND_NO_RB
 	{ u_char ret_val;
@@ -1302,6 +1328,7 @@ static int nand_write_page (struct nand_chip *nand,
 #endif
 	return 0;
 }
+
 static int nand_write_ecc (struct nand_chip* nand, size_t to, size_t len, size_t * retlen, const u_char * buf, u_char * ecc_code)
 {
 	int i, page, col, cnt, ret = 0;
@@ -1393,7 +1420,7 @@ static int nand_read_oob(struct nand_chip* nand, size_t ofs, size_t len,
 		NanD_Command(nand, NAND_CMD_READOOB);
 		NanD_Address(nand, ADDR_COLUMN_PAGE, ofs & (~0x1ff));
 	}
-	udelay(9);
+	udelay(9); /* YAFFS Hacks */
 	dprintf("nand_read_oob_2\n");
 	NanD_ReadBuf(nand, &buf[len256], len - len256);
 	*retlen = len;
@@ -1442,7 +1469,7 @@ static int nand_write_oob(struct nand_chip* nand, size_t ofs, size_t len,
 #ifdef CONFIG_MMSP20
 	       	NanD_WaitReady(nand, 0);
 #endif
-		udelay(300); // hwjang
+		udelay(300); /* YAFFS Hacks */
 		NanD_Command(nand, NAND_CMD_STATUS);
 #ifdef NAND_NO_RB
    		{ u_char ret_val;
@@ -1467,7 +1494,7 @@ static int nand_write_oob(struct nand_chip* nand, size_t ofs, size_t len,
 #ifdef CONFIG_MMSP20
        	NanD_WaitReady(nand, 0);
 #endif
-        udelay(300); 
+        udelay(300);
 	NanD_Command(nand, NAND_CMD_STATUS);
 #ifdef NAND_NO_RB
 	{ u_char ret_val;
@@ -1494,11 +1521,11 @@ int nand_write_yaffs_func(ulong addrm, ulong ofs, ulong len)
 	ulong off  	= ofs;
 	ulong size 	= len;
 	int cmd    	= NANDRW_WRITE;
-	int ret		= 0; 
+	int ret		= 0;
 	int total	= 0;
-	
-	cmd |= NANDRW_YAFFS;	
-	
+
+	cmd |= NANDRW_YAFFS;
+
 	printf ("\nNAND %s: device %d offset 0x%x, size 0x%x ... ", (cmd & NANDRW_READ) ? "read" : "write", curr_device, off, size);
 	ret = nand_rw(nand_dev_desc + curr_device, cmd, off, size, &total, (u_char*)addr);
 
@@ -1510,22 +1537,22 @@ int nand_write_yaffs_func(ulong addrm, ulong ofs, ulong len)
 
 int nand_read_jffs2_func(ulong addrm, ulong ofs, ulong len)
 {
-	
+
 	ulong addr 	= addrm;
 	ulong off  	= ofs;
 	ulong size 	= len;
 	int cmd    	= NANDRW_READ;
-	int ret		= 0; 
+	int ret		= 0;
 	int total	= 0;
-	
+
 	cmd |= NANDRW_JFFS2 | NANDRW_JFFS2_SKIP;	/* skip bad blocks */
-	
+
 	printf ("\nNAND %s: device %d offset 0x%x, size 0x%x ... ", (cmd & NANDRW_READ) ? "read" : "write", curr_device, off, size);
 	ret = nand_rw(nand_dev_desc + curr_device, cmd, off, size, &total, (u_char*)addr);
 
 	printf(" %d bytes %s: %s\n", total, (cmd & NANDRW_READ) ? "read" : "written", ret ? "ERROR" : "OK");
 
-	return ret;	
+	return ret;
 }
 int nand_write_jffs2_func(ulong addrm, ulong ofs, ulong len)
 {
@@ -1533,11 +1560,11 @@ int nand_write_jffs2_func(ulong addrm, ulong ofs, ulong len)
 	ulong off  	= ofs;
 	ulong size 	= len;
 	int cmd    	= NANDRW_WRITE;
-	int ret		= 0; 
+	int ret		= 0;
 	int total	= 0;
-	
+
 	cmd |= NANDRW_JFFS2;	/* skip bad blocks */
-	
+
 	printf ("\nNAND %s: device %d offset 0x%x, size 0x%x ... ", (cmd & NANDRW_READ) ? "read" : "write", curr_device, off, size);
 	ret = nand_rw(nand_dev_desc + curr_device, cmd, off, size, &total, (u_char*)addr);
 	printf(" %d bytes %s: %s\n", total, (cmd & NANDRW_READ) ? "read" : "written", ret ? "ERROR" : "OK");
@@ -1546,20 +1573,20 @@ int nand_write_jffs2_func(ulong addrm, ulong ofs, ulong len)
 
 int nand_read_func(ulong addrm, ulong ofs, ulong len)
 {
-	
+
 	ulong addr 	= addrm;
 	ulong off  	= ofs;
 	ulong size 	= len;
 	int cmd    	= NANDRW_READ;
-	int ret		= 0; 
+	int ret		= 0;
 	int total	= 0;
-	
+
 	printf ("\nNAND %s: device %d offset 0x%x, size 0x%x ... ", (cmd & NANDRW_READ) ? "read" : "write", curr_device, off, size);
 	ret = nand_rw(nand_dev_desc + curr_device, cmd, off, size, &total, (u_char*)addr);
 
 	printf(" %d bytes %s: %s\n", total, (cmd & NANDRW_READ) ? "read" : "written", ret ? "ERROR" : "OK");
 
-	return ret;	
+	return ret;
 }
 
 int nand_write_func(ulong addrm, ulong ofs, ulong len)
@@ -1568,9 +1595,9 @@ int nand_write_func(ulong addrm, ulong ofs, ulong len)
 	ulong off  	= ofs;
 	ulong size 	= len;
 	int cmd    	= NANDRW_WRITE;
-	int ret		= 0; 
+	int ret		= 0;
 	int total	= 0;
-	
+
 	printf ("\nNAND %s: device %d offset 0x%x, size 0x%x ... ", (cmd & NANDRW_READ) ? "read" : "write", curr_device, off, size);
 	ret = nand_rw(nand_dev_desc + curr_device, cmd, off, size, &total, (u_char*)addr);
 	printf(" %d bytes %s: %s\n", total, (cmd & NANDRW_READ) ? "read" : "written", ret ? "ERROR" : "OK");
@@ -1593,7 +1620,7 @@ static int nand_erase(struct nand_chip* nand, size_t ofs, size_t len, int clean)
 	unsigned long nandptr;
 	struct Nand *mychip;
 	int ret = 0;
-	
+
 	if (ofs & (nand->erasesize-1) || len & (nand->erasesize-1)) {
 		printf ("Offset and size must be sector aligned, erasesize = %d\n",
 			(int) nand->erasesize);
@@ -2090,7 +2117,7 @@ static int nand_rw_without_ecc(struct nand_chip* nand, int cmd,
                 }
 		else
                 {
-		        dprintf("nand_rw_3\n");                
+		        dprintf("nand_rw_3\n");
 			ret = nand_write_without_ecc(nand, start,
 					    min(len, eblk + erasesize - start),
 					    &n, (u_char*)buf);
