@@ -175,9 +175,7 @@ static int __init rtc_init(void)
 {
 	misc_register (&mmsp2rtc_miscdev);
 	create_proc_read_entry ("driver/rtc", 0, 0, rtc_read_proc, NULL);
-#ifdef CONFIG_MACH_GP2X_DEBUG
 	printk (KERN_INFO "MMSP2 Real Time Clock driver\n");
-#endif
 	return 0;
 }
 

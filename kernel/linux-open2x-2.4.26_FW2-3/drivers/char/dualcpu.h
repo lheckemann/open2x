@@ -61,7 +61,9 @@
 //	CODEC VERSION
 //  Length : 16bits
 //------------------------------------------------------------------------------
+// MPEG2 DECODER
 
+// MPEG4 DECODER
 #define	CODEC_VER_DIVX_311	311
 #define	CODEC_VER_DIVX_500	500
 #define	CODEC_VER_XVID		900
@@ -76,9 +78,22 @@ typedef struct _SYSTEM_INIT_PARAM_ {
 	U16	Arm940BaseOffset;
 } SYSTEM_INIT_PARAM;
 
+// MPEG2 DECODER
+typedef struct _MP2D_INIT_PARAM_ {
+	U16 Command;
+	U16 CodecType;
+	U16 Width;
+	U16 Height;
+	U16 CodecVersion;
+	U16 RL_L;
+	U16 RL_H;
+	U16 RL_Length;	// in kbytes
+	U16 StreamBufferPaddrL;
+	U16 StreamBufferPaddrH;
+} MP2D_INIT_PARAM;
+
 // MPEG4 DECODER
 typedef struct _MP4D_INIT_PARAM_ {
-
     U16 Command;            // commands ARM940T Firmware. (codec.h)
 	U16 CodecType;          // defines what CODEC do you want to use. (codec.h)
 	U16 Width;              // Video image width
@@ -132,7 +147,6 @@ typedef struct _MJPD_INIT_PARAM_ {
 //------------------------------------------------------------------------------
 // MPEG4 DECODER
 typedef struct _MP4D_INIT_BUF_PARAM_ {
-
 	U16 Command;            // commands ARM940T Firmware. (codec.h)
     U16 buffer_type;        // non bframe buffer of bframe buffer
     U16 buffer_idx;         // buffer idx
@@ -145,6 +159,13 @@ typedef struct _MP4D_INIT_BUF_PARAM_ {
 //------------------------------------------------------------------------------
 //	CODEC RUN PARAMETER
 //------------------------------------------------------------------------------
+// MPEG2 DECODER
+typedef struct _MP2D_RUN_PARAM_ {
+	unsigned short Command;
+	unsigned short CodecType;
+	unsigned short StreamBufferPaddrL;
+	unsigned short StreamBufferPaddrH;
+} MP2D_RUN_PARAM;
 
 // MPEG4 ENCODER
 typedef struct _MP4E_RUN_PARAM_ {
@@ -256,6 +277,11 @@ typedef struct _MJPE_ENC_RESULT_
 //------------------------------------------------------------------------------
 //	CODEC RELEASE  PARAMETER
 //------------------------------------------------------------------------------
+// MPEG2 DECODER
+typedef struct _MP2D_REL_PARAM_ {
+	unsigned short Command;
+	unsigned short CodecType;
+} MP2D_REL_PARAM;
 
 // MPEG4 ENCODER
 typedef struct _MP4E_REL_PARAM_ {

@@ -65,33 +65,38 @@ extern void bon_release_mtd(struct mtd_partition **mtd_table);
 #else
 
 #if 0
+
+/*
+ * Define static partitions for the flash device.
+ */
+
 #define NUM_PARTITIONS 5
 static struct mtd_partition partition_info[] = {
 	{
-		name:		"Bootloader",
+		name:		"U-Boot Bootloader",
 		size:		0x80000,
 		offset:		0,
 		mask_flags:	MTD_WRITEABLE,  /* force read-only */
 	}, {
-		name:		"Param",
+		name:		"Configuration Settings",
 		size:		0x20000,
 		offset:		MTDPART_OFS_APPEND,
 	}, {
-		name:		"Kernel",
+		name:		"Linux Kernel Partition",
 		size:		0x100000,
 		offset:		MTDPART_OFS_APPEND,
 	}, {
-		name:		"Filesystem",
+		name:		"Filesystem-A (YAFFS)",
 		size:		0x1800000,
 		offset:		MTDPART_OFS_APPEND,
 	}, {
-		name:		"Extend",
+		name:		"Filesystem-B (YAFFS)",
 		size:		MTDPART_SIZ_FULL,
 		offset:		MTDPART_OFS_APPEND,
 	}
 };
 #else
-/*					
+/*
 	 0x0			boot base		0xB0000
 	 0xD0000		kernel base		0x130000
 	 0x200000	    rootfs(YAFFS) 	0x1E00000
@@ -110,7 +115,7 @@ static struct mtd_partition partition_info[] = {
 		offset:		MTDPART_OFS_APPEND,
 	}, {
 		name:		"Param",
-		size:		0x60000,					/* Real address */				
+		size:		0x60000,					/* Real address */
 		offset:		MTDPART_OFS_APPEND,
 	}, {
 		name:		"Filesystem",
@@ -272,13 +277,13 @@ static void mp2520f_nand_cmdfunc(struct mtd_info *mtd, unsigned command, int col
 			NFADDR = (unsigned char)(page_addr & 0xff);
 			NFADDR = (unsigned char)((page_addr >> 8) & 0xff);
 			/* One more address cycle for higher density devices */
-			if (mtd->size & 0x0c000000) 
+			if (mtd->size & 0x0c000000)
 				NFADDR = (unsigned char)((page_addr >> 16) & 0x0f);
 		}
 	}
-	
-	/* 
-	 * program and erase have their own busy handlers 
+
+	/*
+	 * program and erase have their own busy handlers
 	 * status and sequential in needs no delay
 	 */
 	switch (command) {
@@ -295,26 +300,26 @@ static void mp2520f_nand_cmdfunc(struct mtd_info *mtd, unsigned command, int col
 		return;
 
 	case NAND_CMD_RESET:
-		if (this->dev_ready)	
+		if (this->dev_ready)
 			break;
 		NFCMD = NAND_CMD_STATUS;
 		while ( !(NFDATA & 0x40));
 		return;
 
-	/* This applies to read commands */	
+	/* This applies to read commands */
 	default:
 		if (!this->dev_ready) {
 			udelay (this->chip_delay);
 			return;
-		}	
+		}
 	}
-	
+
 	/* wait until command is processed */
 	while (!this->dev_ready(mtd));
 }
 
-/* 
- * large page size 
+/*
+ * large page size
  *   (not used, but ...)
  */
 static void mp2520f_nand_cmdfunc_lp(struct mtd_info *mtd, unsigned command, int column, int page_addr)
@@ -338,7 +343,7 @@ static void mp2520f_nand_cmdfunc_lp(struct mtd_info *mtd, unsigned command, int 
 		if (column != -1) {
 			NFADDR = (column & 0xff);
 			NFADDR = (column >> 8);
-		}	
+		}
 		if (page_addr != -1) {
 			NFADDR = (unsigned char) ((page_addr & 0xff));
 			NFADDR = (unsigned char) ((page_addr >> 8) & 0xff);
@@ -347,13 +352,13 @@ static void mp2520f_nand_cmdfunc_lp(struct mtd_info *mtd, unsigned command, int 
 				NFADDR = (unsigned char) ((page_addr >> 16) & 0xff);
 		}
 	}
-	
-	/* 
-	 * program and erase have their own busy handlers 
+
+	/*
+	 * program and erase have their own busy handlers
 	 * status and sequential in needs no delay
 	*/
 	switch (command) {
-			
+
 	case NAND_CMD_CACHEDPROG:
 	case NAND_CMD_PAGEPROG:
 	case NAND_CMD_ERASE1:
@@ -368,7 +373,7 @@ static void mp2520f_nand_cmdfunc_lp(struct mtd_info *mtd, unsigned command, int 
 
 
 	case NAND_CMD_RESET:
-		if (this->dev_ready)	
+		if (this->dev_ready)
 			break;
 		udelay(this->chip_delay);
 		NFCMD = NAND_CMD_STATUS;
@@ -377,19 +382,19 @@ static void mp2520f_nand_cmdfunc_lp(struct mtd_info *mtd, unsigned command, int 
 
 	case NAND_CMD_READ0:
 		NFCMD = NAND_CMD_READSTART;
-		
-	/* This applies to read commands */	
+
+	/* This applies to read commands */
 	default:
-		/* 
+		/*
 		 * If we don't have access to the busy pin, we apply the given
 		 * command delay
 		*/
 		if (!this->dev_ready) {
 			udelay (this->chip_delay);
 			return;
-		}	
+		}
 	}
-	
+
 	/* wait until command is processed */
 	while (!this->dev_ready(mtd));
 }
@@ -415,8 +420,8 @@ static void mp2520f_calculate_ecc(struct mtd_info *mtd, const u_char *dat, u_cha
  */
 static void mp2520f_calculate_ecc_16(struct mtd_info *mtd, const u_char *dat, u_char *ecc_code)
 {
-	/* 
-	 * FIXME - not tested 
+	/*
+	 * FIXME - not tested
 	 */
 	*(ecc_code+1) = MEMNANDECC0 & 0xff;
 	*(ecc_code+0) = MEMNANDECC1 & 0xff;
@@ -538,7 +543,7 @@ int __init mp2520f_nand_init (void)
 # endif /* CONFIG_MP2520F_HWECC_DEBUG */
 #else
 	this->eccmode = NAND_ECC_SOFT;
-#ifdef CONFIG_MACH_GP2X_DEBUG	
+#ifdef CONFIG_MACH_GP2X_DEBUG
 	printk(__FILE__": Using NAND S/W ECC\n");
 #endif
 
@@ -549,7 +554,7 @@ int __init mp2520f_nand_init (void)
 	this->oob_buf = oob_buf;
 
 	/* 20 us command delay time */
-	this->chip_delay = 20;		
+	this->chip_delay = 20;
 
 	/* Scan to find existance of the device */
 	if (nand_scan (mp2520f_nand_mtd, 1)) {
@@ -596,7 +601,7 @@ static void __exit mp2520f_nand_cleanup (void)
 
 	/* Unregister partitions */
 	del_mtd_partitions(mp2520f_nand_mtd);
-	
+
 	/* Unregister the device */
 	del_mtd_device (mp2520f_nand_mtd);
 
@@ -610,4 +615,6 @@ static void __exit mp2520f_nand_cleanup (void)
 module_exit(mp2520f_nand_cleanup);
 #endif
 
+MODULE_LICENSE("GPL");
 MODULE_AUTHOR("DIGNSYS Inc.(www.dignsys.com)");
+MODULE_DESCRIPTION("Board-specific glue layer for NAND flash on MP2520F");

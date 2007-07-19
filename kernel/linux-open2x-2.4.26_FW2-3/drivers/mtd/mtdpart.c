@@ -343,9 +343,8 @@ int add_mtd_partitions(struct mtd_info *master,
 	u_int32_t cur_offset = 0;
 	int i;
 
-#ifdef CONFIG_MACH_GP2X_DEBUG
 	printk (KERN_NOTICE "Creating %d MTD partitions on \"%s\":\n", nbparts, master->name);
-#endif
+
 	for (i = 0; i < nbparts; i++) {
 
 		/* allocate the partition structure */
@@ -436,10 +435,9 @@ int add_mtd_partitions(struct mtd_info *master,
 			slave->mtd.size = master->size - slave->offset;
 		cur_offset = slave->offset + slave->mtd.size;
 
-#ifdef CONFIG_MACH_GP2X_DEBUG	
 		printk (KERN_NOTICE "0x%08x-0x%08x : \"%s\"\n", slave->offset, 
 			slave->offset + slave->mtd.size, slave->mtd.name);
-#endif
+
 		/* let's do some sanity checks */
 		if (slave->offset >= master->size) {
 				/* let's register it anyway to preserve ordering */
@@ -486,6 +484,9 @@ int add_mtd_partitions(struct mtd_info *master,
 			printk ("mtd: partition \"%s\" doesn't end on an erase block -- force read-only\n",
 				parts[i].name);
 		}
+
+		///* added NCB */
+		//memcpy(&slave->mtd.oobinfo, &master->oobinfo, sizeof(slave->mtd.oobinfo));
 
 		if(parts[i].mtdp)
 		{	/* store the object pointer (caller may or may not register it */
