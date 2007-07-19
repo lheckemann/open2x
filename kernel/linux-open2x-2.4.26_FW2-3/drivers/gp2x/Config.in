@@ -1,0 +1,10 @@
+#
+# GP2X Custom Modules
+#
+mainmenu_option next_comment
+comment 'GP2X MMUHACK Support'
+
+dep_tristate 'Support for custom GP2X modules (Inc. MMUHACK)' CONFIG_GP2X_CUSTOM $CONFIG_MACH_GP2X
+
+dep_tristate '  Support for upper memory caching (MMUHACK)' CONFIG_GP2X_MMUHACK $CONFIG_GP2X_CUSTOM $CONFIG_MACH_GP2X
+endmenu
