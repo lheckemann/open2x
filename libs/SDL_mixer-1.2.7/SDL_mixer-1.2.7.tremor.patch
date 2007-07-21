@@ -1,0 +1,106 @@
+diff -ru SDL_mixer-1.2.7.orig/configure.in SDL_mixer-1.2.7.tremor/configure.in
+--- SDL_mixer-1.2.7.orig/configure.in	2006-05-12 11:33:37.000000000 +0200
++++ SDL_mixer-1.2.7.tremor/configure.in	2006-08-08 20:01:42.000000000 +0200
+@@ -257,6 +257,26 @@
+         fi
+     fi
+ fi
++AC_ARG_ENABLE(music-ogg-tremor,
++[  --enable-music-ogg-tremor   enable OGG music via libtremor [[default=no]]],
++	      , enable_music_ogg_tremor=no)
++if test x$enable_music_ogg_tremor = xyes; then
++    AC_MSG_CHECKING(for libtremor headers)
++    have_tremor=no
++    AC_TRY_COMPILE([
++     #include <tremor/ivorbiscodec.h>
++     #include <tremor/ivorbisfile.h>
++    ],[
++    ],[
++    have_tremor=yes
++    ])
++    AC_MSG_RESULT($have_tremor)
++    if test x$have_tremor = xyes; then
++        SOURCES="$SOURCES $srcdir/*_ogg.c"
++        EXTRA_CFLAGS="$EXTRA_CFLAGS -DOGG_MUSIC -DOGG_USE_TREMOR"
++	EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lvorbisidec"
++    fi
++fi
+ AC_ARG_ENABLE(music-mp3,
+ [  --enable-music-mp3      enable MP3 music via smpeg [[default=yes]]],
+               , enable_music_mp3=yes)
+diff -ru SDL_mixer-1.2.7.orig/dynamic_ogg.h SDL_mixer-1.2.7.tremor/dynamic_ogg.h
+--- SDL_mixer-1.2.7.orig/dynamic_ogg.h	2006-05-12 07:33:32.000000000 +0200
++++ SDL_mixer-1.2.7.tremor/dynamic_ogg.h	2006-08-08 19:17:32.000000000 +0200
+@@ -21,7 +21,11 @@
+ */
+ 
+ #ifdef OGG_MUSIC
++#ifdef OGG_USE_TREMOR
++#include <tremor/ivorbisfile.h>
++#else
+ #include <vorbis/vorbisfile.h>
++#endif
+ 
+ typedef struct {
+ 	int loaded;
+@@ -31,7 +35,11 @@
+ 	int (*ov_open)(FILE *f,OggVorbis_File *vf,char *initial,long ibytes);
+ 	int (*ov_open_callbacks)(void *datasource, OggVorbis_File *vf, char *initial, long ibytes, ov_callbacks callbacks);
+ 	ogg_int64_t (*ov_pcm_total)(OggVorbis_File *vf,int i);
++#ifdef OGG_USE_TREMOR
++	long (*ov_read)(OggVorbis_File *vf,char *buffer,int length, int *bitstream);
++#else
+ 	long (*ov_read)(OggVorbis_File *vf,char *buffer,int length, int bigendianp,int word,int sgned,int *bitstream);
++#endif
+ 	int (*ov_time_seek)(OggVorbis_File *vf,double pos);
+ } vorbis_loader;
+ 
+diff -ru SDL_mixer-1.2.7.orig/load_ogg.c SDL_mixer-1.2.7.tremor/load_ogg.c
+--- SDL_mixer-1.2.7.orig/load_ogg.c	2006-05-12 08:14:50.000000000 +0200
++++ SDL_mixer-1.2.7.tremor/load_ogg.c	2006-08-08 19:20:50.000000000 +0200
+@@ -117,9 +117,15 @@
+ 
+     buf = *audio_buf;
+     to_read = *audio_len;
++#ifdef OGG_USE_TREMOR
++    for (read = vorbis.ov_read(&vf, (char *)buf, to_read, &bitstream);
++	 read > 0;
++	 read = vorbis.ov_read(&vf, (char *)buf, to_read, &bitstream))
++#else
+     for (read = vorbis.ov_read(&vf, (char *)buf, to_read, 0/*LE*/, 2/*16bit*/, 1/*signed*/, &bitstream);
+          read > 0;
+          read = vorbis.ov_read(&vf, (char *)buf, to_read, 0, 2, 1, &bitstream))
++#endif	 
+     {
+         if (read == OV_HOLE || read == OV_EBADLINK)
+             break; /* error */
+diff -ru SDL_mixer-1.2.7.orig/music_ogg.c SDL_mixer-1.2.7.tremor/music_ogg.c
+--- SDL_mixer-1.2.7.orig/music_ogg.c	2006-05-12 08:14:50.000000000 +0200
++++ SDL_mixer-1.2.7.tremor/music_ogg.c	2006-08-08 19:27:54.000000000 +0200
+@@ -165,7 +165,11 @@
+ 	char data[4096];
+ 	SDL_AudioCVT *cvt;
+ 
++#ifdef OGG_USE_TREMOR
++	len = voribs.ov_read(&music->vf, data, sizeof(data), &section);
++#else
+ 	len = vorbis.ov_read(&music->vf, data, sizeof(data), 0, 2, 1, &section);
++#endif
+ 	if ( len <= 0 ) {
+ 		if ( len == 0 ) {
+ 			music->playing = 0;
+diff -ru SDL_mixer-1.2.7.orig/music_ogg.h SDL_mixer-1.2.7.tremor/music_ogg.h
+--- SDL_mixer-1.2.7.orig/music_ogg.h	2006-05-01 09:25:57.000000000 +0200
++++ SDL_mixer-1.2.7.tremor/music_ogg.h	2006-08-08 19:22:03.000000000 +0200
+@@ -26,7 +26,11 @@
+ 
+ /* This file supports Ogg Vorbis music streams */
+ 
++#ifdef OGG_USE_TREMOR
++#include <tremor/ivorbisfile.h>
++#else
+ #include <vorbis/vorbisfile.h>
++#endif
+ 
+ typedef struct {
+ 	int playing;

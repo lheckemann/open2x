@@ -23,7 +23,6 @@ PREFIX=$OPEN2X
 export PREFIX
  
 PATH=$PATH:$OPEN2X/bin
-
 export PATH
 
 clear
@@ -45,6 +44,6 @@ echo
 read -p "Press return to continue." first
 echo
 
-make -f makefile.o2x $1 $2
+make -f makefile.o2x $1 $2 $3
 
 echo Done - Please check build logs.

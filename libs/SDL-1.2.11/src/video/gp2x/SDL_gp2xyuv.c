@@ -34,6 +34,7 @@
 #include "SDL_gp2xyuv_c.h"
 #include "../SDL_yuvfuncs.h"
 #include "mmsp2_regs.h"
+#include "arm_colorconv.h"
 
 /* The functions used to manipulate software video overlays */
 static struct private_yuvhwfuncs gp2x_yuvfuncs =
@@ -233,6 +234,7 @@ SDL_Overlay *GP2X_CreateYUVOverlay(_THIS, int width, int height, Uint32 format, 
 	overlay->pixels[0] = hwdata->YUVBuf[hwdata->uBackBuf];
 
 	/* We're all done.. */
+	printf("SDL_GP2X: Created YUY2 overlay\n");
 	return(overlay);
 }
 

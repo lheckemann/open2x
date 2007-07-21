@@ -1,0 +1,7 @@
+
+ 001 - loading and parsing simple, game-like config file
+ 002 - iterating through groups (and entries, plus through multi-value entries)
+ 003 - loads config file, changes its content, then saves it to other file, loads again and checks some entries.
+ 004 - loads test_001.cfg and saves it to test_004.gz, which is loaded once more from stream, changed, and saved to test004_generated.cfg
+ 005 - stress test, used for syntax debugging, profiling and optimizations
+ 006 - using library in C

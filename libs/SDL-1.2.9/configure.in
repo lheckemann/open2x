@@ -2990,3 +2990,4 @@ SDL.qpg
 ])
 AC_CONFIG_COMMANDS([default],[[chmod +x sdl-config]],[[]])
 AC_OUTPUT
+AM_PROG_AS

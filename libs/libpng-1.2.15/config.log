@@ -554,7 +554,7 @@ configure:20044: result: no
 configure:20053: checking for pow
 configure:20109: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -o conftest -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c  >&5
 conftest.c:49: warning: conflicting types for built-in function 'pow'
-/tmp/ccqlyC9j.o: In function `main':
+/tmp/cccTJBN6.o: In function `main':
 conftest.c:(.text+0x4): undefined reference to `pow'
 collect2: ld returned 1 exit status
 configure:20115: $? = 1
@@ -669,6 +669,7 @@ config.status:677: creating Makefile
 config.status:677: creating libpng.pc
 config.status:677: creating libpng-config
 config.status:677: creating config.h
+config.status:906: config.h is unchanged
 config.status:952: executing depfiles commands
 
 ## ---------------- ##

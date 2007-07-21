@@ -12,7 +12,7 @@ FLAGS += STRIP='$(OPEN2X)/bin/$(HOST)-strip'
 FLAGS += RANLIB='$(OPEN2X)/bin/$(HOST)-ranlib'
 FLAGS += OPEN2X='$(PREFIX)'
 
-FLAGS += CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2 -I$(OPEN2X)/include/SDL'
+FLAGS += CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I$(OPEN2X)/include -I$(OPEN2X)/include/libxml2 -I$(OPEN2X)/include/SDL'
 FLAGS += LDFLAGS='-L$(OPEN2X)/lib'
 #FLAGS += BUILD_CC='/usr/bin/cc'
 FLAGS += PKG_CONFIG='$(OPEN2X)/bin/pkg-config'
@@ -27,7 +27,7 @@ TARGETS += $(PREFIX)/lib/libSDL_gfx.a
 TARGETS += $(PREFIX)/lib/libxml2.a
 TARGETS += $(PREFIX)/lib/libSDL_image.a
 #TARGETS += $(PREFIX)/lib/libSDL_svg.a
-#TARGETS += $(PREFIX)/lib/libSDL_ttf.a
+TARGETS += $(PREFIX)/lib/libSDL_ttf.a
 TARGETS += $(PREFIX)/lib/libbz2.a
 TARGETS += $(PREFIX)/lib/libfreetype.a
 TARGETS += $(PREFIX)/lib/libid3tag.a
@@ -43,6 +43,7 @@ TARGETS += $(PREFIX)/lib/libungif.a
 TARGETS += $(PREFIX)/lib/libvorbisidec.a
 TARGETS += $(PREFIX)/lib/libSDL_mixer.a
 TARGETS += $(PREFIX)/lib/libImlib2.a
+TARGETS += $(PREFIX)/lib/libmpeg2.a
 #TARGETS += $(PREFIX)/lib/libvorbis.a
  
 all: $(TARGETS)
@@ -50,11 +51,14 @@ all: $(TARGETS)
 clean:
 	rm -f $(TARGETS)
 
+#Use this rule to build the stable SDL 1.2.9
+
 #SDL: $(PREFIX)/lib/libSDL.a
+#
 #$(PREFIX)/lib/libSDL.a:
 #	cd SDL-1.2.9 && ./autogen.sh && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
-#Swap this with the rule above to build the test SDL 1.2.11
+#Use this rule to build the test SDL 1.2.11
 
 SDL: $(PREFIX)/lib/libSDL.a
 
@@ -74,7 +78,7 @@ $(PREFIX)/lib/libSDL_image.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libjpeg.a $(P
 SDL_ttf: $(PREFIX)/lib/libSDL_ttf.a
 
 $(PREFIX)/lib/libSDL_ttf.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libfreetype.a
-	cd SDL_ttf-2.0.7 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-freetype-prefix=$(PREFIX) --with-sdl-prefix=$(PREFIX) --without-x && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd SDL_ttf-2.0.8 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-freetype-prefix=$(PREFIX) --with-sdl-prefix=$(PREFIX) --without-x && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
 SDL_svg: $(PREFIX)/lib/libSDL_svg.a
 
@@ -175,4 +179,10 @@ $(PREFIX)/lib/libz.a:
 SDL_mixer: $(PREFIX)/lib/libSDL_mixer.a
 
 $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libsmpeg.a $(PREFIX)/lib/libvorbisidec.a $(PREFIX)/lib/libmikmod.a $(PREFIX)/lib/libmad.a
-	cd SDL_mixer-1.2.7 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes --enable-music-libmikmod=no --enable-music-ogg-tremor=yes && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd SDL_mixer-1.2.7 && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --enable-music-mp3=yes --enable-music-mod=yes --enable-music-libmikmod=yes --enable-music-ogg-tremor=yes && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+
+mpeg2: $(PREFIX)/lib/libmpeg2.a
+
+$(PREFIX)/lib/libmpeg2.a: $(PREFIX)/lib/libSDL.a
+	cd mpeg2dec-gp2x && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install
+	#&& $(FLAGS) make clean

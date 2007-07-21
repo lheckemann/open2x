@@ -44,6 +44,7 @@ static char rcsid =
 #include <linux/input.h>
 #endif
 
+#include "SDL_events.h"
 #include "SDL_error.h"
 #include "SDL_joystick.h"
 #include "SDL_sysjoystick.h"

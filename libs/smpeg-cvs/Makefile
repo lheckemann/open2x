@@ -146,19 +146,19 @@ ASFLAGS =
 AUTOCONF = ${SHELL} /storage/file-store/Projects/GP2X/open2x-svn/libs/smpeg-cvs/missing --run autoconf
 AUTOHEADER = ${SHELL} /storage/file-store/Projects/GP2X/open2x-svn/libs/smpeg-cvs/missing --run autoheader
 AUTOMAKE = ${SHELL} /storage/file-store/Projects/GP2X/open2x-svn/libs/smpeg-cvs/missing --run automake-1.9
-AWK = mawk
+AWK = gawk
 BINARY_AGE = 5
 CC = /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc
 CCAS = /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc
 CCASFLAGS = 
 CCDEPMODE = depmode=gcc3
-CFLAGS = -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video
+CFLAGS = -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video
 CPP = /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -E
 CPPFLAGS = 
 CXX = /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-g++
 CXXCPP = /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-g++ -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video -fno-exceptions -fno-rtti
+CXXFLAGS = -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video -fno-exceptions -fno-rtti
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"\" -DPACKAGE_TARNAME=\"\" -DPACKAGE_VERSION=\"\" -DPACKAGE_STRING=\"\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE=\"smpeg\" -DVERSION=\"0.4.5\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1
 DEPDIR = .deps
@@ -209,7 +209,7 @@ PACKAGE_TARNAME =
 PACKAGE_VERSION = 
 PATH_SEPARATOR = :
 RANLIB = /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-ranlib
-SDL_CFLAGS = -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_REENTRANT
+SDL_CFLAGS = -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT
 SDL_CONFIG = /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/sdl-config
 SDL_LIBS = -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -Wl,-rpath,/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -lSDL -lpthread
 SET_MAKE = 

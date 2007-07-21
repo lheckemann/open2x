@@ -1,0 +1,4 @@
+libmpeg2arch_la-motion_comp_mmx.lo libmpeg2arch_la-motion_comp_mmx.o:  \
+ motion_comp_mmx.c ../include/config.h
+
+../include/config.h:

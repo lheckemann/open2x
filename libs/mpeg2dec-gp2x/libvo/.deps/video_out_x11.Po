@@ -1,0 +1,3 @@
+video_out_x11.o video_out_x11.o: video_out_x11.c ../include/config.h
+
+../include/config.h:

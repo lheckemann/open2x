@@ -79,7 +79,7 @@ int SDL_KeyboardInit(void)
 	SDL_EnableKeyRepeat(0, 0);
 
 	/* Fill in the blanks in keynames */
-	keynames[SDLK_CTRL_C] = "ctrl+c";
+	/* keynames[SDLK_CTRL_C] = "ctrl+c"; */
 	keynames[SDLK_BACKSPACE] = "backspace";
 	keynames[SDLK_TAB] = "tab";
 	keynames[SDLK_CLEAR] = "clear";
@@ -306,7 +306,7 @@ int SDL_KeyboardInit(void)
 	keynames[SDLK_RMETA] = "right meta";
 	keynames[SDLK_LMETA] = "left meta";
 	keynames[SDLK_LSUPER] = "left super";	/* "Windows" keys */
-	keynames[SDLK_RSUPER] = "right super";	
+	keynames[SDLK_RSUPER] = "right super";
 	keynames[SDLK_MODE] = "alt gr";
 	keynames[SDLK_COMPOSE] = "compose";
 
@@ -392,7 +392,7 @@ int SDL_PrivateKeyboard(Uint8 state, SDL_keysym *keysym)
 	memset(&event, 0, sizeof(event));
 
 #if 0
-printf("The '%s' key has been %s\n", SDL_GetKeyName(keysym->sym), 
+printf("The '%s' key has been %s\n", SDL_GetKeyName(keysym->sym),
 				state == SDL_PRESSED ? "pressed" : "released");
 #endif
 	/* Set up the keysym */

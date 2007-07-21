@@ -52,10 +52,8 @@ configure:2181: result: /usr/bin/install -c
 configure:2192: checking whether build environment is sane
 configure:2235: result: yes
 configure:2300: checking for gawk
-configure:2330: result: no
-configure:2300: checking for mawk
-configure:2316: found /usr/bin/mawk
-configure:2327: result: mawk
+configure:2316: found /usr/bin/gawk
+configure:2327: result: gawk
 configure:2338: checking whether make sets $(MAKE)
 configure:2359: result: yes
 configure:2435: checking for arm-open2x-linux-strip
@@ -83,7 +81,7 @@ configure:2915: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -V >&
 arm-open2x-linux-gcc: '-V' option must have argument
 configure:2918: $? = 1
 configure:2941: checking for C compiler default output file name
-configure:2968: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c  >&5
+configure:2968: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c  >&5
 configure:2971: $? = 0
 configure:3017: result: a.out
 configure:3022: checking whether the C compiler works
@@ -91,15 +89,15 @@ configure:3052: result: yes
 configure:3059: checking whether we are cross compiling
 configure:3061: result: yes
 configure:3064: checking for suffix of executables
-configure:3071: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -o conftest -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c  >&5
+configure:3071: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -o conftest -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c  >&5
 configure:3074: $? = 0
 configure:3098: result: 
 configure:3104: checking for suffix of object files
-configure:3130: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:3130: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:3133: $? = 0
 configure:3156: result: o
 configure:3160: checking whether we are using the GNU C compiler
-configure:3189: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:3189: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:3195: $? = 0
 configure:3202: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:3205: $? = 0
@@ -115,7 +113,7 @@ configure:3287: test -s conftest.o
 configure:3290: $? = 0
 configure:3420: result: yes
 configure:3437: checking for /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc option to accept ISO C89
-configure:3511: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc  -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:3511: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc  -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:3517: $? = 0
 configure:3524: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:3527: $? = 0
@@ -215,7 +213,7 @@ configure: failed program was:
 | /* end confdefs.h.  */
 | #include <ac_nonexistent.h>
 configure:5751: checking for ANSI C header files
-configure:5781: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5781: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5787: $? = 0
 configure:5794: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5797: $? = 0
@@ -223,7 +221,7 @@ configure:5804: test -s conftest.o
 configure:5807: $? = 0
 configure:5932: result: yes
 configure:5956: checking for sys/types.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -231,7 +229,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for sys/stat.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -239,7 +237,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for stdlib.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -247,7 +245,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for string.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -255,7 +253,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for memory.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -263,7 +261,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for strings.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -271,7 +269,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for inttypes.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -279,7 +277,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for stdint.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -287,7 +285,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:5956: checking for unistd.h
-configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:5977: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:5983: $? = 0
 configure:5990: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:5993: $? = 0
@@ -295,7 +293,7 @@ configure:6000: test -s conftest.o
 configure:6003: $? = 0
 configure:6016: result: yes
 configure:6043: checking dlfcn.h usability
-configure:6060: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:6060: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:6066: $? = 0
 configure:6073: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:6076: $? = 0
@@ -498,11 +496,11 @@ configure:6723: result: no
 configure:6753: checking the maximum length of command line arguments
 configure:6868: result: 32768
 configure:6879: checking command to parse /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-nm -B output from /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc object
-configure:6984: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:6984: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:6987: $? = 0
 configure:6991: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-nm -B conftest.o \| sed -n -e 's/^.*[ 	]\([ABCDGIRSTW][ABCDGIRSTW]*\)[ 	][ 	]*\([_A-Za-z][_A-Za-z0-9]*\)$/\1 \2 \2/p' \> conftest.nm
 configure:6994: $? = 0
-configure:7046: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -o conftest -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c conftstm.o >&5
+configure:7046: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -o conftest -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c conftstm.o >&5
 configure:7049: $? = 0
 configure:7087: result: ok
 configure:7091: checking for objdir
@@ -514,26 +512,26 @@ configure:7281: result: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-r
 configure:7350: checking for arm-open2x-linux-strip
 configure:7377: result: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-strip
 configure:7707: checking if /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc supports -fno-rtti -fno-exceptions
-configure:7725: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -fno-rtti -fno-exceptions conftest.c >&5
+configure:7725: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -fno-rtti -fno-exceptions conftest.c >&5
 cc1: warning: command line option "-fno-rtti" is valid for C++/ObjC++ but not for C
 configure:7729: $? = 0
 configure:7742: result: no
 configure:7757: checking for /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc option to produce PIC
 configure:7967: result: -fPIC
 configure:7975: checking if /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc PIC flag -fPIC works
-configure:7993: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -fPIC -DPIC conftest.c >&5
+configure:7993: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -fPIC -DPIC conftest.c >&5
 configure:7997: $? = 0
 configure:8010: result: yes
 configure:8038: checking if /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc static flag -static works
 configure:8066: result: yes
 configure:8076: checking if /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc supports -c -o file.o
-configure:8097: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -o out/conftest2.o conftest.c >&5
+configure:8097: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  -o out/conftest2.o conftest.c >&5
 configure:8101: $? = 0
 configure:8123: result: yes
 configure:8149: checking whether the /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc linker (/opt/open2x/gcc-4.1.1-glibc-2.3.6/arm-open2x-linux/bin/ld) supports shared libraries
 configure:9135: result: yes
 configure:9156: checking whether -lc should be explicitly linked in
-configure:9161: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:9161: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:9164: $? = 0
 configure:9179: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -shared conftest.o  -v -Wl,-soname -Wl,conftest -o conftest 2\>\&1 \| grep  -lc  \>/dev/null 2\>\&1
 configure:9182: $? = 0
@@ -580,7 +578,7 @@ configure:13895: result: immediate
 configure:20120: checking for a BSD-compatible install
 configure:20176: result: /usr/bin/install -c
 configure:20193: checking for socklen_t
-configure:20220: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
+configure:20220: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -c -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL  conftest.c >&5
 configure:20226: $? = 0
 configure:20233: test -z "$ac_c_werror_flag" || test ! -s conftest.err
 configure:20236: $? = 0
@@ -592,7 +590,7 @@ configure:20407: result: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/sdl-config
 configure:20416: checking for SDL - version >= 1.2.0
 configure:20546: result: yes
 configure:20662: checking for sqrt in -lm
-configure:20697: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -o conftest -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_REENTRANT  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c -lm   -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -Wl,-rpath,/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -lSDL -lpthread >&5
+configure:20697: /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -o conftest -O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT  -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib conftest.c -lm   -L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -Wl,-rpath,/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -lSDL -lpthread >&5
 conftest.c:28: warning: conflicting types for built-in function 'sqrt'
 configure:20703: $? = 0
 configure:20710: test -z "$ac_c_werror_flag" || test ! -s conftest.err
@@ -642,7 +640,7 @@ ac_cv_env_CCC_value=
 ac_cv_env_CC_set=set
 ac_cv_env_CC_value=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc
 ac_cv_env_CFLAGS_set=set
-ac_cv_env_CFLAGS_value='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL'
+ac_cv_env_CFLAGS_value='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL'
 ac_cv_env_CPPFLAGS_set=
 ac_cv_env_CPPFLAGS_value=
 ac_cv_env_CPP_set=
@@ -687,7 +685,7 @@ ac_cv_path_GREP=/bin/grep
 ac_cv_path_SDL_CONFIG=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/sdl-config
 ac_cv_path_install='/usr/bin/install -c'
 ac_cv_prog_AR=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-ar
-ac_cv_prog_AWK=mawk
+ac_cv_prog_AWK=gawk
 ac_cv_prog_CC=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc
 ac_cv_prog_CPP='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -E'
 ac_cv_prog_CXXCPP='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-g++ -E'
@@ -740,19 +738,19 @@ ASFLAGS=''
 AUTOCONF='${SHELL} /storage/file-store/Projects/GP2X/open2x-svn/libs/smpeg-cvs/missing --run autoconf'
 AUTOHEADER='${SHELL} /storage/file-store/Projects/GP2X/open2x-svn/libs/smpeg-cvs/missing --run autoheader'
 AUTOMAKE='${SHELL} /storage/file-store/Projects/GP2X/open2x-svn/libs/smpeg-cvs/missing --run automake-1.9'
-AWK='mawk'
+AWK='gawk'
 BINARY_AGE='5'
 CC='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc'
 CCAS='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc'
 CCASFLAGS=''
 CCDEPMODE='depmode=gcc3'
-CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video'
+CFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video'
 CPP='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -E'
 CPPFLAGS=''
 CXX='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-g++'
 CXXCPP='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-g++ -E'
 CXXDEPMODE='depmode=gcc3'
-CXXFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video -fno-exceptions -fno-rtti'
+CXXFLAGS='-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DTHREADED_AUDIO -DNDEBUG -I.. -DNOCONTROLS -I$(top_srcdir) -I$(top_srcdir)/audio -I$(top_srcdir)/video -fno-exceptions -fno-rtti'
 CYGPATH_W='echo'
 DEFS='-DPACKAGE_NAME=\"\" -DPACKAGE_TARNAME=\"\" -DPACKAGE_VERSION=\"\" -DPACKAGE_STRING=\"\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE=\"smpeg\" -DVERSION=\"0.4.5\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1'
 DEPDIR='.deps'
@@ -803,7 +801,7 @@ PACKAGE_TARNAME=''
 PACKAGE_VERSION=''
 PATH_SEPARATOR=':'
 RANLIB='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-ranlib'
-SDL_CFLAGS='-I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_REENTRANT'
+SDL_CFLAGS='-I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT'
 SDL_CONFIG='/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/sdl-config'
 SDL_LIBS='-L/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -Wl,-rpath,/opt/open2x/gcc-4.1.1-glibc-2.3.6/lib -lSDL -lpthread'
 SET_MAKE=''

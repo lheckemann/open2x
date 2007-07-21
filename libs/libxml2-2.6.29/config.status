@@ -511,7 +511,7 @@ s,@LIBXML_MICRO_VERSION@,29,;t t
 s,@LIBXML_VERSION@,2.6.29,;t t
 s,@LIBXML_VERSION_INFO@,8:29:6,;t t
 s,@LIBXML_VERSION_NUMBER@,20629,;t t
-s,@LIBXML_VERSION_EXTRA@,,;t t
+s,@LIBXML_VERSION_EXTRA@,-SVN241,;t t
 s,@INSTALL_PROGRAM@,${INSTALL},;t t
 s,@INSTALL_SCRIPT@,${INSTALL},;t t
 s,@INSTALL_DATA@,${INSTALL} -m 644,;t t
@@ -678,7 +678,7 @@ s,@PYTHON_INCLUDES@,,;t t
 s,@PYTHON_SITE_PACKAGES@,/usr/lib/python2.5/site-packages,;t t
 s,@M_LIBS@,-lm,;t t
 s,@RDL_LIBS@,,;t t
-s,@RELDATE@,Tue Jun 26 2007,;t t
+s,@RELDATE@,Fri Jun 29 2007,;t t
 s,@PYTHON_TESTS@,,;t t
 s,@LIBOBJS@,,;t t
 s,@LTLIBOBJS@,,;t t

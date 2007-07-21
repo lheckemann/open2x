@@ -85,7 +85,7 @@ AR_FLAGS="cru"
 LTCC="/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc"
 
 # LTCC compiler flags.
-LTCFLAGS="-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL"
+LTCFLAGS="-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL"
 
 # A language-specific compiler.
 CC="/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc"
@@ -7257,7 +7257,7 @@ AR_FLAGS="cru"
 LTCC="/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc"
 
 # LTCC compiler flags.
-LTCFLAGS="-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL"
+LTCFLAGS="-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL"
 
 # A language-specific compiler.
 CC="/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-g++"
