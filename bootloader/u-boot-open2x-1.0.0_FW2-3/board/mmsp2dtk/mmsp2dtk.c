@@ -641,12 +641,6 @@ void attempt_firmware_upgrade(void)
 			ulong length = 0x4000 * ((size/0x4000)+1);		// 0x4000 단위로 나누고 이걸 1더해서 곱하면 0x4000의 배수가 된다.
 			printf("gp2xkernel.img Update %d 0x%x \n", size, length);
 
-			//if(bShowLogo == 0)
-			//{
-			//	bShowLogo = 1;
-			//	display_Firmware();
-			//}
-
 			do
 			{
 				do
@@ -772,16 +766,17 @@ void attempt_firmware_upgrade(void)
 
 			}while(ret_gp2xyaffs_write);	// 0이면 쓴 것이다.
 
-			sdk2x_LcdTextOut (0, 130, "gp2xyaffs.img - Flashed.", 0xF800);
+			sdk2x_LcdTextOut (0, 140, "gp2xyaffs.img - Flashed.", 0xF800);
 		}
 		else
 		{
 			printf("gp2xyaffs.img not found\n");
-			sdk2x_LcdTextOut (0, 130, "gp2xyaffs.img - Not Found.", 0xF800);
+			sdk2x_LcdTextOut (0, 140, "gp2xyaffs.img - Not Found.", 0xF800);
 		}
 	}
-	sdk2x_LcdTextOut (0, 150, "Complete...", 0x07E0);
-	sdk2x_LcdTextOut (0, 160, "Press power off your GP2X and restart.", 0x07E0);
+	printf("Upgrade code finished\n");
+	sdk2x_LcdTextOut (0, 160, "Complete...", 0x07E0);
+	sdk2x_LcdTextOut (0, 170, "Please power off the GP2X and restart.", 0x07E0);
 
 	/* Wait for the user to press B after flash
 	   Allows user to see all flash info */
@@ -790,7 +785,7 @@ void attempt_firmware_upgrade(void)
 	{
 		if (SDK2X_KEY_B & sdk2x_SysReadKeys()) /* Check to see if the B key is pressed */
 		{
-			return;
+			/* Never Return - User should power cycle */
 		}
 	}
 }

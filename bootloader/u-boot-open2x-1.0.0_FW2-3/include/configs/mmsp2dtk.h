@@ -191,9 +191,9 @@
  * NAND FLASH and environment organization
  */
 
-#define CONFIG_YAFFS                    /* use yaffs filesystem on nand flash */
+#define CONFIG_YAFFS                    /* Support writing a YAFFS1 filesystem to NAND */
 
-#define CFG_MAX_NAND_DEVICE     1       /* Max number of NAND devices           */
+#define CFG_MAX_NAND_DEVICE     1       /* Max number of NAND devices */
 #define SECTORSIZE 512
 
 #define ADDR_COLUMN 1

@@ -468,11 +468,13 @@ void main_loop (void)
 				}
 				sdk2x_LcdTextOut (0, 40, "Failed to load kernel.img from card.", 0xF800);
 				sdk2x_MSleep(5000);
+				kernel_load = 1;
 				sprintf(s, "reset\0");
 			}
 			else
 			{
 				sdk2x_LcdTextOut (80, 104, "Running kernel.img.", 0x07E0);
+				kernel_load = 1;
 				sprintf(s, "bootm\0");
 			}
 		}
@@ -496,9 +498,6 @@ void main_loop (void)
 //				*fbaddr++ = 0x00;
 //			}
 //		}
-		//sdk2x_LcdTextOut (100, 20, "Open2x Bootloader", 0xFFFF);
-		//sdk2x_LcdTextOut (100, 27, "-----------------", 0xFFFF);
-		//sdk2x_LcdTextOut (100, 40, "                 ", 0xFFFF);
 
 		/* Wait for the user to chose an image or cancel */
 		while (!selected && !cancelled)
@@ -572,16 +571,19 @@ void main_loop (void)
 						}
 						else
 						{
+							kernel_load = 1;
 							sprintf(s, "bootm\0");
 						}
 					}
 					break;
 
 				case 2:
+					kernel_load = 1;
 					sprintf(s, "nand read 0x1000000 0x80000 0x100000; bootm\0");
 					break;
 
 				case 3:
+					kernel_load = 1;
 					sdk2x_LcdTextOut (108, 159, "Serial prompt active.", 0xF800);
 					bootdelay = -1;
 					break;

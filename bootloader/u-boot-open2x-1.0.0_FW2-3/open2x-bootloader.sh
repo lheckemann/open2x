@@ -4,12 +4,12 @@
 
 ## OPEN2X - This should point to the root of your tool-chain (i.e. folder above the BIN dir) 
  
-OPEN2X=/opt/open2x/gcc-3.3.4-glibc-2.3.2
+OPEN2X=/opt/open2x/gcc-3.4.4-glibc-2.3.6
  
 ## CROSS_COMPILE - This should be the canonical tool names of your tool.
 ## Defaults would be 'arm-open2x-linux-' for a normal Open2x tool-chain.
  
-CROSS_COMPILE=arm-linux-
+CROSS_COMPILE=arm-open2x-linux-
 
 ## U_BOOT_MKIMAGE - This is the location of your host OS specific version of MKIMAGE from U-Boot.
 U_BOOT_MKIMAGE=/storage/file-store/Projects/GP2X/open2x-svn/bootloader/u-boot-open2x-1.0.0_FW2-3/tools
