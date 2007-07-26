@@ -34,7 +34,7 @@
 #include "SDL_gp2xyuv_c.h"
 #include "../SDL_yuvfuncs.h"
 #include "mmsp2_regs.h"
-#include "arm_colorconv.h"
+//#include "arm_colorconv.h"
 
 /* The functions used to manipulate software video overlays */
 static struct private_yuvhwfuncs gp2x_yuvfuncs =
