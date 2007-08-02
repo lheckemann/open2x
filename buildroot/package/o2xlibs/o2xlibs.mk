@@ -4,9 +4,15 @@
 #
 #############################################################
 
-o2xlibs: 
+O2XLIBS_VERSION:=0.9
+O2XLIBS_SOURCE:=o2xlibs-$(O2XLIBS_VERSION).tar.bz2
+
+$(DL_DIR)/$(O2XLIBS_SOURCE):
+	$(WGET) -P $(DL_DIR) $(O2X_REPO)/$(O2XLIBS_SOURCE)
+
+$(TARGET_DIR)/lib/libdl.so: $(DL_DIR)/$(O2XLIBS_SOURCE)
 	echo "Installing libraries..."
-	cp -f -P $(BR2_TOOLCHAIN_LIBPACK)/*.so* $(TARGET_DIR)/lib/
+	tar xfvj $(DL_DIR)/$(O2XLIBS_SOURCE) -C $(TARGET_DIR)/lib/
 	cp -f -P $(BR2_TOOLCHAIN_EXTERNAL_PATH)/arm-open2x-linux/lib/ld*.so* $(TARGET_DIR)/lib/
 	cp -f -P $(BR2_TOOLCHAIN_EXTERNAL_PATH)/arm-open2x-linux/lib/libc*.so* $(TARGET_DIR)/lib/
 	cp -f -P $(BR2_TOOLCHAIN_EXTERNAL_PATH)/arm-open2x-linux/lib/libstdc++*.so* $(TARGET_DIR)/lib/
@@ -15,7 +21,9 @@ o2xlibs:
 	cp -f -P $(BR2_TOOLCHAIN_EXTERNAL_PATH)/arm-open2x-linux/lib/libgcc*.so* $(TARGET_DIR)/lib/
 	cp -f -P $(BR2_TOOLCHAIN_EXTERNAL_PATH)/arm-open2x-linux/lib/libpthread*.so* $(TARGET_DIR)/lib/
 	cp -f -P $(BR2_TOOLCHAIN_EXTERNAL_PATH)/arm-open2x-linux/lib/libdl*.so* $(TARGET_DIR)/lib/
-	#$(BR2_TOOLCHAIN_EXTERNAL_PATH)/bin/arm-open2x-linux-strip --strip-debug $(TARGET_DIR)/lib/*
+
+o2xlibs: $(TARGET_DIR)/lib/libdl.so
+	echo "Installed libraries!"
 
 o2xlibs-clean:
 	

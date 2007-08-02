@@ -1,0 +1,7 @@
+config BR2_PACKAGE_DEVFSD
+	bool "devfsd"
+	default y
+	help
+	  The dæmon responsible for creating device files. This 
+	  is not essential for booting, but compatibility will 
+	  be extremely low with existing GP2X applications without.

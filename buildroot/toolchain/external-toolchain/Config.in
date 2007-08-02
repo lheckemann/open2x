@@ -20,13 +20,13 @@ config BR2_TOOLCHAIN_EXTERNAL_LIBS
 	  the top-level name is needed, i.e. libc.so, libpthread.so as
 	  the actual shared library symlinked to will be copied also.
 
-config BR2_TOOLCHAIN_LIBPACK
-	string "Path to the 'lib' directory of the libpack"
-	default ""
+config O2X_REPO
+	string "URL for the Open2x repository you wish to use"
+	default "http://x11.gp2x.de/open2x/bins"
 	help
-	  In most cases this will be the toolchain 'lib' directory
-	  as this option is designed for people working with the 
-	  newest bleeding edge libraries from the SVN.
+	  Normally this should point to the binary repository at 
+	  http://x11.gp2x.de/open2x/bins however it can points to any 
+	  complete collection of Open2x binaries.
 
 config BR2_TOOLCHAIN_EXTERNAL_STRIP
         bool
@@ -39,13 +39,13 @@ comment "Common Toolchain Options"
 
 config BR2_TOOLCHAIN_EXTERNAL_PATH
 	string "External toolchain path"
-	default ""
+	default "/opt/open2x/gcc-4.1.1-glibc-2.3.6"
 	help
 	  Path to where the external toolchain is installed.
 
 config BR2_TOOLCHAIN_EXTERNAL_PREFIX
 	string "External toolchain prefix"
-	default ""
+	default "arm-open2x-linux"
 	help
 	  This the the external toolchain prefix. For example:
 	    armeb-unknown-linux-gnu, mipsel-unknown-linux-gnu, etc.
@@ -82,15 +82,15 @@ config BR2_LARGEFILE
 
 config BR2_SOFT_FLOAT
 	bool "Use software floating point by default"
-	default n
-	depends on BR2_arm || BR2_armeb || BR2_mips || BR2_mipsel || BR2_powerpc
+	default y
+	depends on BR2_arm
 	help
 	  If your target CPU does not have a Floating Point Unit (FPU) or a
 	  kernel FPU emulator, but you still wish to support floating point
 	  functions, then everything will need to be compiled with soft
 	  floating point support (-msoft-float).
 
-	  Most people will answer N.
+	  For the GP2X, you should answer yes.
 
 config BR2_TARGET_OPTIMIZATION
 	string "Target Optimizations"
