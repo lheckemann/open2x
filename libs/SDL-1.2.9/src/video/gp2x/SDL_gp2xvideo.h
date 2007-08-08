@@ -175,5 +175,15 @@ static inline void GP2X_WaitBusySurfaces(_THIS)
   do {} while (this->hidden->fio[MESGSTATUS] & MESG_BUSY);
 }
 
-//#define GP2X_DEBUG 1
+// Waits until vblank is active (doesn't necessarily wait for vblank to start)
+static inline void GP2X_WaitVBlank(const SDL_PrivateVideoData *data)
+{
+ 	// wait for vblank to start, choose transition type by polarity
+ 	if (data->vsync_polarity)
+ 	  do {} while ((data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+ 	else
+ 	  do {} while (!(data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+}
+
+//#define GP2X_DEBUG
 #endif // _SDL_gp2xvideo_h

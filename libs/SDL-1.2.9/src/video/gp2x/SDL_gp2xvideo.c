@@ -720,7 +720,9 @@ static int GP2X_AllocHWSurface(_THIS, SDL_Surface *surface)
   surface->hwdata = (struct private_hwdata *)gfx_memory;
   surface->pixels = gfx_memory->base;
   surface->flags |= SDL_HWSURFACE;
+#ifdef GP2X_DEBUG
   fputs("SDL_GP2X: Allocated\n", stderr);
+#endif
   return 0;
 }
 
@@ -1493,7 +1495,9 @@ int SDL_GP2X_TV(int state)
 {
   if (state == 0) {   // Turn TV off
     if (tv_device) {  // close device to return to LCD
+#ifdef GP2X_DEBUG
       fputs("Closing CX25874\n", stderr);
+#endif
       close(tv_device);
       tv_device = 0;
     }
@@ -1502,7 +1506,9 @@ int SDL_GP2X_TV(int state)
 
   // Turn TV on
   if (!tv_device) {  // open device to enable TV
+#ifdef GP2X_DEBUG
     fputs("Opening CX25874\n", stderr);
+#endif
     tv_device = open("/dev/cx25874", O_RDWR, 0);
     if (!tv_device) {
       SDL_SetError("Failed to open TV device.");
@@ -1517,7 +1523,9 @@ int SDL_GP2X_TVMode(int mode)
   // No device open, or mode is out of range
   if ((!tv_device) || (mode < 1) || (mode > 5))
     return -1;
+#ifdef GP2X_DEBUG
   fprintf(stderr, "Switching tv mode to %d\n", mode);
+#endif
   ioctl(tv_device, IOCTL_CX25874_DISPLAY_MODE_SET, mode);
   return 0;
 }
@@ -1527,7 +1535,9 @@ void SDL_GP2X_TVAdjust(int direction)
   if ((!tv_device) || (direction < 0) || (direction > 3))
     return;
 
+#ifdef GP2X_DEBUG
   fprintf(stderr, "Moving TV by %d\n", direction);
+#endif
   ioctl(tv_device, IOCTL_CX25874_TV_MODE_POSITION, direction);
 }
 
@@ -1548,3 +1558,11 @@ void SDL_GP2X_DenyGfxMemory(char *start, int size)
   SDL_PrivateVideoData *data = current_video->hidden;
   data->allow_scratch_memory = 0;
 }
+
+void SDL_GP2X_VSync()
+{
+  SDL_PrivateVideoData *data = current_video->hidden;
+
+  GP2X_WaitVBlank(data);
+}
+
