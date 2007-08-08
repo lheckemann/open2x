@@ -31,6 +31,7 @@ void SDL_GP2X_TVAdjust(int direction);
 void SDL_GP2X_AllowGfxMemory(char *start, int size);
 void SDL_GP2X_DenyGfxMemory(char *start, int size);
 
+void SDL_GP2X_VSync();
 
 #ifdef __cplusplus
 }

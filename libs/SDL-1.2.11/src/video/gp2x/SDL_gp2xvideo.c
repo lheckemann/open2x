@@ -1546,3 +1546,11 @@ void SDL_GP2X_DenyGfxMemory(char *start, int size)
   SDL_PrivateVideoData *data = current_video->hidden;
   data->allow_scratch_memory = 0;
 }
+
+void SDL_GP2X_VSync()
+{
+  SDL_PrivateVideoData *data = current_video->hidden;
+
+  GP2X_WaitVBlank(data);
+}
+
