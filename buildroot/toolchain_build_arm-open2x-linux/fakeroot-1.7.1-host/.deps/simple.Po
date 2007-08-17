@@ -1,0 +1,2 @@
+simple.o simple.o:  \
+ /home/adan/Desktop/open2x/buildroot/build_arm/fakeroot-1.7.1/simple.c

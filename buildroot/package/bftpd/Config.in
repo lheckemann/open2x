@@ -1,0 +1,5 @@
+config BR2_PACKAGE_BFTPD
+	bool "bftpd"
+	default n
+	help
+	  A tiny FTP server for embedded devices.

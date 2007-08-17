@@ -5,7 +5,7 @@
 #############################################################
 
 UTELNETD_VERSION:=0.1.9
-UTELNETD_SOURCE:=utelnetd-$(UTELNETD_VERSION)-o2x.tar.bz2
+UTELNETD_SOURCE:=utelnetd/utelnetd-$(UTELNETD_VERSION)-o2x.tar.bz2
 
 $(TARGET_DIR)/sbin/utelnetd:
 	echo "Installing utelnetd..."

@@ -7,6 +7,6 @@ devpts		/dev/pts       devpts   defaults,gid=5,mode=620	  0	 0
 tmpfs           /tmp           tmpfs    defaults          0      0
 
 # GP2X specific stuff
-/dev/mmcsd/disc0/part1  /mnt/sd         auto    sync,noatime,rw 0
+/dev/mmcsd/disc0/part1  /mnt/sd         auto    sync,noatime,rw,shortname=mixed 0 0
 /dev/mtdblock/4         /opt            yaffs   sync,noatime,rw 0 0
 

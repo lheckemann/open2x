@@ -5,7 +5,7 @@
 #############################################################
 
 GMENU2X_VERSION:=0.9
-GMENU2X_SOURCE:=gmenu2x-$(GMENU2X_VERSION)-o2x.tar.bz2
+GMENU2X_SOURCE:=gmenu2x/gmenu2x-$(GMENU2X_VERSION)-o2x.tar.bz2
 
 $(TARGET_DIR)/usr/menu/gmenu2x:
 	echo "Installing GMenu2X..."

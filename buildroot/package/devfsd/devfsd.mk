@@ -5,7 +5,7 @@
 #############################################################
 
 DEVFSD_VERSION:=1.3.25
-DEVFSD_SOURCE:=devfsd-$(DEVFSD_VERSION)-o2x.tar.bz2
+DEVFSD_SOURCE:=devfsd/devfsd-$(DEVFSD_VERSION)-o2x.tar.bz2
 
 $(TARGET_DIR)/sbin/devfsd:
 	echo "Installing devfsd..."
