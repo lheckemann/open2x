@@ -5,11 +5,11 @@
 #############################################################
 
 BFTPD_VERSION:=1.9.1
-BFTPD_SOURCE:=bftpd/bftpd-$(BFTPD_VERSION)-o2x.tar.bz2
+BFTPD_SOURCE:=bftpd-$(BFTPD_VERSION)-o2x.tar.bz2
 
 $(TARGET_DIR)/sbin/bftpd:
 	echo "Installing bftpd..."
-	$(WGET) -P $(DL_DIR) $(O2X_REPO)/$(BFTPD_SOURCE)
+	$(WGET) -P $(DL_DIR) $(O2X_REPO)/bftpd/$(BFTPD_SOURCE)
 	mkdir -p $(BUILD_DIR)/bftpd-$(BFTPD_VERSION)
 	$(BZCAT) $(DL_DIR)/$(BFTPD_SOURCE) | tar -C $(BUILD_DIR)/bftpd-$(BFTPD_VERSION) $(TAR_OPTIONS) -
 	cp -f $(BUILD_DIR)/bftpd-$(BFTPD_VERSION)/bftpd $(TARGET_DIR)/sbin/

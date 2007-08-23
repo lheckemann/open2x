@@ -6,7 +6,6 @@ deps_config := \
 	target/Config.in \
 	package/samba/Config.in \
 	package/utelnetd/Config.in \
-	package/tftpd/Config.in \
 	package/mkdosfs/Config.in \
 	package/bftpd/Config.in \
 	package/gp2xsleep/Config.in \

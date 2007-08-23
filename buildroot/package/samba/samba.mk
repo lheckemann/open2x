@@ -40,6 +40,7 @@ $(SAMBA_DIR)/.configured: $(SAMBA_DIR)/.unpacked
 		--without-ldap \
 		--with-included-popt \
 		--with-included-iniparser \
+		--with-smbmount \
 		--disable-cups \
 		--disable-static \
 	);

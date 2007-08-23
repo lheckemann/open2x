@@ -5,10 +5,10 @@
 #############################################################
 
 O2XLIBS_VERSION:=0.9.1
-O2XLIBS_SOURCE:=o2xlibs/o2xlibs-$(O2XLIBS_VERSION).tar.bz2
+O2XLIBS_SOURCE:=o2xlibs-$(O2XLIBS_VERSION).tar.bz2
 
 $(DL_DIR)/$(O2XLIBS_SOURCE):
-	$(WGET) -P $(DL_DIR) $(O2X_REPO)/$(O2XLIBS_SOURCE)
+	$(WGET) -P $(DL_DIR) $(O2X_REPO)/o2xlibs/$(O2XLIBS_SOURCE)
 
 $(TARGET_DIR)/lib/libdl.so: $(DL_DIR)/$(O2XLIBS_SOURCE)
 	echo "Installing libraries..."

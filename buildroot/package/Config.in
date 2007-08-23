@@ -19,7 +19,6 @@ source "package/bftpd/Config.in"
 #source "package/coreutils/Config.in"
 source "package/mkdosfs/Config.in"
 #source "package/nano/Config.in"
-source "package/tftpd/Config.in"
 #source "package/tinyx/Config.in"
 source "package/utelnetd/Config.in"
 
