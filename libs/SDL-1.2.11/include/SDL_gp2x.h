@@ -33,6 +33,12 @@ void SDL_GP2X_DenyGfxMemory(char *start, int size);
 
 void SDL_GP2X_VSync();
 
+// Return a hardware surface's bitmap address for use by the 940
+//  Surface has to be SDL_HWSURFACE *and* SDL_LockSurface()ed
+//  When you unlock the surface the address you got from here *must*
+//  be considered invalid.
+void *SDL_GP2X_PhysAddress(SDL_Surface *surface);
+
 #ifdef __cplusplus
 }
 #endif

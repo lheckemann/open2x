@@ -787,7 +787,7 @@ case $basic_machine in
 		os=-proelf
 		;;
         open2x)
-	        basic_machine=arm-gp2x
+	        basic_machine=arm-open2x
                 os=-linux-gnu
                 ;;
 	openrisc | openrisc-*)
