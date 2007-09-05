@@ -1547,7 +1547,7 @@ void SDL_GP2X_AllowGfxMemory(char *start, int size)
 {
   SDL_PrivateVideoData *data = current_video->hidden;
   char *end = start + size;
-  char *block = 0x2000000;  // Start of upper memory
+  char *block = (char*)0x2000000;  // Start of upper memory
 
   data->allow_scratch_memory = 1;
 }
@@ -1566,3 +1566,22 @@ void SDL_GP2X_VSync()
   GP2X_WaitVBlank(data);
 }
 
+
+// Return a hardware surface's bitmap address for use by the 940
+//  Surface has to be SDL_HWSURFACE *and* SDL_LockSurface()ed
+//  When you unlock the surface the address you got from here *must*
+//  be considered invalid.
+void *SDL_GP2X_PhysAddress(SDL_Surface *surface)
+{
+  void *address = NULL;
+
+  // return null if null pointer passed, or surface is not locked
+  if ((!surface) || (!surface->locked))
+    SDL_SetError("Invalid or unlocked surface passed");
+  else if (!(surface->flags & SDL_HWSURFACE))
+    SDL_SetError("PhysAddress() only valid for hardware surfaces");
+  else
+    address = (void*)GP2X_Phys(current_video, surface->pixels);
+
+  return address;
+}
