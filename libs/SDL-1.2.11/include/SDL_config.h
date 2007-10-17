@@ -195,6 +195,7 @@
 /* #undef SDL_CDROM_WIN32 */
 
 /* Enable various input drivers */
+#define SDL_INPUT_LINUXEV 1
 /* #undef SDL_INPUT_TSLIB */
 /* #undef SDL_JOYSTICK_AMIGA */
 /* #undef SDL_JOYSTICK_BEOS */
@@ -202,7 +203,6 @@
 /* #undef SDL_JOYSTICK_DUMMY */
 /* #undef SDL_JOYSTICK_IOKIT */
 #define SDL_JOYSTICK_LINUX 1
-#define SDL_JOYSTICK_LINUXEV 1
 /* #undef SDL_JOYSTICK_MACOS */
 /* #undef SDL_JOYSTICK_MINT */
 /* #undef SDL_JOYSTICK_OS2 */
