@@ -202,7 +202,7 @@
 /* #undef SDL_JOYSTICK_DUMMY */
 /* #undef SDL_JOYSTICK_IOKIT */
 #define SDL_JOYSTICK_LINUX 1
-/* #undef SDL_JOYSTICK_LINUXEV */
+#define SDL_JOYSTICK_LINUXEV 1
 /* #undef SDL_JOYSTICK_MACOS */
 /* #undef SDL_JOYSTICK_MINT */
 /* #undef SDL_JOYSTICK_OS2 */
