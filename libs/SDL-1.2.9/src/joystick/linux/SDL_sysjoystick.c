@@ -347,7 +347,9 @@ int SDL_SYS_JoystickInit(void)
   struct stat sb;
   int n, duplicate;
 
+#ifdef GP2X_DEBUG
   fputs("SDL_SYS_JoystickInit\n", stderr);
+#endif
   SDL_joylist[0].fname = mystrdup(SDL_GP2X_JOYSTICK);
   dev_nums[0] = 0;
   numjoysticks = 1;
@@ -448,7 +450,9 @@ const char *SDL_SYS_JoystickName(int index)
   SDL_logical_joydecl(int oindex = index);
 
 #ifdef GP2X
-  fprintf(stderr, "SDL_GP2X: SYS_JoystickName(%d)\n", index);
+  #ifdef GP2X_DEBUG
+    fprintf(stderr, "SDL_GP2X: SYS_JoystickName(%d)\n", index);
+  #endif
   if (index == 0)
     return SDL_joylist[0].fname;
 #endif
@@ -490,7 +494,9 @@ int SDL_GP2X_JoystickOpen(SDL_Joystick *joystick)
 
   fd = open(gp2x_dev_name, O_RDWR | O_NDELAY );
   if (fd < 0){
+#ifdef GP2X_DEBUG
     fputs("GPIO OPEN FAIL\n", stderr);
+#endif
     return -1;
   }
 
@@ -680,13 +686,17 @@ static SDL_bool JS_ConfigJoystick(SDL_Joystick *joystick, int fd)
 
   /* Default joystick device settings */
   if (ioctl(fd, JSIOCGAXES, &n) < 0) {
+fputs(stderr, "invalid JSIOCGAXES\n");
     joystick->naxes = 2;
   } else {
+fprintf(stderr, "JSIOCGAXES reports %d\n", n);
     joystick->naxes = n;
   }
   if (ioctl(fd, JSIOCGBUTTONS, &n) < 0) {
+fputs(stderr, "invalid JSIOCGBUTTONS\n");
     joystick->nbuttons = 2;
   } else {
+fprintf(stderr, "JSIOCGBUTTONS reports %d\n", n);
     joystick->nbuttons = n;
   }
 

@@ -45,6 +45,7 @@ static char rcsid =
 #include <linux/kd.h>
 #include <linux/keyboard.h>
 
+
 #include "SDL.h"
 #include "SDL_mutex.h"
 #include "SDL_sysevents.h"
@@ -54,6 +55,14 @@ static char rcsid =
 #include "SDL_gp2xevents_c.h"
 //#include "SDL_gp2xkeys.h"
 //#include "SDL_keysym.h"
+
+typedef struct {
+  short pressure;
+  short x;
+  short y;
+  short pad;
+  struct timeval stamp;
+} TS_EVENT;
 
 
 /***********
@@ -72,6 +81,7 @@ static enum {
   MOUSE_MS,
   MOUSE_BM,
   MOUSE_ELO,
+  MOUSE_F200TOUCH,
   NUM_MOUSE_DRVS
 } mouse_drv = MOUSE_NONE;
 
@@ -179,6 +189,7 @@ static int detect_imps2(int fd)
 int GP2X_OpenMouse(_THIS)
 {
   int i;
+  int touchscreen_fd = -1;
   const char *mousedev;
   const char *mousedrv;
   
@@ -219,11 +230,21 @@ int GP2X_OpenMouse(_THIS)
 	}
       }
     }
+    if (this->hidden->mouse_fd < 0) {
+      touchscreen_fd = open("/dev/touchscreen/wm97xx", O_RDONLY | O_NOCTTY);
+      if (touchscreen_fd) {
+	this->hidden->mouse_fd = touchscreen_fd;
+	mouse_drv = MOUSE_F200TOUCH;
+#ifdef DEBUG_MOUSE
+	fputs("SDL_GP2X: F-200 touchscreen emulating mouse\n", stderr);
+#endif
+      }
+    }
   }
   if (this->hidden->mouse_fd < 0) {
     mouse_drv = MOUSE_NONE;
 #ifdef DEBUG_MOUSE
-  fputs("SDL_GP2X: No mice found\n", stderr);
+    fputs("SDL_GP2X: No mice found\n", stderr);
 #endif
   }
   return this->hidden->mouse_fd;
@@ -276,6 +297,7 @@ static void handle_mouse(_THIS)
   static int start = 0;
   static unsigned char mousebuf[BUFSIZ];
   static int relative = 1;
+  TS_EVENT *ts_event;
 
   int i, nread;
   int button = 0;
@@ -301,6 +323,11 @@ static void handle_mouse(_THIS)
     packetsize = 3;
     break;
   case MOUSE_ELO:
+    packetsize = 0;
+    break;
+  case MOUSE_F200TOUCH:
+    packetsize= sizeof(TS_EVENT);
+    break;
   case NUM_MOUSE_DRVS:
     /* Uh oh.. */
     packetsize = 0;
@@ -333,6 +360,7 @@ static void handle_mouse(_THIS)
 	(signed char)(mousebuf[i+3]);
       dy = -((signed char)(mousebuf[i+2]) +
 	     (signed char)(mousebuf[i+4]));
+      relative = 1;
       break;
     case MOUSE_PS2:
       /* PS/2 protocol has nothing in high byte */
@@ -349,6 +377,7 @@ static void handle_mouse(_THIS)
 	mousebuf[i+1] - 256 : mousebuf[i+1];
       dy = (mousebuf[i] & 0x20) ?
 	-(mousebuf[i+2] - 256) : -mousebuf[i+2];
+      relative = 1;
       break;
     case MOUSE_IMPS2:
       /* Get current mouse state */
@@ -378,6 +407,20 @@ static void handle_mouse(_THIS)
     case MOUSE_MS:
     case MOUSE_BM:
     case MOUSE_ELO:
+      dx = 0;
+      dy = 0;
+      break;
+    case MOUSE_F200TOUCH:
+      ts_event = (TS_EVENT*)mousebuf;
+      button = 0x04;  /* Touchscreen only supports one "button" */
+      dx = ((int)ts_event->x - 200) * 320 / 3750;
+      dy = 240 - (((int)ts_event->y - 200) * 240 / 3750);
+      if ((dx <0) || (dx > 320) || (dy < 0) || (dy > 240)) {
+	dx = dy = 0;
+	relative = 1;
+      } else
+	relative = 0;
+      break;
     case NUM_MOUSE_DRVS:
       /* Uh oh.. */
       dx = 0;
