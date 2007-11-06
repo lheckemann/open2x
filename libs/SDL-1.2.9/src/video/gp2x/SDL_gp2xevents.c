@@ -412,9 +412,12 @@ static void handle_mouse(_THIS)
       break;
     case MOUSE_F200TOUCH:
       ts_event = (TS_EVENT*)mousebuf;
-      button = 0x04;  /* Touchscreen only supports one "button" */
+      button = (ts_event->pressure ? 0x04 : 0x00);
       dx = ((int)ts_event->x - 200) * 320 / 3750;
       dy = 240 - (((int)ts_event->y - 200) * 240 / 3750);
+      /*
+      fprintf(stderr, "GP2X_TS: button %d, pos %d,%d\n", button, dx ,dy);
+      */
       if ((dx <0) || (dx > 320) || (dy < 0) || (dy > 240)) {
 	dx = dy = 0;
 	relative = 1;
