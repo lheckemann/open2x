@@ -29,6 +29,7 @@ static char rcsid =
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -81,9 +82,43 @@ static enum {
   MOUSE_MS,
   MOUSE_BM,
   MOUSE_ELO,
-  MOUSE_F200TOUCH,
+  MOUSE_TSLIB,
   NUM_MOUSE_DRVS
 } mouse_drv = MOUSE_NONE;
+
+/*
+ * The F-200 uses tslib data for it's touchscreen (although no modules).
+ * I've ripped the basic (linear) code directly into here.
+ */
+
+// Set default a touchscreen calibration
+static int ts_cal[7] = {6203, 0, -1501397, 0, -4200, 16132680, 65536};
+
+static void read_calibration()
+{
+  struct stat sbuf;
+  int pcal_fd;
+  char pcalbuf[200];
+  int index;
+  char *tokptr;
+  char *calfile = "/etc/pointercal";
+
+  if (stat(calfile,&sbuf) == 0) {
+    pcal_fd = open(calfile,O_RDONLY);
+    read(pcal_fd,pcalbuf, 200);
+    ts_cal[0] = atoi(strtok(pcalbuf," "));
+    index = 1;
+    while (index < 7) {
+      tokptr = strtok(NULL," ");
+      if (*tokptr != '\0') {
+	ts_cal[index] = atoi(tokptr);
+	index++;
+      }
+    }
+    close(pcal_fd);
+  };
+}
+
 
 void GP2X_CloseMouse(_THIS)
 {
@@ -234,7 +269,8 @@ int GP2X_OpenMouse(_THIS)
       touchscreen_fd = open("/dev/touchscreen/wm97xx", O_RDONLY | O_NOCTTY);
       if (touchscreen_fd) {
 	this->hidden->mouse_fd = touchscreen_fd;
-	mouse_drv = MOUSE_F200TOUCH;
+        read_calibration();
+	mouse_drv = MOUSE_TSLIB;
 #ifdef DEBUG_MOUSE
 	fputs("SDL_GP2X: F-200 touchscreen emulating mouse\n", stderr);
 #endif
@@ -325,7 +361,7 @@ static void handle_mouse(_THIS)
   case MOUSE_ELO:
     packetsize = 0;
     break;
-  case MOUSE_F200TOUCH:
+  case MOUSE_TSLIB:
     packetsize= sizeof(TS_EVENT);
     break;
   case NUM_MOUSE_DRVS:
@@ -410,11 +446,16 @@ static void handle_mouse(_THIS)
       dx = 0;
       dy = 0;
       break;
-    case MOUSE_F200TOUCH:
+    case MOUSE_TSLIB:
       ts_event = (TS_EVENT*)mousebuf;
       button = (ts_event->pressure ? 0x04 : 0x00);
-      dx = ((int)ts_event->x - 200) * 320 / 3750;
-      dy = 240 - (((int)ts_event->y - 200) * 240 / 3750);
+      if (ts_cal[6] == 65536) {   // This seems to be what the F200 uses
+	dx = (ts_cal[2] + ts_cal[0] * (int)ts_event->x) >> 16;
+	dy = (ts_cal[5] + ts_cal[4] * (int)ts_event->y) >> 16;
+      } else {
+	dx = (ts_cal[2] + ts_cal[0] * (int)ts_event->x) / ts_cal[6];
+	dy = (ts_cal[5] + ts_cal[4] * (int)ts_event->y) / ts_cal[6];
+      }
       /*
       fprintf(stderr, "GP2X_TS: button %d, pos %d,%d\n", button, dx ,dy);
       */
