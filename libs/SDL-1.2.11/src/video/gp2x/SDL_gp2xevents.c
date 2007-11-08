@@ -29,6 +29,7 @@ static char rcsid =
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -55,6 +56,13 @@ static char rcsid =
 //#include "SDL_gp2xkeys.h"
 //#include "SDL_keysym.h"
 
+typedef struct {
+  short pressure;
+  short x;
+  short y;
+  short pad;
+  struct timeval stamp;
+} TS_EVENT;
 
 /***********
  *** Mouse stuff
@@ -72,8 +80,42 @@ static enum {
   MOUSE_MS,
   MOUSE_BM,
   MOUSE_ELO,
+  MOUSE_TSLIB,
   NUM_MOUSE_DRVS
 } mouse_drv = MOUSE_NONE;
+
+/*
+ * The F-200 uses tslib data for it's touchscreen (although no modules).
+ * I've ripped the basic (linear) code directly into here.
+ */
+
+// Set default a touchscreen calibration
+static int ts_cal[7] = {6203, 0, -1501397, 0, -4200, 16132680, 65536};
+
+static void read_calibration()
+{
+  struct stat sbuf;
+  int pcal_fd;
+  char pcalbuf[200];
+  int index;
+  char *tokptr;
+  char *calfile = "/etc/pointercal";
+
+  if (stat(calfile,&sbuf) == 0) {
+    pcal_fd = open(calfile,O_RDONLY);
+    read(pcal_fd,pcalbuf, 200);
+    ts_cal[0] = atoi(strtok(pcalbuf," "));
+    index = 1;
+    while (index < 7) {
+      tokptr = strtok(NULL," ");
+      if (*tokptr != '\0') {
+	ts_cal[index] = atoi(tokptr);
+	index++;
+      }
+    }
+    close(pcal_fd);
+  };
+}
 
 void GP2X_CloseMouse(_THIS)
 {
@@ -179,6 +221,7 @@ static int detect_imps2(int fd)
 int GP2X_OpenMouse(_THIS)
 {
   int i;
+  int touchscreen_fd = -1;
   const char *mousedev;
   const char *mousedrv;
 
@@ -219,11 +262,22 @@ int GP2X_OpenMouse(_THIS)
 	}
       }
     }
+    if (this->hidden->mouse_fd < 0) {
+      touchscreen_fd = open("/dev/touchscreen/wm97xx", O_RDONLY | O_NOCTTY);
+      if (touchscreen_fd) {
+	this->hidden->mouse_fd = touchscreen_fd;
+        read_calibration();
+	mouse_drv = MOUSE_TSLIB;
+#ifdef DEBUG_MOUSE
+	fputs("SDL_GP2X: F-200 touchscreen emulating mouse\n", stderr);
+#endif
+      }
+    }
   }
   if (this->hidden->mouse_fd < 0) {
     mouse_drv = MOUSE_NONE;
 #ifdef DEBUG_MOUSE
-  fputs("SDL_GP2X: No mice found\n", stderr);
+	fputs("SDL_GP2X: No mice found\n", stderr);
 #endif
   }
   return this->hidden->mouse_fd;
@@ -276,6 +330,7 @@ static void handle_mouse(_THIS)
   static int start = 0;
   static unsigned char mousebuf[BUFSIZ];
   static int relative = 1;
+  TS_EVENT *ts_event;
 
   int i, nread;
   int button = 0;
@@ -301,6 +356,11 @@ static void handle_mouse(_THIS)
     packetsize = 3;
     break;
   case MOUSE_ELO:
+    packetsize = 0;
+    break;
+  case MOUSE_TSLIB:
+    packetsize= sizeof(TS_EVENT);
+    break;
   case NUM_MOUSE_DRVS:
     /* Uh oh.. */
     packetsize = 0;
@@ -333,6 +393,7 @@ static void handle_mouse(_THIS)
 	(signed char)(mousebuf[i+3]);
       dy = -((signed char)(mousebuf[i+2]) +
 	     (signed char)(mousebuf[i+4]));
+      relative = 1;
       break;
     case MOUSE_PS2:
       /* PS/2 protocol has nothing in high byte */
@@ -349,6 +410,7 @@ static void handle_mouse(_THIS)
 	mousebuf[i+1] - 256 : mousebuf[i+1];
       dy = (mousebuf[i] & 0x20) ?
 	-(mousebuf[i+2] - 256) : -mousebuf[i+2];
+      relative = 1;
       break;
     case MOUSE_IMPS2:
       /* Get current mouse state */
@@ -378,6 +440,28 @@ static void handle_mouse(_THIS)
     case MOUSE_MS:
     case MOUSE_BM:
     case MOUSE_ELO:
+      dx = 0;
+      dy = 0;
+      break;
+    case MOUSE_TSLIB:
+      ts_event = (TS_EVENT*)mousebuf;
+      button = (ts_event->pressure ? 0x04 : 0x00);
+      if (ts_cal[6] == 65536) {   // This seems to be what the F200 uses
+	dx = (ts_cal[2] + ts_cal[0] * (int)ts_event->x) >> 16;
+	dy = (ts_cal[5] + ts_cal[4] * (int)ts_event->y) >> 16;
+      } else {
+	dx = (ts_cal[2] + ts_cal[0] * (int)ts_event->x) / ts_cal[6];
+	dy = (ts_cal[5] + ts_cal[4] * (int)ts_event->y) / ts_cal[6];
+      }
+      /*
+      fprintf(stderr, "GP2X_TS: button %d, pos %d,%d\n", button, dx ,dy);
+      */
+      if ((dx <0) || (dx > 320) || (dy < 0) || (dy > 240)) {
+	dx = dy = 0;
+	relative = 1;
+      } else
+	relative = 0;
+      break;
     case NUM_MOUSE_DRVS:
       /* Uh oh.. */
       dx = 0;
