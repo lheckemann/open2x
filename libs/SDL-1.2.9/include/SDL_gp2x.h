@@ -11,6 +11,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define GP2X_MOUSE_NONE        0
+#define GP2X_MOUSE_STD         1
+#define GP2X_MOUSE_TOUCHSCREEN 2
+
   
 void SDL_GP2X_SetMonoColours(int background, int foreground);
 int  SDL_GP2X_GetPhysicalScreenSize(SDL_Rect *size);
@@ -38,6 +43,9 @@ void SDL_GP2X_VSync();
 //  When you unlock the surface the address you got from here *must*
 //  be considered invalid.
 void *SDL_GP2X_PhysAddress(SDL_Surface *surface);
+
+// Query GP2X mouse type
+int SDL_GP2X_MouseType();
 
 #ifdef __cplusplus
 }

@@ -93,6 +93,7 @@ typedef struct SDL_WMcursor {
 typedef struct SDL_PrivateVideoData {
   int memory_fd, fbcon_fd, mouse_fd, keyboard_fd;
   int saved_keybd_mode;
+  int mouse_type;
   //  struct termios saved_kbd_termios;
   int x_offset, y_offset, ptr_offset;
   int w, h, pitch;

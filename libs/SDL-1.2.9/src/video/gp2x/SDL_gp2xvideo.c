@@ -1589,3 +1589,10 @@ void *SDL_GP2X_PhysAddress(SDL_Surface *surface)
 
   return address;
 }
+
+
+// Query gp2x mouse type (none = 0, std = 1, touchscreen = 2)
+int SDL_GP2X_MouseType()
+{
+  return current_video->hidden->mouse_type;
+}
