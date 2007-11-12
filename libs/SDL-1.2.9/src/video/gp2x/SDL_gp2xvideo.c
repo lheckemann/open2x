@@ -431,9 +431,12 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
   data->scale_x = (1024 * width) / data->phys_width;
   // and y-scale is scale * pitch
   data->scale_y = (height * data->pitch) / data->phys_height;
-  // xscale and yscale are set so that virtual_x * xscale = phys_x
-  data->xscale = (float)data->phys_width / (float)width;
-  data->yscale = (float)data->phys_height / (float)height;
+  // xscale and yscale are set so that virtual_x * xscale = phys_x (16.16)
+  data->xscale = (data->phys_width << 16) / width;
+  data->yscale = (data->phys_height << 16) / height;
+  // invxscale and invyscale are inverse for touchscreen use (16.16)
+  data->invxscale = (width << 16) / data->phys_width;
+  data->invyscale = (height << 16) / data->phys_height;
 
   data->buffer_showing = 0;
   data->buffer_addr[0] = current->pixels;
@@ -1313,10 +1316,8 @@ static void GP2X_MoveWMCursor(_THIS, int x, int y)
   data->cursor_vx = x;
   data->cursor_vy = y;
   // convert virtual coordinate into physical
-  x -= data->x_offset;
-  x *= data->xscale;
-  y -= data->y_offset;
-  y *= data->yscale;
+  x = ((x - data->x_offset) * data->xscale) >> 16;
+  y = ((y - data->y_offset) * data->yscale) >> 16;
   data->cursor_px = x;
   data->cursor_py = y;
   data->io[MLC_HWC_STX] = x;
@@ -1375,8 +1376,10 @@ void SDL_GP2X_Display(SDL_Rect *area)
   if (data->h < (area->y + area->h))
     area->h = data->h - area->y;
 
-  data->xscale = (float)data->phys_width / (float)area->w;
-  data->yscale = (float)data->phys_height / (float)area->h;
+  data->xscale = (data->phys_width << 16) / area->w;
+  data->yscale = (data->phys_height << 16) / area->h;
+  data->invxscale = (area->w << 16) / data->phys_width;
+  data->invyscale = (area->h << 16) / data->phys_height;
   sc_x = (1024 * area->w) / data->phys_width;
   sc_y = (area->h * data->pitch) / data->phys_height;
   // Evil hacky thing. Scaler only works if horiz needs scaling.
@@ -1454,7 +1457,8 @@ void SDL_GP2X_MiniDisplay(int x, int y)
   // Set scaler back to 1:1
   data->scale_x = 1024;
   data->scale_y = data->phys_pitch;
-  data->xscale = data->yscale = 1.0;
+  data->xscale = data->yscale = 1<<16;
+  data->invxscale = data->invyscale = 1<<16;
   // offsets needed to start screen at (x,y)
   data->x_offset = -x;
   data->y_offset = -y;

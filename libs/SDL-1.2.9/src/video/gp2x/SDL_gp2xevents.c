@@ -462,8 +462,11 @@ static void handle_mouse(_THIS)
       if ((dx <0) || (dx > 320) || (dy < 0) || (dy > 240)) {
 	dx = dy = 0;
 	relative = 1;
-      } else
+      } else {
 	relative = 0;
+	dx = ((dx * this->hidden->invxscale) >> 16) + this->hidden->x_offset;
+	dy = ((dy * this->hidden->invyscale) >> 16) + this->hidden->y_offset;
+      }
       break;
     case NUM_MOUSE_DRVS:
       /* Uh oh.. */

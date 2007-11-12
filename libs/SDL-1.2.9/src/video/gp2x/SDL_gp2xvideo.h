@@ -99,7 +99,8 @@ typedef struct SDL_PrivateVideoData {
   int vsync_polarity;
   int phys_width, phys_height, phys_pitch, phys_ilace;
   int scale_x, scale_y;
-  float xscale, yscale;
+  int xscale, yscale;
+  int invxscale, invyscale;
   SDL_mutex *hw_lock;
   unsigned short fastioclk, grpclk;
   unsigned short src_foreground, src_background;
