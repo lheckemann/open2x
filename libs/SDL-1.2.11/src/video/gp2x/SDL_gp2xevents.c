@@ -260,6 +260,7 @@ int GP2X_OpenMouse(_THIS)
 #endif
 	  mouse_drv = MOUSE_PS2;
 	}
+	this->hidden->mouse_type = 1; /* GP2X_MOUSE_STD */
       }
     }
     if (this->hidden->mouse_fd < 0) {
@@ -268,6 +269,7 @@ int GP2X_OpenMouse(_THIS)
 	this->hidden->mouse_fd = touchscreen_fd;
         read_calibration();
 	mouse_drv = MOUSE_TSLIB;
+	this->hidden->mouse_type = 2; /*GP2X_MOUSE_TOUCHSCREEN */
 #ifdef DEBUG_MOUSE
 	fputs("SDL_GP2X: F-200 touchscreen emulating mouse\n", stderr);
 #endif
@@ -275,6 +277,7 @@ int GP2X_OpenMouse(_THIS)
     }
   }
   if (this->hidden->mouse_fd < 0) {
+    this->hidden->mouse_type = 0; /* GP2X_MOUSE_NONE */
     mouse_drv = MOUSE_NONE;
 #ifdef DEBUG_MOUSE
 	fputs("SDL_GP2X: No mice found\n", stderr);
@@ -459,8 +462,11 @@ static void handle_mouse(_THIS)
       if ((dx <0) || (dx > 320) || (dy < 0) || (dy > 240)) {
 	dx = dy = 0;
 	relative = 1;
-      } else
+      } else {
 	relative = 0;
+	dx = ((dx * this->hidden->invxscale) >> 16) + this->hidden->x_offset;
+	dy = ((dy * this->hidden->invyscale) >> 16) + this->hidden->y_offset;
+      }
       break;
     case NUM_MOUSE_DRVS:
       /* Uh oh.. */

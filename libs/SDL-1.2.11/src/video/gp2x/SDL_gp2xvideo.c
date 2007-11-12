@@ -432,9 +432,12 @@ static SDL_Surface *GP2X_SetVideoMode(_THIS, SDL_Surface *current,
   data->scale_x = (1024 * width) / data->phys_width;
   // and y-scale is scale * pitch
   data->scale_y = (height * data->pitch) / data->phys_height;
-  // xscale and yscale are set so that virtual_x * xscale = phys_x
-  data->xscale = (float)data->phys_width / (float)width;
-  data->yscale = (float)data->phys_height / (float)height;
+  // xscale and yscale are set so that virtual_x * xscale = phys_x (16.16)
+  data->xscale = (data->phys_width << 16) / width;
+  data->yscale = (data->phys_height << 16) / height;
+  // invxscale and invyscale are inverse for touchscreen use (16.16)
+  data->invxscale = (width << 16) / data->phys_width;
+  data->invyscale = (height << 16) / data->phys_height;
 
   data->buffer_showing = 0;
   data->buffer_addr[0] = current->pixels;
@@ -721,7 +724,9 @@ static int GP2X_AllocHWSurface(_THIS, SDL_Surface *surface)
   surface->hwdata = (struct private_hwdata *)gfx_memory;
   surface->pixels = gfx_memory->base;
   surface->flags |= SDL_HWSURFACE;
+#ifdef GP2X_DEBUG
   fputs("SDL_GP2X: Allocated\n", stderr);
+#endif
   return 0;
 }
 
@@ -1309,10 +1314,8 @@ static void GP2X_MoveWMCursor(_THIS, int x, int y)
   data->cursor_vx = x;
   data->cursor_vy = y;
   // convert virtual coordinate into physical
-  x -= data->x_offset;
-  x *= data->xscale;
-  y -= data->y_offset;
-  y *= data->yscale;
+  x = ((x - data->x_offset) * data->xscale) >> 16;
+  y = ((y - data->y_offset) * data->yscale) >> 16;
   data->cursor_px = x;
   data->cursor_py = y;
   data->io[MLC_HWC_STX] = x;
@@ -1371,8 +1374,10 @@ void SDL_GP2X_Display(SDL_Rect *area)
   if (data->h < (area->y + area->h))
     area->h = data->h - area->y;
 
-  data->xscale = (float)data->phys_width / (float)area->w;
-  data->yscale = (float)data->phys_height / (float)area->h;
+  data->xscale = (data->phys_width << 16) / area->w;
+  data->yscale = (data->phys_height << 16) / area->h;
+  data->invxscale = (area->w << 16) / data->phys_width;
+  data->invyscale = (area->h << 16) / data->phys_height;
   sc_x = (1024 * area->w) / data->phys_width;
   sc_y = (area->h * data->pitch) / data->phys_height;
   // Evil hacky thing. Scaler only works if horiz needs scaling.
@@ -1450,7 +1455,8 @@ void SDL_GP2X_MiniDisplay(int x, int y)
   // Set scaler back to 1:1
   data->scale_x = 1024;
   data->scale_y = data->phys_pitch;
-  data->xscale = data->yscale = 1.0;
+  data->xscale = data->yscale = 1<<16;
+  data->invxscale = data->invyscale = 1<<16;
   // offsets needed to start screen at (x,y)
   data->x_offset = -x;
   data->y_offset = -y;
@@ -1491,7 +1497,9 @@ int SDL_GP2X_TV(int state)
 {
   if (state == 0) {   // Turn TV off
     if (tv_device) {  // close device to return to LCD
+#ifdef GP2X_DEBUG
       fputs("Closing CX25874\n", stderr);
+#endif
       close(tv_device);
       tv_device = 0;
     }
@@ -1500,7 +1508,9 @@ int SDL_GP2X_TV(int state)
 
   // Turn TV on
   if (!tv_device) {  // open device to enable TV
+#ifdef GP2X_DEBUG
     fputs("Opening CX25874\n", stderr);
+#endif
     tv_device = open("/dev/cx25874", O_RDWR, 0);
     if (!tv_device) {
       SDL_SetError("Failed to open TV device.");
@@ -1515,7 +1525,9 @@ int SDL_GP2X_TVMode(int mode)
   // No device open, or mode is out of range
   if ((!tv_device) || (mode < 1) || (mode > 5))
     return -1;
+#ifdef GP2X_DEBUG
   fprintf(stderr, "Switching tv mode to %d\n", mode);
+#endif
   ioctl(tv_device, IOCTL_CX25874_DISPLAY_MODE_SET, mode);
   return 0;
 }
@@ -1525,7 +1537,9 @@ void SDL_GP2X_TVAdjust(int direction)
   if ((!tv_device) || (direction < 0) || (direction > 3))
     return;
 
+#ifdef GP2X_DEBUG
   fprintf(stderr, "Moving TV by %d\n", direction);
+#endif
   ioctl(tv_device, IOCTL_CX25874_TV_MODE_POSITION, direction);
 }
 
@@ -1573,4 +1587,11 @@ void *SDL_GP2X_PhysAddress(SDL_Surface *surface)
     address = (void*)GP2X_Phys(current_video, surface->pixels);
 
   return address;
+}
+
+
+// Query gp2x mouse type (none = 0, std = 1, touchscreen = 2)
+int SDL_GP2X_MouseType()
+{
+  return current_video->hidden->mouse_type;
 }
