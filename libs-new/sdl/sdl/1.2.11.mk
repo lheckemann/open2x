@@ -18,6 +18,8 @@ o2x-sdl:
 				--disable-video-x11\
 				--disable-arts\
 				--disable-esd\
+				--enable-video\
+				--enable-video-gp2x\
 	)
 	$(FLAGS) make -C $(SDL_DIR)
 	$(FLAGS) make -C $(SDL_DIR) install
