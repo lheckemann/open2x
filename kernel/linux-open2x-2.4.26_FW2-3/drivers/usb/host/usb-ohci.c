@@ -98,6 +98,10 @@ extern void usbh_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr, size_t
 
 #define OHCI_UNLINK_TIMEOUT	(HZ / 10)
 
+static LIST_HEAD (ohci_hcd_list);
+spinlock_t usb_ed_lock = SPIN_LOCK_UNLOCKED;
+
+
 /*-------------------------------------------------------------------------*/
 
 /* AMD-756 (D2 rev) reports corrupt register contents in some cases.
@@ -124,57 +128,6 @@ static u32 roothub_portstatus (struct ohci *hc, int i)
 /*-------------------------------------------------------------------------*
  * URB support functions 
  *-------------------------------------------------------------------------*/ 
-
-static void ohci_complete_add(struct ohci *ohci, struct urb *urb)
-{
-
-	if (urb->hcpriv != NULL) {
-		printk("completing with non-null priv!\n");
-		return;
-	}
-
-	if (ohci->complete_tail == NULL) {
-		ohci->complete_head = urb;
-		ohci->complete_tail = urb;
-	} else {
-		ohci->complete_head->hcpriv = urb;
-		ohci->complete_tail = urb;
-	}
-}
-
-static inline struct urb *ohci_complete_get(struct ohci *ohci)
-{
-	struct urb *urb;
-
-	if ((urb = ohci->complete_head) == NULL)
-		return NULL;
-	if (urb == ohci->complete_tail) {
-		ohci->complete_tail = NULL;
-		ohci->complete_head = NULL;
-	} else {
-		ohci->complete_head = urb->hcpriv;
-	}
-	urb->hcpriv = NULL;
-	return urb;
-}
-
-static inline void ohci_complete(struct ohci *ohci)
-{
-	struct urb *urb;
-
-	spin_lock(&ohci->ohci_lock);
-	while ((urb = ohci_complete_get(ohci)) != NULL) {
-		spin_unlock(&ohci->ohci_lock);
-		if (urb->dev) {
-			usb_dec_dev_use (urb->dev);
-			urb->dev = NULL;
-		}
-		if (urb->complete)
-			(*urb->complete)(urb);
-		spin_lock(&ohci->ohci_lock);
-	}
-	spin_unlock(&ohci->ohci_lock);
-}
  
 /* free HCD-private data associated with this URB */
 
@@ -250,12 +203,18 @@ static void urb_rm_priv_locked (struct urb * urb)
 		}
 
 		urb_free_priv ((struct ohci *)urb->dev->bus->hcpriv, urb_priv);
-	} else {
-		if (urb->dev != NULL) {
-			err ("Non-null dev at rm_priv time");
-			// urb->dev = NULL;
-		}
+		usb_dec_dev_use (urb->dev);
+		urb->dev = NULL;
 	}
+}
+
+static void urb_rm_priv (struct urb * urb)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave (&usb_ed_lock, flags);
+	urb_rm_priv_locked (urb);
+	spin_unlock_irqrestore (&usb_ed_lock, flags);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -501,6 +460,7 @@ static int sohci_return_urb (struct ohci *hc, struct urb * urb)
 {
 	urb_priv_t * urb_priv = urb->hcpriv;
 	struct urb * urbt;
+	unsigned long flags;
 	int i;
 	
 	if (!urb_priv)
@@ -508,8 +468,7 @@ static int sohci_return_urb (struct ohci *hc, struct urb * urb)
 
 	/* just to be sure */
 	if (!urb->complete) {
-		urb_rm_priv_locked (urb);
-		ohci_complete_add(hc, urb);	/* Just usb_dec_dev_use */
+		urb_rm_priv (urb);
 		return -1;
 	}
 	
@@ -525,18 +484,20 @@ static int sohci_return_urb (struct ohci *hc, struct urb * urb)
 				usb_pipeout (urb->pipe)
 					? PCI_DMA_TODEVICE
 					: PCI_DMA_FROMDEVICE);
+
 			if (urb->interval) {
 				urb->complete (urb);
-
+ 
 				/* implicitly requeued */
 				urb->actual_length = 0;
 				urb->status = -EINPROGRESS;
 				td_submit_urb (urb);
 			} else {
-				urb_rm_priv_locked (urb);
-				ohci_complete_add(hc, urb);
+				urb_rm_priv(urb);
+				urb->complete (urb);
 			}
-  			break;
+   			break;
+
   			
 		case PIPE_ISOCHRONOUS:
 			for (urbt = urb->next; urbt && (urbt != urb); urbt = urbt->next);
@@ -548,6 +509,7 @@ static int sohci_return_urb (struct ohci *hc, struct urb * urb)
 						? PCI_DMA_TODEVICE
 						: PCI_DMA_FROMDEVICE);
 				urb->complete (urb);
+				spin_lock_irqsave (&usb_ed_lock, flags);
 				urb->actual_length = 0;
   				urb->status = USB_ST_URB_PENDING;
   				urb->start_frame = urb_priv->ed->last_iso + 1;
@@ -558,17 +520,18 @@ static int sohci_return_urb (struct ohci *hc, struct urb * urb)
   					}
   					td_submit_urb (urb);
   				}
-
+  				spin_unlock_irqrestore (&usb_ed_lock, flags);
+  				
   			} else { /* unlink URB, call complete */
-				urb_rm_priv_locked (urb);
-				ohci_complete_add(hc, urb);
+				urb_rm_priv (urb);
+				urb->complete (urb); 	
 			}		
 			break;
   				
 		case PIPE_BULK:
 		case PIPE_CONTROL: /* unlink URB, call complete */
-			urb_rm_priv_locked (urb);
-			ohci_complete_add(hc, urb);
+			urb_rm_priv (urb);
+			urb->complete (urb);	
 			break;
 	}
 	return 0;
@@ -605,24 +568,20 @@ static int sohci_submit_urb (struct urb * urb)
 #ifdef DEBUG
 	urb_print (urb, "SUB", usb_pipein (pipe));
 #endif
-
+	
 	/* handle a request to the virtual root hub */
 	if (usb_pipedevice (pipe) == ohci->rh.devnum) 
 		return rh_submit_urb (urb);
-
-	spin_lock_irqsave(&ohci->ohci_lock, flags);
-
+	
 	/* when controller's hung, permit only roothub cleanup attempts
 	 * such as powering down ports */
 	if (ohci->disabled) {
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 		usb_dec_dev_use (urb->dev);	
 		return -ESHUTDOWN;
 	}
 
 	/* every endpoint has a ed, locate and fill it */
 	if (!(ed = ep_add_ed (urb->dev, pipe, urb->interval, 1, mem_flags))) {
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 		usb_dec_dev_use (urb->dev);	
 		return -ENOMEM;
 	}
@@ -644,7 +603,6 @@ static int sohci_submit_urb (struct urb * urb)
 		case PIPE_ISOCHRONOUS: /* number of packets from URB */
 			size = urb->number_of_packets;
 			if (size <= 0) {
-				spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 				usb_dec_dev_use (urb->dev);	
 				return -EINVAL;
 			}
@@ -664,9 +622,8 @@ static int sohci_submit_urb (struct urb * urb)
 
 	/* allocate the private part of the URB */
 	urb_priv = kmalloc (sizeof (urb_priv_t) + size * sizeof (td_t *), 
-							GFP_ATOMIC);
+							in_interrupt() ? GFP_ATOMIC : GFP_NOIO);
 	if (!urb_priv) {
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 		usb_dec_dev_use (urb->dev);	
 		return -ENOMEM;
 	}
@@ -677,12 +634,13 @@ static int sohci_submit_urb (struct urb * urb)
 	urb_priv->ed = ed;	
 
 	/* allocate the TDs (updating hash chains) */
+	spin_lock_irqsave (&usb_ed_lock, flags);
 	for (i = 0; i < size; i++) { 
 		urb_priv->td[i] = td_alloc (ohci, SLAB_ATOMIC);
 		if (!urb_priv->td[i]) {
 			urb_priv->length = i;
 			urb_free_priv (ohci, urb_priv);
-			spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+			spin_unlock_irqrestore (&usb_ed_lock, flags);
 			usb_dec_dev_use (urb->dev);	
 			return -ENOMEM;
 		}
@@ -690,7 +648,7 @@ static int sohci_submit_urb (struct urb * urb)
 
 	if (ed->state == ED_NEW || (ed->state & ED_DEL)) {
 		urb_free_priv (ohci, urb_priv);
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+		spin_unlock_irqrestore (&usb_ed_lock, flags);
 		usb_dec_dev_use (urb->dev);	
 		return -EINVAL;
 	}
@@ -712,7 +670,7 @@ static int sohci_submit_urb (struct urb * urb)
 			}
 			if (bustime < 0) {
 				urb_free_priv (ohci, urb_priv);
-				spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+				spin_unlock_irqrestore (&usb_ed_lock, flags);
 				usb_dec_dev_use (urb->dev);	
 				return bustime;
 			}
@@ -757,7 +715,7 @@ static int sohci_submit_urb (struct urb * urb)
 	}
 #endif
 
-	spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+	spin_unlock_irqrestore (&usb_ed_lock, flags);
 
 	return 0;	
 }
@@ -788,7 +746,6 @@ static int sohci_unlink_urb (struct urb * urb)
 	if (usb_pipedevice (urb->pipe) == ohci->rh.devnum)
 		return rh_unlink_urb (urb);
 
-	spin_lock_irqsave(&ohci->ohci_lock, flags);
 	if (urb->hcpriv && (urb->status == USB_ST_URB_PENDING)) { 
 		if (!ohci->disabled) {
 			urb_priv_t  * urb_priv;
@@ -798,7 +755,6 @@ static int sohci_unlink_urb (struct urb * urb)
 			 */
 			if (!(urb->transfer_flags & USB_ASYNC_UNLINK)
 					&& in_interrupt ()) {
-				spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 				err ("bug in call from %p; use async!",
 					__builtin_return_address(0));
 				return -EWOULDBLOCK;
@@ -807,10 +763,11 @@ static int sohci_unlink_urb (struct urb * urb)
 			/* flag the urb and its TDs for deletion in some
 			 * upcoming SF interrupt delete list processing
 			 */
+			spin_lock_irqsave (&usb_ed_lock, flags);
 			urb_priv = urb->hcpriv;
 
 			if (!urb_priv || (urb_priv->state == URB_DEL)) {
-				spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+				spin_unlock_irqrestore (&usb_ed_lock, flags);
 				return 0;
 			}
 				
@@ -825,7 +782,7 @@ static int sohci_unlink_urb (struct urb * urb)
 
 				add_wait_queue (&unlink_wakeup, &wait);
 				urb_priv->wait = &unlink_wakeup;
-				spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+				spin_unlock_irqrestore (&usb_ed_lock, flags);
 
 				/* wait until all TDs are deleted */
 				set_current_state(TASK_UNINTERRUPTIBLE);
@@ -837,22 +794,14 @@ static int sohci_unlink_urb (struct urb * urb)
 					err ("unlink URB timeout");
 					return -ETIMEDOUT;
 				}
-
-				usb_dec_dev_use (urb->dev);
-				urb->dev = NULL;
-				if (urb->complete)
-					urb->complete (urb); 
 			} else {
 				/* usb_dec_dev_use done in dl_del_list() */
 				urb->status = -EINPROGRESS;
-				spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+				spin_unlock_irqrestore (&usb_ed_lock, flags);
 				return -EINPROGRESS;
 			}
 		} else {
-			urb_rm_priv_locked (urb);
-			spin_unlock_irqrestore(&ohci->ohci_lock, flags);
-			usb_dec_dev_use (urb->dev);
-			urb->dev = NULL;
+			urb_rm_priv (urb);
 			if (urb->transfer_flags & USB_ASYNC_UNLINK) {
 				urb->status = -ECONNRESET;
 				if (urb->complete)
@@ -860,8 +809,6 @@ static int sohci_unlink_urb (struct urb * urb)
 			} else 
 				urb->status = -ENOENT;
 		}	
-	} else {
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 	}	
 	return 0;
 }
@@ -904,7 +851,7 @@ static int sohci_free_dev (struct usb_device * usb_dev)
 		 * (freeing all the TDs, unlinking EDs) but we need
 		 * to defend against bugs that prevent that.
 		 */
-		spin_lock_irqsave(&ohci->ohci_lock, flags);	
+		spin_lock_irqsave (&usb_ed_lock, flags);	
 		for(i = 0; i < NUM_EDS; i++) {
   			ed = &(dev->ed[i]);
   			if (ed->state != ED_NEW) {
@@ -919,7 +866,7 @@ static int sohci_free_dev (struct usb_device * usb_dev)
   				cnt++;
   			}
   		}
-  		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+  		spin_unlock_irqrestore (&usb_ed_lock, flags);
   		
 		/* if the controller is running, tds for those unlinked
 		 * urbs get freed by dl_del_list at the next SF interrupt
@@ -1253,12 +1200,17 @@ static ed_t * ep_add_ed (
 	td_t * td;
 	ed_t * ed_ret;
 	volatile ed_t * ed; 
+	unsigned long flags;
+ 	
+ 	
+	spin_lock_irqsave (&usb_ed_lock, flags);
 
 	ed = ed_ret = &(usb_to_ohci (usb_dev)->ed[(usb_pipeendpoint (pipe) << 1) | 
 			(usb_pipecontrol (pipe)? 0: usb_pipeout (pipe))]);
 
 	if ((ed->state & ED_DEL) || (ed->state & ED_URB_DEL)) {
 		/* pending delete request */
+		spin_unlock_irqrestore (&usb_ed_lock, flags);
 		return NULL;
 	}
 	
@@ -1271,6 +1223,7 @@ static ed_t * ep_add_ed (
 			/* out of memory */
 		        if (td)
 		            td_free(ohci, td);
+			spin_unlock_irqrestore (&usb_ed_lock, flags);
 			return NULL;
 		}
 		ed->hwTailP = cpu_to_le32 (td->td_dma);
@@ -1293,7 +1246,8 @@ static ed_t * ep_add_ed (
   		ed->int_period = interval;
   		ed->int_load = load;
   	}
-
+  	
+	spin_unlock_irqrestore (&usb_ed_lock, flags);
 	return ed_ret; 
 }
 
@@ -1409,7 +1363,6 @@ static void td_submit_urb (struct urb * urb)
 	int cnt = 0; 
 	__u32 info = 0;
   	unsigned int toggle = 0;
-	unsigned long flags;
 
 	/* OHCI handles the DATA-toggles itself, we just use the USB-toggle bits for reseting */
   	if(usb_gettoggle(urb->dev, usb_pipeendpoint(urb->pipe), usb_pipeout(urb->pipe))) {
@@ -1459,7 +1412,6 @@ static void td_submit_urb (struct urb * urb)
 			if (!ohci->sleeping) {
 				wmb();
 				writel (OHCI_BLF, &ohci->regs->cmdstatus); /* start bulk list */
-				spin_unlock_irqrestore (&ohci->ohci_lock, flags);
 			}
 			break;
 
@@ -1555,7 +1507,7 @@ static void dl_transfer_length(td_t * td)
 
 /* handle an urb that is being unlinked */
 
-static void dl_del_urb (ohci_t *ohci, struct urb * urb)
+static void dl_del_urb (struct urb * urb)
 {
 	wait_queue_head_t * wait_head = ((urb_priv_t *)(urb->hcpriv))->wait;
 
@@ -1563,9 +1515,12 @@ static void dl_del_urb (ohci_t *ohci, struct urb * urb)
 
 	if (urb->transfer_flags & USB_ASYNC_UNLINK) {
 		urb->status = -ECONNRESET;
-		ohci_complete_add(ohci, urb);
+		if (urb->complete)
+			urb->complete (urb);
 	} else {
 		urb->status = -ENOENT;
+		if (urb->complete)
+			urb->complete (urb);
 
 		/* unblock sohci_unlink_urb */
 		if (wait_head)
@@ -1584,7 +1539,10 @@ static td_t * dl_reverse_done_list (ohci_t * ohci)
 	td_t * td_rev = NULL;
 	td_t * td_list = NULL;
   	urb_priv_t * urb_priv = NULL;
-
+  	unsigned long flags;
+  	
+  	spin_lock_irqsave (&usb_ed_lock, flags);
+  	
 	td_list_hc = le32_to_cpup (&ohci->hcca->done_head) & 0xfffffff0;
 	ohci->hcca->done_head = 0;
 	
@@ -1610,6 +1568,7 @@ static td_t * dl_reverse_done_list (ohci_t * ohci)
 		td_rev = td_list;
 		td_list_hc = le32_to_cpup (&td_list->hwNextTD) & 0xfffffff0;	
 	}	
+	spin_unlock_irqrestore (&usb_ed_lock, flags);
 	return td_list;
 }
 
@@ -1621,12 +1580,15 @@ static td_t * dl_reverse_done_list (ohci_t * ohci)
  
 static void dl_del_list (ohci_t  * ohci, unsigned int frame)
 {
+	unsigned long flags;
 	ed_t * ed;
 	__u32 edINFO;
 	__u32 tdINFO;
 	td_t * td = NULL, * td_next = NULL, * tdHeadP = NULL, * tdTailP;
 	__u32 * td_p;
 	int ctrl = 0, bulk = 0;
+
+	spin_lock_irqsave (&usb_ed_lock, flags);
 
 	for (ed = ohci->ed_rm_list[frame]; ed != NULL; ed = ed->ed_rm_list) {
 
@@ -1648,7 +1610,7 @@ static void dl_del_list (ohci_t  * ohci, unsigned int frame)
 
 				/* URB is done; clean up */
 				if (++(urb_priv->td_cnt) == urb_priv->length)
-					dl_del_urb (ohci, urb);
+					dl_del_urb (urb);
 			} else {
 				td_p = &td->hwNextTD;
 			}
@@ -1705,6 +1667,7 @@ static void dl_del_list (ohci_t  * ohci, unsigned int frame)
 	}
 
    	ohci->ed_rm_list[frame] = NULL;
+   	spin_unlock_irqrestore (&usb_ed_lock, flags);
 }
 
 
@@ -1721,7 +1684,9 @@ static void dl_done_list (ohci_t * ohci, td_t * td_list)
 	struct urb * urb;
 	urb_priv_t * urb_priv;
  	__u32 tdINFO, edHeadP, edTailP;
- 
+ 	
+ 	unsigned long flags;
+ 	
   	while (td_list) {
    		td_list_next = td_list->next_dl_td;
    		
@@ -1750,10 +1715,13 @@ static void dl_done_list (ohci_t * ohci, td_t * td_list)
   				urb->status = cc_to_error[cc];
   				sohci_return_urb (ohci, urb);
   			} else {
-  				dl_del_urb (ohci, urb);
+				spin_lock_irqsave (&usb_ed_lock, flags);
+  				dl_del_urb (urb);
+				spin_unlock_irqrestore (&usb_ed_lock, flags);
 			}
   		}
   		
+  		spin_lock_irqsave (&usb_ed_lock, flags);
   		if (ed->state != ED_NEW) { 
   			edHeadP = le32_to_cpup (&ed->hwHeadP) & 0xfffffff0;
   			edTailP = le32_to_cpup (&ed->hwTailP);
@@ -1762,6 +1730,7 @@ static void dl_done_list (ohci_t * ohci, td_t * td_list)
      			if ((edHeadP == edTailP) && (ed->state == ED_OPER)) 
      				ep_unlink (ohci, ed);
      		}	
+     		spin_unlock_irqrestore (&usb_ed_lock, flags);
      	
     		td_list = td_list_next;
   	}  
@@ -1958,8 +1927,7 @@ static int rh_submit_urb (struct urb * urb)
 	int leni = urb->transfer_buffer_length;
 	int len = 0;
 	int status = TD_CC_NOERROR;
-	unsigned long flags;
-
+	
 	__u32 datab[4];
 	__u8  * data_buf = (__u8 *) datab;
 	
@@ -1968,16 +1936,13 @@ static int rh_submit_urb (struct urb * urb)
 	__u16 wIndex;
 	__u16 wLength;
 
-	spin_lock_irqsave(&ohci->ohci_lock, flags);
-
 	if (usb_pipeint(pipe)) {
 		ohci->rh.urb =  urb;
 		ohci->rh.send = 1;
 		ohci->rh.interval = urb->interval;
 		rh_init_int_timer(urb);
 		urb->status = cc_to_error [TD_CC_NOERROR];
-
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
+		
 		return 0;
 	}
 
@@ -2149,7 +2114,6 @@ static int rh_submit_urb (struct urb * urb)
 #endif
 
 	urb->hcpriv = NULL;
-	spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 	usb_dec_dev_use (usb_dev);
 	urb->dev = NULL;
 	if (urb->complete)
@@ -2162,16 +2126,13 @@ static int rh_submit_urb (struct urb * urb)
 static int rh_unlink_urb (struct urb * urb)
 {
 	ohci_t * ohci = urb->dev->bus->hcpriv;
-	unsigned int flags;
  
-	spin_lock_irqsave(&ohci->ohci_lock, flags);
 	if (ohci->rh.urb == urb) {
 		ohci->rh.send = 0;
 		del_timer (&ohci->rh.rh_int_timer);
 		ohci->rh.urb = NULL;
 
 		urb->hcpriv = NULL;
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 		usb_dec_dev_use(urb->dev);
 		urb->dev = NULL;
 		if (urb->transfer_flags & USB_ASYNC_UNLINK) {
@@ -2180,8 +2141,6 @@ static int rh_unlink_urb (struct urb * urb)
 				urb->complete (urb);
 		} else
 			urb->status = -ENOENT;
-	} else {
-		spin_unlock_irqrestore(&ohci->ohci_lock, flags);
 	}
 	return 0;
 }
@@ -2319,7 +2278,7 @@ static int hc_start (ohci_t * ohci)
 
 static void check_timeouts (struct ohci *ohci)
 {
-	spin_lock (&ohci->ohci_lock);
+	spin_lock (&usb_ed_lock);
 	while (!list_empty (&ohci->timeout_list)) {
 		struct urb	*urb;
 
@@ -2332,15 +2291,15 @@ static void check_timeouts (struct ohci *ohci)
 			continue;
 
 		urb->transfer_flags |= USB_TIMEOUT_KILLED | USB_ASYNC_UNLINK;
-		spin_unlock (&ohci->ohci_lock);
+		spin_unlock (&usb_ed_lock);
 
 		// outside the interrupt handler (in a timer...)
 		// this reference would race interrupts
 		sohci_unlink_urb (urb);
 
-		spin_lock (&ohci->ohci_lock);
+		spin_lock (&usb_ed_lock);
 	}
-	spin_unlock (&ohci->ohci_lock);
+	spin_unlock (&usb_ed_lock);
 }
 
 
@@ -2354,8 +2313,6 @@ static void hc_interrupt (int irq, void * __ohci, struct pt_regs * r)
 	struct ohci_regs * regs = ohci->regs;
  	int ints; 
 
-	spin_lock (&ohci->ohci_lock);
-
 	/* avoid (slow) readl if only WDH happened */
 	if ((ohci->hcca->done_head != 0)
 			&& !(le32_to_cpup (&ohci->hcca->done_head) & 0x01)) {
@@ -2364,13 +2321,11 @@ static void hc_interrupt (int irq, void * __ohci, struct pt_regs * r)
 	/* cardbus/... hardware gone before remove() */
 	} else if ((ints = readl (&regs->intrstatus)) == ~(u32)0) {
 		ohci->disabled++;
-		spin_unlock (&ohci->ohci_lock);
 		err ("%s device removed!", ohci->ohci_dev->slot_name);
 		return;
 
 	/* interrupt for some other device? */
 	} else if ((ints &= readl (&regs->intrenable)) == 0) {
-		spin_unlock (&ohci->ohci_lock);
 		return;
 	}
 
@@ -2415,13 +2370,6 @@ static void hc_interrupt (int irq, void * __ohci, struct pt_regs * r)
 			writel (OHCI_INTR_SF, &regs->intrenable);	
 	}
 
-	/*
-	 * Finally, we are done with trashing about our hardware lists
-	 * and other CPUs are allowed in. The festive flipping of the lock
-	 * ensues as we struggle with the check_timeouts disaster.
-	 */
-	spin_unlock (&ohci->ohci_lock);
-
 	if (!list_empty (&ohci->timeout_list)) {
 		check_timeouts (ohci);
 // FIXME:  enable SF as needed in a timer;
@@ -2432,9 +2380,7 @@ static void hc_interrupt (int irq, void * __ohci, struct pt_regs * r)
 	}
 
 	writel (ints, &regs->intrstatus);
-	writel (OHCI_INTR_MIE, &regs->intrenable);
-
-	ohci_complete(ohci);
+	writel (OHCI_INTR_MIE, &regs->intrenable);	
 }
 
 /*-------------------------------------------------------------------------*/
@@ -2469,8 +2415,10 @@ static ohci_t * __devinit hc_alloc_ohci (struct pci_dev *dev, void * mem_base)
 	pci_set_drvdata(dev, ohci);
 #endif
  
+	INIT_LIST_HEAD (&ohci->ohci_hcd_list);
+	list_add (&ohci->ohci_hcd_list, &ohci_hcd_list);
+
 	INIT_LIST_HEAD (&ohci->timeout_list);
-	spin_lock_init(&ohci->ohci_lock);
 
 	ohci->bus = usb_alloc_bus (&sohci_device_operations);
 	if (!ohci->bus) {
@@ -2515,6 +2463,9 @@ static void hc_release_ohci (ohci_t * ohci)
 
 		usb_free_bus (ohci->bus);
 	}
+
+	list_del (&ohci->ohci_hcd_list);
+	INIT_LIST_HEAD (&ohci->ohci_hcd_list);
 
 	ohci_mem_cleanup (ohci);
     
