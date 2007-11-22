@@ -1,0 +1,293 @@
+----------------------------------------
+|Open2x - SDL Port to use GP2X hardware|
+----------------------------------------
+
+Version: SDL for the GP2X (Based on SDL 1.2.11)
+-----------------------------------------------
+
+Using the official http://www.libsdl.org/ 1.2.11 release as a basis this
+release aims to add advanced support for the GP2X handheld console/computer.
+
+This libary is part of the Open2x libs project.
+
+ http://wiki.open2x.org/open2x/wiki/index.php?title=Libraries
+ 
+Changes from stock SDL
+----------------------
+
+Added hardware support, made as a seperate video driver rather than
+extending fbcon driver.
+Added ability to scale display surface to full-screen.
+Fixed X & Y buttons.
+Added (partial) hardware cursor support
+Added regions - user-definable areas of the physical display to show.
+Added support for non-scaled displays that are smaller than native resolution.
+Added single USB mouse support.
+Added USB joystick support.
+Added backlight & CPU speed adjustments.
+Added preliminary TV-out control.
+Added option to allow extra 16MB gfx memory
+
+TODO: 
+
+  Cursor support may be flaky on interlaced TV modes.
+  Better control of gfx memory.
+  Lots more
+
+Building:
+---------
+
+You can just install SDL onto most popular GP2X development kits by
+downloading and installing a recent prebuilt library package
+
+ http://wiki.open2x.org/open2x/wiki/index.php?title=Prebuilt_Library_Packages
+ 
+You can also build and install all the libraries by running ./open2x-libs.sh
+from the root libs/ folder. Please review the README.OPEN2X in that folder for 
+more info.
+
+Lastly, you can just build SDL on its own using a configure flag something 
+like what is shown below.
+
+./configure --prefix=$LIB_ROOT --host=$HOST --disable-shared --enable-video-gp2x --enable-video-fbcon=no
+
+
+Using:
+------
+
+This is SDL and can be used just like any other SDL build.
+
+****
+** Limitations of GP2X video driver
+****
+
+The primary surface (as set by SDL_SetVideoMode) is limited to 8 or 16 bit.
+24 and 32 bit modes are NOT supported, driver will use 16bit instead.
+SetVideoMode also forces SDL_HWSURFACE
+
+WARNING: Loading images with IMG_Load(filename) will create SWSURFACES, to
+convert them to HWSURFACES do this:
+
+	img_temp = IMG_Load("my_image.png");
+	img = SDL_DisplayFormat(img_temp);
+	SDL_FreeSurface(img_temp);
+
+Screen sizes can be between 64x64 and 1024x768 inclusive, but the width must
+be a multiple of 8 (legacy), width will be rounded up if need be.
+The primary surface will be visually expanded or shrunk to fill either the
+LCD or TV. The scaler is coarse only, no nice bilinear filtering.
+
+HWSURFACE to HWSURFACE blits are accelerated and ASYNCHRONOUS, SDL_BlitSurface
+will return as soon as it has set the blit up, you MUST lock the surface if
+you want to be sure the blit has taken place.
+
+====
+== SWSURFACE to HWSURFACE blits have moderate acceleration and SDL_BlitSurface
+== will return when the blit is finished, although locking the surface is still
+== required to ensure the blitter flushes its cache.
+===
+== NOTE: My driver supports it, but SDL seems to not call my blit routine if
+== the source surface is SWSURFACE. Will look into it later.
+====
+
+The harware cursor is capable of colour (although only 2), but is 24bit
+regardless of the display surface. It can also alpha-blend it's fore- and
+background colours at different levels, each ranging from 0=transparent to
+15=opaque.
+
+
+****
+** Additional non-standard SDL functions, GP2X specific.
+**
+** These are defined in the non-standard SDL_gp2x.h
+****
+
+////
+int SDL_GP2X_GetPhysicalScreenSize(SDL_Rect *size);
+
+  Fills size->w and size->h with dimensions of the current screen,
+    LCD  : 320x240
+    NTSC : 720x480
+    PAL  : 720x576
+  Returns
+    0 for progressive (LCD)
+    1 for interlaced (NTSC & PAL)
+   -1 if SDL_Init hasn't been called yet
+
+////
+void SDL_GP2X_Display(SDL_Rect *area);
+
+  Sets the hardware scaler to show requested area of primary surface as
+  fullscreen. The scaler does not physically alter the surface, it just
+  affects how the surface will appear on-screen. This allows you to pan
+  around a surface larger than the screen, and/or zoom in/out.
+  You cannot zoom out further than having the full surface on-screen.
+
+  area->x and area->y set which pixel of the primary surface will appear at
+  the top-left corner of the display,
+  area->w and area->h set the width and height of the area to fill the display.
+
+////
+void SDL_GP2X_MiniDisplay(int x, int y);
+
+  Similar to the above function, but does not scale and blanks the borders.
+  Only really useful if your videomode is less than 320x240. Gives rise to
+  possible small speed increase as the display hardware doesn't access
+  memory in the borders. Region 1 (see SDL_GP2X_DefineRegion below) area is
+  set to {x, y, x+videomode_width-1, y+videomodeheight-1}.
+  The x & y values are where the top-left corner of you screen will placed
+  on the display. e.g. for a 200x200 videomode centred in the middle of the
+  display you'd use x=60 y=20
+  NO checking is done to make sure your screen fits!
+
+////
+void SDL_GP2X_SetCursorColour(SDL_Cursor *cursor
+                              int b_red, b_green, b_blue, b_alpha,
+                              int f_red, f_green, f_blue, f_alpha);
+
+  Sets the background and foreground colours of the hardware cursor.
+  SDL assumes black and white for all cursors, this lets you choose
+  your own colours for each cursor. Cursor colours are full 24bit, each
+  component wraps instead of clamping (so if you try setting red to 257
+  you'll actually get 1 etc.)
+  Also, the background and foreground colours have seperate levels of
+  alpha-blending (0=transparent -> 15=opaque). Again, the values wrap.
+
+////
+void SDL_GP2X_DefineRegion(int region, SDL_Rect *area);
+
+  Allows you to define regions (1-4) that will be visible.
+  By default region 1 is set to fullscreen (apart from when using MiniDisplay).
+  Regions work by defining rectangles of the display that the video hardware
+  will show. Think of it like painting your LCD black and for each region
+  you use, scrape the paint off for that rectangle.
+  Region areas are in hardware coordinates, 0x0 is the top-left,
+  319x239 is bottom-right regardless of size and position of your surface.
+
+////
+void SDL_GP2X_ActivateRegion(int region, int activate);
+
+  After defining regions above, use this to switch individual regions
+  on (activate = 1) or off (activate=0).
+  By default only region 1 is active.
+  There is a fifth region, region 5, but this is fullscreen only and hence
+  not available to SDL_GP2X_DefineRegion().
+
+////
+void SDL_SYS_JoystickGp2xSys(SDL_Joystick joystick, int command);
+
+  joystick _must_ be the value returned by SDL_JoystickOpen(0). This is
+  because this function relies on data that is stored in the joystick
+  structure of the internal joystick. To be doing anything on the GP2X
+  you'll more than likely be wanting access to the buttons anyway.
+  The values you can pass as the command are as follows:
+    BACK_LIGHT_OFF	- Switches the backlight off ;)
+    BACK_LIGHT_ON	- Switches the backlight back on.
+    BATT_LED_OFF	- Switches the red battery light on.
+    BATT_LED_ON		- Switches the red battery light off.
+    FCLK_200		- Runs the CPU at 200 MHz.
+    FCLK_166		- Runs the CPU at 166 MHz.
+    FCLK_133		- Runs the CPU at 133 MHz.
+    FCLK_100		- Runs the CPU at 100 MHz.
+    FCLK_78		- Runs the CPU at  78 MHz.
+    FCLK_64		- Runs the CPU at  64 MHz.
+  The following is allowed, but I've just checked the soruce for /dev/gpio to
+  see what speed it corresponded to and found that it doesn't actually do
+  anything.
+    FCLK_DEFAULT	- Runs the CPU at it's default speed.
+
+////
+void SDL_GP2X_TV(int state);  
+
+  Allows user control of TV-Out.
+    state = 0		Internal screen on - TV off.
+    state = 1		TV on - internal screen off
+
+////
+int SDL_GP2X_TVMode(int mode);
+
+  Allows switching of the TV-out chip's mode.
+  Where mode is one of :-
+    DISPLAY_LCD,
+    DISPLAY_MONITOR,
+    DISPLAY_TV_NTSC,
+    DISPLAY_TV_PAL,
+    DISPLAY_TV_GAME_NTSC;
+
+////
+void SDL_GP2X_TVAdjust(int direction);
+
+  Allows adjustment of TV position.
+  Where direction is one of :-
+    TV_POS_LEFT,
+    TV_POS_RIGHT,
+    TV_POS_UP,
+    TV_POS_DOWN;
+
+////
+void SDL_GP2X_AllowGfxMemory(char *start, int size);
+
+  Allows the user to make regions of upper memory available to SDL.
+  Call this function AFTER SDL_Init() but before SDL_SetVideoMode().
+
+  ** Partial implementation
+  ** The values are currently ignored, calling this function will enable
+  ** SDL to use the first 16MB of upper memory in addition to the standard
+  ** 5MB frame buffer. Gfx memory will be 21MB
+
+////
+void SDL_GP2X_DenyGfxMemory(char *start, int size);
+
+  Allows the user to make regions of upper memory unavailable to SDL.
+  Call this function AFTER SDL_Init() but before SDL_SetVideoMode().
+
+  ** Partial implementation
+  ** The values are currently ignored, calling this function will prevent
+  ** SDL from using the first 16MB of upper memory.
+  ** Gfx memory will be the standard 5MB frame buffer.
+
+////
+void SDL_GP2X_VSync();
+
+  Waits for the current frame to be fully displayed.
+  Not needed for double buffered screens.
+
+////
+void *SDL_GP2X_PhysAddress(SDL_Surface *surface);
+
+  Returns the address of the surface's bitmap for use by the 940.
+  Only the hardware and 940 can use the address returned by this function.
+  This function is only valid for hardware surfaces that have been locked
+  with SDL_LockSurface().
+
+  ** NOTE **
+   You must lock the surface first, and after you unlock the surface
+   the pointer that was returned must be considered invalid.
+
+  If the function returns NULL then SDL_GetError() will return one of
+  the following :-
+
+    "Invalid or unlocked surface" - You passed either a null pointer or
+                                    the surface wasn't locked.
+
+    "PhysAddress() only valid for hardware surfaces"
+                                  - You tried getting the address of a
+                                    software surface which the 940 cannot
+                                    access.
+
+*************************************************************
+** The following functions are implemented, but not tested **
+*************************************************************
+
+////
+void SDL_GP2X_SetMonoColours(int background, int foreground);
+  ****
+  ** untested function
+  ****
+  When blitting a 1bpp surface, this sets what colour the 0s and 1s will
+  be translated into. Useful for drawing fonts. 
+  This is a global setting, not per-surface.
+
+-------------------------------------
+
+The Open2x Project

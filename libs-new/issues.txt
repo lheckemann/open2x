@@ -1,0 +1,7 @@
+
+ KNOWN ISSUES
+
+ - ncurses compiles as a static library only
+ - sdl_mixer doesn't compile with support for mods using libmikmod
+ - mikmod attempts to create music.raw if /dev/dsp is not available ?? (in pygame anyway)
+ - libunicodefont and libsdl_config have to be built manually since they don't use autotools

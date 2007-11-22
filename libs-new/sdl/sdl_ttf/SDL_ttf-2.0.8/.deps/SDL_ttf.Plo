@@ -1,0 +1,345 @@
+SDL_ttf.lo SDL_ttf.o: SDL_ttf.c \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/math.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/features.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/cdefs.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gnu/stubs.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/huge_val.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/huge_valf.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/huge_vall.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/inf.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/nan.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/mathdef.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/mathcalls.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/mathinline.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdio.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stddef.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/types.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wordsize.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/typesizes.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/libio.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/_G_config.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/wchar.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wchar.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gconv.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stdarg.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sys_errlist.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdlib.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/waitflags.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/waitstatus.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/endian.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/endian.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/xlocale.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/types.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/time.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/select.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/select.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sigset.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/time.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/sysmacros.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/pthreadtypes.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sched.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/alloca.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/string.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string2.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/ft2build.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftheader.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/internal.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/freetype.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftconfig.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftoption.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftstdlib.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/limits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/syslimits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/limits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix1_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/local_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/limits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix2_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/xopen_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/ctype.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/setjmp.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/setjmp.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/fterrors.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftmoderr.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/fterrdef.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/fttypes.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftsystem.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftimage.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftoutln.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ttnameid.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftobjs.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftrender.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftmodapi.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftglyph.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftsizes.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftmemory.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftgloadr.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftdriver.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/autohint.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftserv.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_main.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_stdinc.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_config.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_platform.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/strings.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/inttypes.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdint.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/iconv.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/begin_code.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/close_code.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_audio.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_error.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_endian.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_mutex.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_thread.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_rwops.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_cdrom.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_cpuinfo.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_events.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_active.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_keyboard.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_keysym.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_mouse.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_video.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_joystick.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_quit.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_loadso.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_timer.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_version.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_endian.h SDL_ttf.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/begin_code.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/close_code.h
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/math.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/features.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/cdefs.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gnu/stubs.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/huge_val.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/huge_valf.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/huge_vall.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/inf.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/nan.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/mathdef.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/mathcalls.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/mathinline.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdio.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stddef.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/types.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wordsize.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/typesizes.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/libio.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/_G_config.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/wchar.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wchar.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gconv.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stdarg.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sys_errlist.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdlib.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/waitflags.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/waitstatus.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/endian.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/endian.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/xlocale.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/types.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/time.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/select.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/select.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sigset.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/time.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/sysmacros.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/pthreadtypes.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sched.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/alloca.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/string.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string2.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/ft2build.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftheader.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/internal.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/freetype.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftconfig.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftoption.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/config/ftstdlib.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/limits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/syslimits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/limits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix1_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/local_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/limits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix2_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/xopen_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/ctype.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/setjmp.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/setjmp.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/fterrors.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftmoderr.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/fterrdef.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/fttypes.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftsystem.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftimage.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftoutln.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ttnameid.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftobjs.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftrender.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftmodapi.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftglyph.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/ftsizes.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftmemory.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftgloadr.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftdriver.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/autohint.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/freetype2/freetype/internal/ftserv.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_main.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_stdinc.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_config.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_platform.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/strings.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/inttypes.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdint.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/iconv.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/begin_code.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/close_code.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_audio.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_error.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_endian.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_mutex.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_thread.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_rwops.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_cdrom.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_cpuinfo.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_events.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_active.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_keyboard.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_keysym.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_mouse.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_video.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_joystick.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_quit.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_loadso.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_timer.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_version.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/SDL_endian.h:
+
+SDL_ttf.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/begin_code.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL/close_code.h:
