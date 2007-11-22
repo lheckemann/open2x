@@ -1,4 +1,8 @@
 # Libraries to build
+ifeq ($(strip $(BUILD_BUILDROOT)),y)
+include .config
+else
+TARGETS+=o2x-zlib
 TARGET_BZIP2 = n
 TARGET_FREETYPE = n
 TARGET_IMLIB2 = n
@@ -25,6 +29,7 @@ TARGET_SDL_SVG = n
 TARGET_SDL_TTF = n
 TARGET_SMPEG = n
 TARGET_ZLIB = n
+endif
 
 # Do not edit below here
 FLAGS += CC='$(OPEN2X)/bin/$(HOST)-gcc'
