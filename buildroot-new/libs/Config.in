@@ -1,0 +1,134 @@
+menu "Libraries"
+
+config TARGET_BZIP2
+	bool "bzip2"
+	default y
+	help
+	  
+config TARGET_FREETYPE
+	bool "freetype"
+	default y
+	help
+	  
+config TARGET_IMLIB2
+	bool "imlib2"
+	default y
+	help
+	  
+config TARGET_LIBICONV
+	bool "libiconv"
+	default y
+	help
+	  
+config TARGET_LIBID3TAG
+	bool "libid3tag"
+	default y
+	help
+	  
+config TARGET_LIBJPEG
+	bool "libjpeg"
+	default y
+	help
+	  
+config TARGET_LIBMAD
+	bool "libmad"
+	default y
+	help
+	  
+config TARGET_LIBMIKMOD
+	bool "libmikmod"
+	default y
+	help
+	  
+config TARGET_LIBOGG
+	bool "libogg"
+	default y
+	help
+	  
+config TARGET_LIBPNG
+	bool "libpng"
+	default y
+	help
+	  
+config TARGET_LIBTIFF
+	bool "libtiff"
+	default y
+	help
+	  
+config TARGET_LIBUNGIF
+	bool "libungif"
+	default y
+	help
+	  
+config TARGET_LIBVORBIS
+	bool "libvorbis"
+	default y
+	help
+	  
+config TARGET_LIBXML2
+	bool "libxml2"
+	default y
+	help
+	  
+config TARGET_MPEG2DEC
+	bool "mpeg2dec"
+	default y
+	help
+	  
+config TARGET_NCURSES
+	bool "ncurses"
+	default y
+	help
+	  
+config TARGET_TREMOR
+	bool "tremor"
+	default y
+	help
+	  
+config TARGET_READLINE
+	bool "readline"
+	default y
+	help
+	  
+config TARGET_SDL
+	bool "SDL"
+	default y
+	help
+	  
+config TARGET_SDL_GFX
+	bool "SDL_gfx"
+	default y
+	help
+	  
+config TARGET_SDL_IMAGE
+	bool "SDL_image"
+	default y
+	help
+	  
+config TARGET_SDL_MIXER
+	bool "SDL_mixer"
+	default y
+	help
+	  
+config TARGET_SDL_SVG
+	bool "SDL_svg"
+	default y
+	help
+	  
+config TARGET_SDL_TTF
+	bool "SDL_ttf"
+	default y
+	help
+	  
+config TARGET_SMPEG
+	bool "smpeg"
+	default y
+	help
+	  
+config TARGET_ZLIB
+	bool "zlib"
+	default y
+	help
+	  
+
+endmenu

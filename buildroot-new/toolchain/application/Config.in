@@ -1,0 +1,6 @@
+config O2X_TOOLCHAIN_APPLICATION
+	bool "Applications"
+	default y
+	help
+	  The recommended toolchain for building applications for the GP2X. Based 
+	  around gcc 4.1.1.

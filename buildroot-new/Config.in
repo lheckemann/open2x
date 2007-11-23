@@ -1,0 +1,78 @@
+#
+
+mainmenu "Open2x compliation suite"
+
+config BR2_HAVE_DOT_CONFIG
+	bool
+	default y
+
+config BR2_VERSION
+	string
+	default "1.0"
+
+menu "Installation options"
+
+config WGET
+	string "Wget command"
+	default "wget"
+
+config SVN_CO
+	string "Subversion (svn) command to download source tree"
+	default "svn co"
+
+config SVN_UP
+	string "Subversion (svn) command to update source tree"
+	default "svn up"
+
+config ZCAT
+	string "zcat command"
+	default "zcat"
+	help
+	  Command to be used to extract a gzip'ed file to stdout.
+	  zcat is identical to gunzip -c except that the former may
+	  not be available on your system.
+	  Default is "gzip -d -c"
+	  Other possible values include "gunzip -c" or "zcat".
+
+config BZCAT
+	string "bzcat command"
+	default "bzcat"
+	help
+	  Command to be used to extract a bzip2'ed file to stdout.
+	  bzcat is identical to bunzip2 -c except that the former may
+	  not be available on your system.
+	  Default is "bzcat"
+	  Other possible values include "bunzip2 -c" or "bzip2 -d -c".
+
+config DL_DIR
+	string "Download dir"
+	default ./dl
+	help
+	  Directory to store all the source files that we need to fetch.
+	  If the Linux shell environment has defined the BUILDROOT_DL_DIR
+	  environment variable, then this overrides this configuration item.
+
+	  The default is ./dl
+
+config O2X_SET_ENV_VARS
+	bool "Set environment variables"
+	default n
+	help
+	  Selecting this option will let the installer automatically add lines 
+	  to a file of your choice which is parsed by your shell, meaning no 
+	  manual configuration of environment variables is needed.
+
+config O2X_SET_ENV_VARS_FILE
+	string "File to edit"
+	default "~/.bashrc"
+	depends O2X_SET_ENV_VARS
+	help
+	  This is the file that will have environment variables added to so 
+	  they needn't be added manually. It should be a file parsed by your 
+	  shell when launched (such as /etc/profile or ~/.bashrc).
+
+endmenu
+
+source "toolchain/Config.in"
+source "libs/Config.in"
+#source "examples/Config.in"

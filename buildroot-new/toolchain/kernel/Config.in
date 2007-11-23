@@ -1,0 +1,7 @@
+config O2X_TOOLCHAIN_KERNEL
+	bool "Kernel"
+	default y
+	help
+	  The required toolchain for building kernels for the GP2X. Based around 
+	  gcc 3.4.4 (this is the newest version of gcc that can compile a 2.4 
+	  series kernel without major modifications).

@@ -1,0 +1,6 @@
+menu "Toolchains"
+
+source "toolchain/application/Config.in"
+source "toolchain/kernel/Config.in"
+
+endmenu
