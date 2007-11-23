@@ -350,7 +350,7 @@ static int GP2X_VideoInit(_THIS, SDL_PixelFormat *vformat)
 
   GP2X_InitHWSurfaces(this);
   // Enable mouse and keyboard support
-  //  GP2X_OpenKeyboard(this);
+  GP2X_OpenKeyboard(this);
   GP2X_OpenMouse(this);
   return 0;
 }
@@ -1595,4 +1595,15 @@ void *SDL_GP2X_PhysAddress(SDL_Surface *surface)
 int SDL_GP2X_MouseType()
 {
   return current_video->hidden->mouse_type;
+}
+
+
+// Get (semi-)raw touchpad position (not SDL position)
+//   0 <= x <= 319, 0 <= y <= 239
+//   Return value is pressure (any non zero value means pressed)
+int SDL_GP2X_Touchpad(int *x, int *y)
+{
+  if (x) *x = current_video->hidden->touch_x;
+  if (y) *y = current_video->hidden->touch_y;
+  return current_video->hidden->touch_pressure;
 }

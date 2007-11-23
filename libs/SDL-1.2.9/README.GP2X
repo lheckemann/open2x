@@ -22,6 +22,11 @@ Added backlight & CPU speed adjustments.
 Added preliminary TV-out control.
 Added option to allow extra 16MB gfx memory
 
+23-11-2007:
+Added a hacked, statically linked version of tslib to smooth the touchpad.
+Added a new function to get raw touchpad position.
+Started USB keyboard support, not yet ready.
+
 TODO: 
 
   Cursor support may be flaky on interlaced TV modes.
@@ -256,6 +261,20 @@ void *SDL_GP2X_PhysAddress(SDL_Surface *surface);
                                   - You tried getting the address of a
                                     software surface which the 940 cannot
                                     access.
+
+////
+int SDL_GP2X_MouseType();
+
+  Returns the type of mouse detected.
+  0 = No mouse
+  1 = Standard mouse
+  2 = F-200 touchpad
+
+////
+int SDL_GP2X_Touchpad(int *x, int *y);
+
+  Fills x & y with the raw coordinates of the touchpad, returns pressure.
+  Note: magnitude of pressure is irrelevent - it's either 0 or !0
 
 *************************************************************
 ** The following functions are implemented, but not tested **

@@ -48,7 +48,8 @@ mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libvideo_gp2x_la_LIBADD =
-am__objects_1 = SDL_gp2xevents.lo SDL_gp2xmouse.lo SDL_gp2xvideo.lo
+am__objects_1 = gp2x_tslib.lo SDL_gp2xevents.lo SDL_gp2xmouse.lo \
+	SDL_gp2xvideo.lo
 am_libvideo_gp2x_la_OBJECTS = $(am__objects_1)
 libvideo_gp2x_la_OBJECTS = $(am_libvideo_gp2x_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
@@ -278,6 +279,7 @@ libvideo_gp2x_la_SOURCES = $(gp2x_SRCS)
 
 # The SDL gp2x video driver sources
 gp2x_SRCS = \
+	gp2x_tslib.c		\
 	SDL_gp2xvideo.h		\
 	SDL_gp2xevents.c	\
 	SDL_gp2xevents_c.h	\
@@ -339,6 +341,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SDL_gp2xevents.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SDL_gp2xmouse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SDL_gp2xvideo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gp2x_tslib.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

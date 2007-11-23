@@ -42,10 +42,12 @@ static char rcsid =
 #include <dirent.h>
 #include <ctype.h>
 
-#include <linux/vt.h>
+//#include <linux/vt.h>
 #include <linux/kd.h>
 #include <linux/keyboard.h>
+#include <linux/input.h>
 
+#include "tslib.h"
 
 #include "SDL.h"
 #include "SDL_mutex.h"
@@ -54,16 +56,8 @@ static char rcsid =
 #include "SDL_events_c.h"
 #include "SDL_gp2xvideo.h"
 #include "SDL_gp2xevents_c.h"
-//#include "SDL_gp2xkeys.h"
+#include "SDL_gp2xkeys.h"
 //#include "SDL_keysym.h"
-
-typedef struct {
-  short pressure;
-  short x;
-  short y;
-  short pad;
-  struct timeval stamp;
-} TS_EVENT;
 
 
 /***********
@@ -86,42 +80,14 @@ static enum {
   NUM_MOUSE_DRVS
 } mouse_drv = MOUSE_NONE;
 
-/*
- * The F-200 uses tslib data for it's touchscreen (although no modules).
- * I've ripped the basic (linear) code directly into here.
- */
-
-// Set default a touchscreen calibration
-static int ts_cal[7] = {6203, 0, -1501397, 0, -4200, 16132680, 65536};
-
-static void read_calibration()
-{
-  struct stat sbuf;
-  int pcal_fd;
-  char pcalbuf[200];
-  int index;
-  char *tokptr;
-  char *calfile = "/etc/pointercal";
-
-  if (stat(calfile,&sbuf) == 0) {
-    pcal_fd = open(calfile,O_RDONLY);
-    read(pcal_fd,pcalbuf, 200);
-    ts_cal[0] = atoi(strtok(pcalbuf," "));
-    index = 1;
-    while (index < 7) {
-      tokptr = strtok(NULL," ");
-      if (*tokptr != '\0') {
-	ts_cal[index] = atoi(tokptr);
-	index++;
-      }
-    }
-    close(pcal_fd);
-  };
-}
-
 
 void GP2X_CloseMouse(_THIS)
 {
+  if (this->hidden->ts_dev != NULL) {
+    ts_close(this->hidden->ts_dev);
+    this->hidden->ts_dev = NULL;
+    this->hidden->mouse_fd = -1;
+  }
   if (this->hidden->mouse_fd > 0) {
     close(this->hidden->mouse_fd);
   }
@@ -221,10 +187,11 @@ static int detect_imps2(int fd)
   return imps2;
 }
 
+static struct stat sbuf;
+
 int GP2X_OpenMouse(_THIS)
 {
   int i;
-  int touchscreen_fd = -1;
   const char *mousedev;
   const char *mousedrv;
   
@@ -239,7 +206,8 @@ int GP2X_OpenMouse(_THIS)
   if (mousedev == NULL) {
     /* FIXME someday... allow multiple mice in this driver */
     static const char * const ps2mice[] = {
-      "/dev/input/mouse/0", "/dev/usbmouse", "/dev/psaux", NULL
+      "/dev/input/mouse/0", NULL
+      //      "/dev/input/mouse/0", "/dev/usbmouse", "/dev/psaux", NULL
     };
     /* Now try to use a modern PS/2 mouse */
     for (i=0; (this->hidden->mouse_fd < 0) && ps2mice[i]; ++i ) {
@@ -267,15 +235,19 @@ int GP2X_OpenMouse(_THIS)
       }
     }
     if (this->hidden->mouse_fd < 0) {
-      touchscreen_fd = open("/dev/touchscreen/wm97xx", O_RDONLY | O_NOCTTY);
-      if (touchscreen_fd) {
-	this->hidden->mouse_fd = touchscreen_fd;
-        read_calibration();
-	mouse_drv = MOUSE_TSLIB;
-	this->hidden->mouse_type = 2; /*GP2X_MOUSE_TOUCHSCREEN */
+      /* try the F-200 touchscreen */
+      mousedev = "/dev/touchscreen/wm97xx";
+      if (!stat(mousedev, &sbuf)) {
+	this->hidden->ts_dev = ts_open(mousedev, 1);
+	if ((this->hidden->ts_dev != NULL) &&
+	    (ts_config(this->hidden->ts_dev) >= 0)) {
+	  mouse_drv = MOUSE_TSLIB;
+	  this->hidden->mouse_fd = ts_fd(this->hidden->ts_dev);
+	  this->hidden->mouse_type = 2; /*GP2X_MOUSE_TOUCHSCREEN */
 #ifdef DEBUG_MOUSE
-	fputs("SDL_GP2X: F-200 touchscreen emulating mouse\n", stderr);
+	  fputs("SDL_GP2X: F-200 touchscreen emulating mouse\n", stderr);
 #endif
+	}
       }
     }
   }
@@ -328,6 +300,29 @@ void GP2X_vgamousecallback(int button, int relative, int dx, int dy)
   }
 }
 
+/* Handle input from tslib */
+static void handle_tslib(_THIS)
+{
+  struct ts_sample sample;
+  int button;
+
+  while (ts_read(this->hidden->ts_dev, &sample, 1) > 0) {
+    button = (sample.pressure > 0) ? 1 : 0;
+    button <<= 2;  /* must report it as button 3 */
+    // Store (semi-)raw touchscreen position (pre mouse clipping)
+    this->hidden->touch_x = sample.x;
+    this->hidden->touch_y = sample.y;
+    this->hidden->touch_pressure = sample.pressure;
+
+    sample.x = ((sample.x * this->hidden->invxscale) >> 16) +
+               this->hidden->x_offset;
+    sample.y = ((sample.y * this->hidden->invyscale) >> 16) +
+               this->hidden->y_offset;
+    GP2X_vgamousecallback(button, 0, sample.x, sample.y);
+  }
+  return;
+}
+
 /* For now, use MSC, PS/2, and MS protocols
    Driver adapted from the SVGAlib mouse driver code (taken from gpm, etc.)
 */
@@ -336,13 +331,11 @@ static void handle_mouse(_THIS)
   static int start = 0;
   static unsigned char mousebuf[BUFSIZ];
   static int relative = 1;
-  TS_EVENT *ts_event;
 
   int i, nread;
   int button = 0;
   int dx = 0, dy = 0;
   int packetsize = 0;
-  int realx, realy;
 	
   /* Figure out the mouse packet size */
   switch (mouse_drv) {
@@ -365,8 +358,8 @@ static void handle_mouse(_THIS)
     packetsize = 0;
     break;
   case MOUSE_TSLIB:
-    packetsize= sizeof(TS_EVENT);
-    break;
+    handle_tslib(this);
+    return; /* nothing left to do */
   case NUM_MOUSE_DRVS:
     /* Uh oh.. */
     packetsize = 0;
@@ -450,27 +443,6 @@ static void handle_mouse(_THIS)
       dy = 0;
       break;
     case MOUSE_TSLIB:
-      ts_event = (TS_EVENT*)mousebuf;
-      button = (ts_event->pressure ? 0x04 : 0x00);
-      if (ts_cal[6] == 65536) {   // This seems to be what the F200 uses
-	dx = (ts_cal[2] + ts_cal[0] * (int)ts_event->x) >> 16;
-	dy = (ts_cal[5] + ts_cal[4] * (int)ts_event->y) >> 16;
-      } else {
-	dx = (ts_cal[2] + ts_cal[0] * (int)ts_event->x) / ts_cal[6];
-	dy = (ts_cal[5] + ts_cal[4] * (int)ts_event->y) / ts_cal[6];
-      }
-      /*
-      fprintf(stderr, "GP2X_TS: button %d, pos %d,%d\n", button, dx ,dy);
-      */
-      if ((dx <0) || (dx > 320) || (dy < 0) || (dy > 240)) {
-	dx = dy = 0;
-	relative = 1;
-      } else {
-	relative = 0;
-	dx = ((dx * this->hidden->invxscale) >> 16) + this->hidden->x_offset;
-	dy = ((dy * this->hidden->invyscale) >> 16) + this->hidden->y_offset;
-      }
-      break;
     case NUM_MOUSE_DRVS:
       /* Uh oh.. */
       dx = 0;
@@ -489,58 +461,8 @@ static void handle_mouse(_THIS)
 }
 
 
-void GP2X_PumpEvents(_THIS)
-{
-  fd_set fdset;
-  int max_fd;
-  static struct timeval zero;
-
-  do {
-    posted = 0;
-
-    FD_ZERO(&fdset);
-    max_fd = 0;
-    /*** TODO
-    if (this->hidden->keyboard_fd >= 0) {
-			
-      FD_SET(this->hidden->keyboard_fd, &fdset);
-      if (max_fd < this->hidden->keyboard_fd) {
-	max_fd = this->hidden->keyboard_fd;
-      }
-    }
-    ***/
-    if (this->hidden->mouse_fd >= 0) {
-      FD_SET(this->hidden->mouse_fd, &fdset);
-      if (max_fd < this->hidden->mouse_fd) {
-	max_fd = this->hidden->mouse_fd;
-      }
-    }
-    if (select(max_fd+1, &fdset, NULL, NULL, &zero) > 0) {
-      /*** TODO
-      if (this->hidden->keyboard_fd >= 0) {
-	if (FD_ISSET(this->hidden->keyboard_fd, &fdset)) {
-	  handle_keyboard(this);
-	}
-      }
-      ***/
-      if (this->hidden->mouse_fd >= 0) {
-	if (FD_ISSET(this->hidden->mouse_fd, &fdset)) {
-	  handle_mouse(this);
-	}
-      }
-    }
-  } while (posted);
-}
-
-#if 1
-void GP2X_InitOSKeymap(_THIS)
-{
-  /* do nothing. */
-}
-#else
-
 /* The translation tables from a console scancode to a SDL keysym */
-#define NUM_VGAKEYMAPS	(1<<KG_CAPSSHIFT)
+#define NUM_VGAKEYMAPS (1<<KG_CAPSSHIFT)
 static Uint16 vga_keymap[NUM_VGAKEYMAPS][NR_KEYS];
 static SDLKey keymap[128];
 static Uint16 keymap_temp[128]; /* only used at startup */
@@ -629,144 +551,80 @@ static void GP2X_vgainitkeymaps(int fd)
   }
 }
 
-int GP2X_InGraphicsMode(_THIS)
-{
-  return ((keyboard_fd >= 0) && (saved_kbd_mode >= 0));
-}
-
-int GP2X_EnterGraphicsMode(_THIS)
-{
-  struct termios keyboard_termios;
-  
-  /* Set medium-raw keyboard mode */
-  if ((keyboard_fd >= 0) && !GP2X_InGraphicsMode(this)) {
-    
-    /* Set the terminal input mode */
-    if (tcgetattr(keyboard_fd, &saved_kbd_termios) < 0) {
-      SDL_SetError("Unable to get terminal attributes");
-      if (keyboard_fd > 0) {
-	close(keyboard_fd);
-      }
-      keyboard_fd = -1;
-      return(-1);
-    }
-    keyboard_termios = saved_kbd_termios;
-    
-    keyboard_termios.c_lflag = 0;
-    keyboard_termios.c_iflag &= ~(ISTRIP | IGNCR | ICRNL | INLCR | IXOFF | IXON);
-    
-    keyboard_termios.c_cc[VTIME]    = 0;   // 문자 사이의 timer를 disable
-    keyboard_termios.c_cc[VMIN]     = 1;   // 최소 5 문자 받을 때까진 blocking
-    
-    tcflush(keyboard_fd, TCIFLUSH);
-    
-    if (tcsetattr(keyboard_fd, TCSAFLUSH, &keyboard_termios) < 0) {
-      GP2X_CloseKeyboard(this);
-      SDL_SetError("Unable to set terminal attributes");
-      return(-1);
-    }
-    
-    
-  }
-  return(keyboard_fd);
-}
-
-void GP2X_LeaveGraphicsMode(_THIS)
-{
-  tcsetattr(keyboard_fd, TCSAFLUSH, &saved_kbd_termios);
-  saved_kbd_mode = -1;
-}
-
-void GP2X_CloseKeyboard(_THIS)
-{
-  if (keyboard_fd >= 0) {
-    GP2X_LeaveGraphicsMode(this);
-    if (keyboard_fd > 0) {
-      close(keyboard_fd);
-    }
-  }
-  keyboard_fd = -1;
-}
-
+//###
+//#define DEBUG_KEYBOARD
+//###
 int GP2X_OpenKeyboard(_THIS)
 {
+  int fd;
+
   /* Open only if not already opened */
-  if ( keyboard_fd < 0 ) {
-    static const char * const tty0[] = { "/dev/tty0", "/dev/vc/0", NULL };
-    static const char * const vcs[] = { "/dev/vc/%d", "/dev/tty%d", NULL };
-    int i, tty0_fd;
-    
-    /* Try to query for a free virtual terminal */
-    tty0_fd = -1;
-    for (i = 0; tty0[i] && (tty0_fd < 0); ++i) {
-      tty0_fd = open(tty0[i], O_WRONLY, 0);
-    }
-    
-    if ( keyboard_fd < 0 ) {
-      /* Last resort, maybe our tty is a usable VT */
-      current_vt = 0;
-      keyboard_fd = open("/dev/tty", O_RDWR);
-    }
+  if ( this->hidden->keyboard_fd < 0 ) {
+    static const char keybd[] = "/dev/input/event0";
+
+    fd = open(keybd, O_RDWR);
+    if (fd) {
 #ifdef DEBUG_KEYBOARD
-    fprintf(stderr, "Current VT: %d\n", current_vt);
+      int version;
+      unsigned short dev_id[4];
+      char device_name[256];
+      int abs[5];
+
+      if (ioctl(fd, EVIOCGVERSION, &version))
+	fputs("Failed to get keyboard driver version", stderr);
+      else
+	fprintf(stderr, "Input driver version is %d.%d.%d\n",
+		version >> 16, (version >> 8) & 0xff, version & 0xff);
+
+      ioctl(fd, EVIOCGID, dev_id);
+      fprintf(stderr, "Input device ID: bus 0x%x vendor 0x%x product 0x%x version 0x%x\n",
+	      dev_id[ID_BUS],
+	      dev_id[ID_VENDOR],
+	      dev_id[ID_PRODUCT],
+	      dev_id[ID_VERSION]);
+      
+      ioctl(fd, EVIOCGNAME(sizeof(device_name)), device_name);
+      printf("Input device name: \"%s\"\n", device_name);
 #endif
-    saved_kbd_mode = -1;
-    
+    }
+
+    /* Set up keymap */
+    //    GP2X_vgainitkeymaps(this->hidden->keyboard_fd);
   }
-  return(keyboard_fd);
+
+  return(this->hidden->keyboard_fd);
 }
 
 static void handle_keyboard(_THIS)
 {
-  unsigned char keybuf[BUFSIZ];
+  /**************
+   * Do nothing. I haven't finished the keyboard code yet
+   **************/
+  return;
+
+  /*
+  struct input_event event;
   int i, nread;
   int pressed;
   int scancode;
   SDL_keysym keysym;
 
-  nread = read(keyboard_fd, keybuf, BUFSIZ);
-	
-  // ghcstop add: 041206  확장키의 경우는 처리를 하지 않는다.
-  if (nread >= 3) return; 
+  while ((nread = read(this->hidden->keyboard_fd, &event, sizeof(event))) > 0) {
+    switch (event.type) {
+    case EV_KEY:
+      if (event.value == 0)
+	pressed = SDL_RELEASED;
+      else if (event.value == 1)
+	pressed = SDL_PRESSED;
 
-  for (i = 0; i<nread; ++i) {
-    scancode = keybuf[i] & 0x7F;
-    if (keybuf[i] & 0x80) {
-      pressed = SDL_RELEASED;
-    } else {
-      pressed = SDL_PRESSED;
-    }
-    TranslateKey(scancode, &keysym);
-
-    /* Handle Alt-FN for vt switch */
-    switch (keysym.sym) {
-    case SDLK_F1:
-    case SDLK_F2:
-    case SDLK_F3:
-    case SDLK_F4:
-    case SDLK_F5:
-    case SDLK_F6:
-    case SDLK_F7:
-    case SDLK_F8:
-    case SDLK_F9:
-    case SDLK_F10:
-    case SDLK_F11:
-    case SDLK_F12:
-      if (SDL_GetModState() & KMOD_ALT) {
-	if (pressed) {
-	  switch_vt(this, (keysym.sym-SDLK_F1)+1);
-	}
-	break;
-      }
-      /* Fall through to normal processing */
-    default:
-      posted += SDL_PrivateKeyboard(pressed, &keysym);
-      break;
+      scancode = event.code;
+      TranslateKey(scancode, &keysym);
+      SDL_PrivateKeyboard(pressed, &keysym);
     }
   }
+  */
 }
 
-#if 0 ****** Why is GP2X different? Needs checking
 void GP2X_InitOSKeymap(_THIS)
 {
   int i;
@@ -883,46 +741,6 @@ void GP2X_InitOSKeymap(_THIS)
     }
   }
 }
-#else
-
-void GP2X_InitOSKeymap(_THIS)
-{
-  int i;
-
-  /* Initialize the Linux key translation table */
-
-  /* First get the ascii keys and others not well handled */
-  for (i=0; i<SDL_TABLESIZE(keymap); ++i)  // 128개 까정 
-    {
-      keymap[i] = 0; // all key map clear ==> 몽땅 SDLK_UNKNOWN로 일단 세팅
-    }
-	
-  keymap[0] =  SDLK_UNKNOWN	;
-  keymap[3] =  SDLK_CTRL_C	;
-  keymap[8] =  SDLK_BACKSPACE	;
-  keymap[9] =  SDLK_TAB		;
-  keymap[12] = SDLK_CLEAR		;
-  keymap[13] = SDLK_RETURN	;	
-  keymap[19] = SDLK_PAUSE		;
-  keymap[27] = SDLK_ESCAPE    ;
-	
-	
-  for (i=32; i<=64; ++i)  // ' ' 에서부터 '@'까지의 32개 
-    {
-      keymap[i] = i; // all key map clear ==> 몽땅 SDLK_UNKNOWN로 일단 세팅
-    }
-	
-  for (i=91; i<=122; ++i)  // '[' 에서부터 'z'까지의 32개 
-    {
-      keymap[i] = i; // all key map clear ==> 몽땅 SDLK_UNKNOWN로 일단 세팅
-    }
-
-  keymap[127] = SDLK_DELETE    ;	
-       
-	
-}
-
-#endif
 
 static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
 {
@@ -933,7 +751,6 @@ static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
 
   /* If UNICODE is on, get the UNICODE value for the key */
   keysym->unicode = 0;
-#if 0 // 041206: ghcstop delete 왜냐? 아예 keymap을 내맘대로 serial console용으로 변화시켰기 때문
   if ( SDL_TranslateUNICODE ) {
     int map;
     SDLMod modstate;
@@ -965,10 +782,46 @@ static SDL_keysym *TranslateKey(int scancode, SDL_keysym *keysym)
       keysym->unicode = KVAL(vga_keymap[map][scancode]);
     }
   }
-#endif 
   return(keysym);
 }
 
-#endif /* Keyboard support commented out for now */
+
+void GP2X_PumpEvents(_THIS)
+{
+  fd_set fdset;
+  int max_fd;
+  static struct timeval zero;
+
+  do {
+    posted = 0;
+
+    FD_ZERO(&fdset);
+    max_fd = 0;
+    if (this->hidden->keyboard_fd >= 0) {
+      FD_SET(this->hidden->keyboard_fd, &fdset);
+      if (max_fd < this->hidden->keyboard_fd) {
+	max_fd = this->hidden->keyboard_fd;
+      }
+    }
+    if (this->hidden->mouse_fd >= 0) {
+      FD_SET(this->hidden->mouse_fd, &fdset);
+      if (max_fd < this->hidden->mouse_fd) {
+	max_fd = this->hidden->mouse_fd;
+      }
+    }
+    if (select(max_fd+1, &fdset, NULL, NULL, &zero) > 0) {
+      if (this->hidden->keyboard_fd >= 0) {
+	if (FD_ISSET(this->hidden->keyboard_fd, &fdset)) {
+	  handle_keyboard(this);
+	}
+      }
+      if (this->hidden->mouse_fd >= 0) {
+	if (FD_ISSET(this->hidden->mouse_fd, &fdset)) {
+	  handle_mouse(this);
+	}
+      }
+    }
+  } while (posted);
+}
 
 /* end of SDL_gp2xevents.c ... */

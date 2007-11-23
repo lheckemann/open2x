@@ -28,6 +28,9 @@ static char rcsid =
 #ifndef _SDL_gp2xvideo_h
 #define _SDL_gp2xvideo_h
 
+#include <sys/types.h>
+#include <termios.h>
+
 #include "SDL_mouse.h"
 #include "SDL_sysvideo.h"
 #include "SDL_mutex.h"
@@ -92,9 +95,13 @@ typedef struct SDL_WMcursor {
 
 typedef struct SDL_PrivateVideoData {
   int memory_fd, fbcon_fd, mouse_fd, keyboard_fd;
-  int saved_keybd_mode;
+  int saved_kbd_mode;
+  int current_vt;
+  int saved_vt;
   int mouse_type;
-  //  struct termios saved_kbd_termios;
+  struct tsdev *ts_dev;
+  struct termios saved_kbd_termios;
+  int touch_x, touch_y, touch_pressure;
   int x_offset, y_offset, ptr_offset;
   int w, h, pitch;
   int vsync_polarity;
