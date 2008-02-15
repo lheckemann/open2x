@@ -322,6 +322,7 @@ unsigned char mmsp_get_SDCLK(void)
 
 EXPORT_SYMBOL(mmsp_set_SDCLK);
 EXPORT_SYMBOL(mmsp_get_SDCLK);
+EXPORT_SYMBOL(mmsp_get_usbCONN);
 EXPORT_SYMBOL(mmsp_set_usbCONN);
 EXPORT_SYMBOL(mmsp_get_sdsize);
 EXPORT_SYMBOL(set_gpio_ctrl);

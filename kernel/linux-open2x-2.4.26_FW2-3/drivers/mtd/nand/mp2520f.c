@@ -554,7 +554,7 @@ int __init mp2520f_nand_init (void)
 	this->oob_buf = oob_buf;
 
 	/* 20 us command delay time */
-	this->chip_delay = 20;
+	this->chip_delay = 200;
 
 	/* Scan to find existance of the device */
 	if (nand_scan (mp2520f_nand_mtd, 1)) {
