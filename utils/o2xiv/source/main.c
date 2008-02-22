@@ -80,6 +80,7 @@ int main(int argc, char* argv[]) {
 						break;
 
 					case GP2X_BUTTON_VOLDOWN:
+						/* TODO: Fix zooming so there is no blank period before complete inversion (due to SF 0) */
 						if(zoom == 0.1) {
 							zoom -= 0.2;
 						} else {
