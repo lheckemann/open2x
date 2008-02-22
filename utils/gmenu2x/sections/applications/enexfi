@@ -1,0 +1,4 @@
+title=File Manager
+icon=skin:icons/filemgr.png
+exec=/opt/enexfi/enexfi.gpe
+clock=100

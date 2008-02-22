@@ -1,0 +1,5 @@
+title=Burokku
+icon=/mnt/sd/GP2Xpdf/GP2Xpdf.png
+exec=/mnt/sd/burokku_old/Burokku
+clock=200
+wrapper=true

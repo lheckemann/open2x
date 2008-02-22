@@ -1,0 +1,5 @@
+title=E-Book
+icon=skin:icons/ebook.png
+exec=/opt/greader2x/greader2x.gpe
+manual=/opt/greader2x/readme.txt
+clock=100

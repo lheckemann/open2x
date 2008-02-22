@@ -1,0 +1,6 @@
+title=Video
+icon=skin:icons/mplayer.png
+exec=/opt/mplayer/mp2x
+params= 
+clock=200
+wrapper=false
