@@ -23,11 +23,12 @@ TARGETS += $(PREFIX)/lib/libSDL.a
 #Build everything else.
 TARGETS += $(PREFIX)/lib/libz.a
 TARGETS += $(PREFIX)/lib/libpng.a
-TARGETS += $(PREFIX)/lib/libSDL_gfx.a
+#TARGETS += $(PREFIX)/lib/libSDL_gfx.a
 TARGETS += $(PREFIX)/lib/libxml2.a
 TARGETS += $(PREFIX)/lib/libSDL_image.a
 #TARGETS += $(PREFIX)/lib/libSDL_svg.a
 TARGETS += $(PREFIX)/lib/libSDL_ttf.a
+#TARGETS += $(PREFIX)/lib/libSDL_inifile.a
 TARGETS += $(PREFIX)/lib/libbz2.a
 TARGETS += $(PREFIX)/lib/libfreetype.a
 TARGETS += $(PREFIX)/lib/libid3tag.a
@@ -57,13 +58,15 @@ clean:
 #
 #$(PREFIX)/lib/libSDL.a:
 #	cd SDL-1.2.9 && ./autogen.sh && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+#
 
 #Use this rule to build the test SDL 1.2.11
 
 SDL: $(PREFIX)/lib/libSDL.a
 
 $(PREFIX)/lib/libSDL.a:
-	cd SDL-1.2.11 && ./autogen.sh && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads --enable-video --enable-video-gp2x --enable-video-fbcon=no && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd SDL-1.2.11 && ./autogen.sh && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --enable-pthreads --enable-pthreads-sem --enable-threads --enable-video --enable-video-gp2x --enable-video-fbcon=no --enable-video-directfb=no && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
+	cd $(PREFIX)/bin; ln -f -s sdl-config $(HOST)-sdl-config
 
 SDL_gfx: $(PREFIX)/lib/libSDL_gfx.a
 
@@ -85,6 +88,11 @@ SDL_svg: $(PREFIX)/lib/libSDL_svg.a
 $(PREFIX)/lib/libSDL_svg.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libxml2.a $(PREFIX)/lib/libz.a
 	cd SDL_svg-1.1.9 && ./autogen.sh $(FLAGS) $(LIBS) && $(FLAGS) $(LIBS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) --with-gnu-ld && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
 
+SDL_inifile: $(PREFIX)/lib/libSDL_inifile.a
+
+$(PREFIX)/lib/libSDL_inifile.a: $(PREFIX)/lib/libSDL.a
+#	cd SDL_config_ini-0.0.4 && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean 
+	
 bzip2: $(PREFIX)/lib/libbz2.a
 
 $(PREFIX)/lib/libbz2.a:
@@ -184,5 +192,4 @@ $(PREFIX)/lib/libSDL_mixer.a: $(PREFIX)/lib/libSDL.a $(PREFIX)/lib/libsmpeg.a $(
 mpeg2: $(PREFIX)/lib/libmpeg2.a
 
 $(PREFIX)/lib/libmpeg2.a: $(PREFIX)/lib/libSDL.a
-	cd mpeg2dec-gp2x && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install
-	#&& $(FLAGS) make clean
+#	cd mpeg2dec-gp2x && $(FLAGS) ./configure --prefix=$(PREFIX) --build=$(BUILD) --host=$(HOST) --enable-shared --enable-static --with-sdl-prefix=$(PREFIX) && $(FLAGS) make && $(FLAGS) make install && $(FLAGS) make clean
