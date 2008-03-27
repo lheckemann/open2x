@@ -4,4 +4,5 @@ endif
 
 #include libpng/1.2.8.mk
 #include libpng/1.2.15.mk
-include libpng/1.2.23.mk
+#include libpng/1.2.23.mk
+include libpng/1.2.25.mk
