@@ -58,20 +58,20 @@
 //[*]----------------------------------------------------------------------------------------------------[*]
 #define rSDICON			(*(volatile unsigned short*	)0xC0001500)		/* SDI Control Register */
 #define rSDIPRE			(*(volatile unsigned short*	)0xC0001502)		/* SDI Prescaler Register */
-#define rSDICARG		(*(volatile unsigned int*	)0xC0001504)	/* SDI Command Argument Register */
+#define rSDICARG		(*(volatile unsigned int*	)0xC0001504)		/* SDI Command Argument Register */
 #define rSDICCON		(*(volatile unsigned short*	)0xC0001508)		/* SDI Command Control Register */
 #define rSDICSTA		(*(volatile unsigned short*	)0xC000150A)		/* SDI Command Status Register */
-#define rSDIRSP0		(*(volatile unsigned int*	)0xC000150C)	/* SDI Response Register 0 */
-#define rSDIRSP1		(*(volatile unsigned int*	)0xC0001510)	/* SDI Response Register 1 */
-#define rSDIRSP2		(*(volatile unsigned int*	)0xC0001514)	/* SDI Response Register 2 */
-#define rSDIRSP3		(*(volatile unsigned int*	)0xC0001518)	/* SDI Response Register 3 */
+#define rSDIRSP0		(*(volatile unsigned int*	)0xC000150C)		/* SDI Response Register 0 */
+#define rSDIRSP1		(*(volatile unsigned int*	)0xC0001510)		/* SDI Response Register 1 */
+#define rSDIRSP2		(*(volatile unsigned int*	)0xC0001514)		/* SDI Response Register 2 */
+#define rSDIRSP3		(*(volatile unsigned int*	)0xC0001518)		/* SDI Response Register 3 */
 #define rSDIBSIZE		(*(volatile unsigned short*	)0xC000151E)		/* SDI Block Size Register */
-#define rSDIDCON		(*(volatile unsigned int*	)0xC0001520)	/* SDI Data Control Register */
-#define rSDIDCNT		(*(volatile unsigned int*	)0xC0001524)	/* SDI Data Remain Counter Register */
+#define rSDIDCON		(*(volatile unsigned int*	)0xC0001520)		/* SDI Data Control Register */
+#define rSDIDCNT		(*(volatile unsigned int*	)0xC0001524)		/* SDI Data Remain Counter Register */
 #define rSDIDSTA		(*(volatile unsigned short*	)0xC0001528)		/* SDI Data Status Register */
 #define rSDIFSTA		(*(volatile unsigned short*	)0xC000152A)		/* SDI FIFO Status Register */
-#define rSDIDAT			(*(volatile unsigned char*	)0xC000152C)	/* SDI Data Register */
-#define rSDIIMSK		(*(volatile unsigned int*	)0xC0001530)	/* SDI Interrupt Mask Register 0 */
+#define rSDIDAT			(*(volatile unsigned char*	)0xC000152C)		/* SDI Data Register */
+#define rSDIIMSK		(*(volatile unsigned int*	)0xC0001530)		/* SDI Interrupt Mask Register 0 */
 #define rSDIDTIMERL		(*(volatile unsigned short*	)0xC0001536)		/* SDI Data Timer Register */
 #define rSDIDTIMERH		(*(volatile unsigned short*	)0xC0001538)		/* SDI Data Timer Register */
 #define rSDISFTL		(*(volatile unsigned short*	)0xC000153A)		/* SDI Shift Regisrt Low */
@@ -79,7 +79,7 @@
 //[*]----------------------------------------------------------------------------------------------------[*]
 #define SDIDCON_DATA_SIZE_WORD 		(2 << 22)	/* SDIO Interrupt period is ... */
 #define SDIDCON_PRD					(1 << 21)	/* SDIO Interrupt period is ... */
-				/* when last data block is transferred. */
+/* when last data block is transferred. */
 #define SDIDCON_PRD_2				(0 << 21)	/* 0: exact 2 cycle */
 #define SDIDCON_PRD_N				(1 << 21)	/* 1: more cycle */
 #define SDIDCON_TARSP				(1 << 20)	/* when data transmit start ... */
@@ -104,7 +104,73 @@
 #define SDIDCON_BUSY				FInsrt(0x1, fSDIDCON_DatMode)	/* only busy check */
 #define SDIDCON_RX					FInsrt(0x2, fSDIDCON_DatMode)	/* Data receive */
 #define SDIDCON_TX					FInsrt(0x3, fSDIDCON_DatMode)	/* Data transmit */
-#define SDIDCON_BNUM				FMsk(Fld(12,0))	/* Block Number(0~4095) */
+#define SDIDCON_BNUM				FMsk(Fld(12,0))					/* Block Number(0~4095) */
+
+#define RES_LEN_SHORT		6
+#define RES_LEN_LONG		17
+
+
+typedef struct {
+	unsigned char  mid;			/* [127:120] Manufacturer ID */		
+	unsigned short oid;			/* [119:104] OEM/Application ID */
+	unsigned char  pnm[7];  	/* [103: 56] Product Name + '\0' (MMCSD) */
+	unsigned char  pnm_sd[6];	/* [103: 64] Product Name + '\0' (SD) */
+	unsigned char  prv;			/* [ 55: 48] Product Version (MMCSD) */
+								/* [ 63: 56] Product Version (SD) */
+	unsigned long psn;			/* [ 47: 16] Product Serial Number (MMCSD) */
+								/* [ 55: 24] Product Serial Number (SD) */
+	unsigned char  mdt;			/* [ 15:  8] Manufacturing date (MMCSD) */
+	unsigned short mdt_sd;   	/* [ 19:  8] Manufacturing date (SD) */
+								/* [  7:  1] CRC (rwe) */
+} CID_regs;
+
+typedef struct {
+	unsigned char csd;			/* [127:126] CSD structure */
+	unsigned char spec_vers;	/* [125:122] Spec version (MMCSD) */
+	struct {
+		unsigned char man;		/* [118:115] time mantissa */
+		unsigned char exp;		/* [114:113] time exponent */
+	} taac;						/* [119:112] Data read access-time-1 */
+	unsigned char nsac;			/* [111:104] Data read access-time-2 in CLK cycle */
+	struct {
+		unsigned char man;		/* [103:100] rate mantissa */
+		unsigned char exp;		/* [ 99: 97] rate exponent */
+	} tran_speed;				/* [103: 96] Max. data transfer rate */
+	unsigned short ccc;			/* [ 95: 84]  Card command classes */
+	unsigned char read_len;		/* [ 83: 80] Max. read data block length */
+	unsigned char read_part;	/* [ 79: 79] Partial blocks for read allowed */
+	unsigned char write_mis;	/* [ 78: 78] write block misalignment */
+	unsigned char read_mis;		/* [ 77: 77] read block misalignment */
+	unsigned char dsr;			/* [ 76: 76] DSR implemented */
+	unsigned long c_size;		/* [ 73: 62] Device size (SDHC: [ 69: 48] )*/
+
+	unsigned char vcc_r_min;	/* [ 61: 59] Max. read current at Vcc min */
+	unsigned char vcc_r_max;	/* [ 58: 56] Max. read current at Vcc max */
+	unsigned char vcc_w_min;	/* [ 55: 53] Max. write current at Vcc min */
+	unsigned char vcc_w_max;	/* [ 52: 50] Max. write current at Vcc max */
+	unsigned char c_size_mult;	/* [ 49: 47] Device size multiplier */
+	unsigned char er_blk_en;	/* [ 46: 46] Erase single block enable (SD) */
+	unsigned char er_size;		/* [ 46: 42] Erase sector size (MMCSD) */
+								/* [ 45: 39] Erase sector size (SD) */
+	unsigned char er_grp_size;	/* [ 41: 37] Erase group size (MMCSD) */
+	unsigned char wp_grp_size;	/* [ 36: 32] Write protect group size (MMCSD)*/
+								/* [ 38: 32] Write Protect group size (SD) */	
+	unsigned char wp_grp_en;	/* [ 31: 31] Write protect group enable */
+	unsigned char dflt_ecc;		/* [ 30: 29] Manufacturer default ECC (MMCSD) */
+	unsigned char r2w_factor;	/* [ 28: 26] Write speed factor */
+	unsigned char write_len;	/* [ 25: 22] Max. write data block length */
+	unsigned char write_part;	/* [ 21: 21] Partial blocks for write allowed */
+								/* [ 20: 17] Reserved */
+								/* [ 16: 16] Content protection application */
+	unsigned char ffmt_grp;		/* [ 15: 15] File format group (rw) */
+	unsigned char copy;			/* [ 14: 14] Copy flag (OTP) (rw) */
+	unsigned char perm_wp;		/* [ 13: 13] Permanent write protection (rw) */
+	unsigned char tmp_wp;		/* [ 12: 12] temporary write protection (rwe) */
+	unsigned char ffmt;			/* [ 11: 10] file format (rw) */
+	unsigned char ecc;			/* [  9:  8] ECC (MMCSD) (rwe) */
+								/* [  7:  1] CRC (rwe) */
+} CSD_regs;
+
 //[*]----------------------------------------------------------------------------------------------------[*]
 extern int fat_register_device(block_dev_desc_t *dev_desc, int part_no);
 //[*]----------------------------------------------------------------------------------------------------[*]
@@ -117,55 +183,9 @@ block_dev_desc_t * mmc_get_dev(int dev)
 //[*]----------------------------------------------------------------------------------------------------[*]
 int isMMC;	// 1:MMC, 0:SD
 int RCA=0;	// Relative card address
-unsigned int CardSize=0; // SD capacity in byte		 
-//[*]----------------------------------------------------------------------------------------------------[*]
-// CSD register, rwe == read/write/erase 
-typedef struct 
-{
-	unsigned char csd;		/* CSD structure */
-	unsigned char spec_vers;		/* Spec version, MMC only */
-	struct 
-	{
-		unsigned char man;	/* time mantissa */
-		unsigned char exp;	/* time exponent */
-	} taac;			/* Data read access-time-1 */
-	unsigned char nsac;		/* Data read access-time-2 in CLK cycle */
-	struct 
-	{
-		unsigned char man;	/* rate mantissa */
-		unsigned char exp;	/* rate exponent */
-	} tran_speed;		/* Max. data transfer rate */
-	unsigned short ccc;		/* Card command classes */
-	unsigned char read_len;		/* Max. read data block length */
-	unsigned char read_part;		/* Partial blocks for read allowed */
-	unsigned char write_mis;		/* write block misalignment */
-	unsigned char read_mis;		/* read block misalignment */
-	unsigned char dsr;		/* DSR implemented */
-	unsigned short  c_size;		/* Device size */
-	unsigned char vcc_r_min;		/* Max. read current at Vcc min */
-	unsigned char vcc_r_max;		/* Max. read current at Vcc max */
-	unsigned char vcc_w_min;		/* Max. write current at Vcc min */
-	unsigned char vcc_w_max;		/* Max. write current at Vcc max */
-	unsigned char c_size_mult;	/* Device size multiplier */
-	unsigned char er_size;		/* Erase sector size, MMC only */
-	unsigned char er_grp_size;	/* Erase group size, MMC only */
-	unsigned char wp_grp_size;	/* Write protect group size */
-	unsigned char wp_grp_en;		/* Write protect group enable */
-	unsigned char dflt_ecc;		/* Manufacturer default ECC, MMC only */
-	unsigned char r2w_factor;	/* Write speed factor */
-	unsigned char write_len;		/* Max. write data block length */
-	unsigned char write_part;	/* Partial blocks for write allowed */
-	unsigned char ffmt_grp;		/* File format group, rw */
-	unsigned char copy;		/* Copy flag (OTP), rw */
-	unsigned char perm_wp;		/* Permanent write protection, rw */
-	unsigned char tmp_wp;		/* temporary write protection, rwe */
-	unsigned char ffmt;		/* file format, rw */
-	unsigned char ecc;		/* ECC, rwe, MMC only */
-
-	/* SD only */
-	unsigned char er_blk_en;		/* Erase single block enable, SD only */
-	unsigned char er_sec_size;	/* Erase sector size, SD only */
-} CSD_regs;
+unsigned int CardSize=0; // SD capacity in byte	
+unsigned char sdhc;
+	 
 //[*]----------------------------------------------------------------------------------------------------[*]
 int Chk_CMDend(int cmd, int be_resp)
 {
@@ -188,30 +208,31 @@ int Chk_CMDend(int cmd, int be_resp)
 		while( !( ((finish0&0x200)==0x200) | ((finish0&0x400)==0x400) ))    // Check cmd/rsp end
 			finish0=rSDICSTA;
 
-		if((cmd==1) | (cmd==9) | (cmd==41))	// CRC no check, CMD9 is a long Resp. command.
+		if((cmd==1) | (cmd==9) | (cmd==41) )	// CRC no check, CMD9 is a long Resp. command.
 		{
 			if( (finish0&0xf00) != 0xa00 )  // Check error
 			{
-				rSDICSTA = finish0;   // Clear error state
+				rSDICSTA = finish0;   		// Clear error state
 				if(((finish0&0x400)==0x400))
-					return 0;	// Timeout error
+					return 0;				// Timeout error
 			}
-			rSDICSTA = finish0;	// Clear cmd & rsp end state
+			rSDICSTA = finish0;				// Clear cmd & rsp end state
 		}
-		else	// CRC check
+		else								// CRC check
 		{
-			if( (finish0&0x1f00) != 0xa00 )	// Check error
+			
+			if( (finish0&0x1f00) != 0xa00 )		// Check error
 			{				
-				//printf("CMD%d:rSDICSTA=0x%x,rSDIRSP0=0x%x\n",cmd, rSDICSTA, rSDIRSP0);
-				rSDICSTA = finish0;   // Clear error state
-
+				rSDICSTA = finish0;   			// Clear error state
 				if(((finish0&0x400)==0x400))
-					return 0;	// Timeout error
+					return 0;					// Timeout error
 			}
 			rSDICSTA=finish0;
 		}
 		return 1;
 	}
+	
+	
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
 int Chk_DATend(void)
@@ -223,12 +244,12 @@ int Chk_DATend(void)
 	{
 		// Chek timeout or data end
 		finish = rSDIDSTA;
-		//printf("DATA:finish=0x%x\n", finish);
+		
 	}
 	if( (finish&0xfc) != 0x10 )
 	{
-		printf("DATA:finish=0x%x\n", finish); // Something wrong !!
-		rSDIDSTA = 0xec;  // Clear error state
+		printf("DATA:finish=0x%x\n", finish); 	// Something wrong !!
+		rSDIDSTA = 0xec;  						// Clear error state
 		return 0;
 	}
 	return 1;
@@ -262,13 +283,41 @@ void CMD0(void)
 //	rSDICSTA=0x800;	    // Clear cmd_end(no rsp)
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
+unsigned char CMD8(void)
+{
+	int retry=10;
+
+retry_CMD8:	
+	rSDICARG = 0xAA | (1<<8);
+	rSDICCON = (0x1<<9) | (0x1<<8) | 0x48;	// short_rsp, wait_resp, start, CMD8
+		
+	//-- Check end of CMD8
+	if(!Chk_CMDend(8, 1)) 
+	{
+		if(retry--){
+			CMD0();
+			goto retry_CMD8;	
+		}						
+	}
+	else
+	{	
+		if( (rSDIRSP0 & 0xff) == 0xAA ) 
+		{
+			printf("SD VER 2.0 \n");	
+			return 1;
+		}			
+	}
+	return 0;				/* none card & ver1.0 */	
+}
+//[*]----------------------------------------------------------------------------------------------------[*]
 int CMD55(void)
 {
 	//--Make ACMD
 	//rSDICARG=RCA<<16;			//CMD7(RCA,stuff bit)
 	rSDICARG = (RCA<<16) & 0xffff0000;	// CMD7(RCA,stuff bit)
 	rSDICCON=(0x1<<9)|(0x1<<8)|0x77;	//sht_resp, wait_resp, start, CMD55
-
+	
+	
 	//-- Check end of CMD55
 	if(!Chk_CMDend(55, 1)) 
 		return 0;
@@ -277,18 +326,163 @@ int CMD55(void)
 	return 1;
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
-CSD_regs csd;
-//[*]----------------------------------------------------------------------------------------------------[*]
 int CMD9(void)//SEND_CSD
 {
+	int retry=10;
+retry_CMD9:		
+	if(isMMC) RCA=1;
+	
 	rSDICARG = (RCA<<16) & 0xffff0000;	// CMD7(RCA,stuff bit)
 	rSDICCON = (0x1<<10) | (0x1<<9) | (0x1<<8) | 0x49;	// long_resp, wait_resp, start, CMD9
-	
-    if(!Chk_CMDend(9, 1)) 
-		return 0;
 
+	if(!Chk_CMDend(9, 1))
+    {
+    	if(retry--) goto retry_CMD9;	 
+		else return 0;
+	}
+    
+  	udelay(20000);
     return 1;
 }
+//[*]----------------------------------------------------------------------------------------------------[*]
+void SetResToBuf(unsigned char *p)
+{
+	unsigned long tmp;
+	
+	tmp = (rSDIRSP0 >> 24) | ( (rSDIRSP0 >> 8) & 0xff00 ) | ( (rSDIRSP0 & 0xff00) << 8 ) | ( (rSDIRSP0 & 0xff) << 24); 
+	memcpy(p ,&tmp ,sizeof(tmp));
+	tmp = (rSDIRSP1 >> 24) | ( (rSDIRSP1 >> 8) & 0xff00 ) | ( (rSDIRSP1 & 0xff00) << 8 ) | ( (rSDIRSP1 & 0xff) << 24); 
+	memcpy(p + (1 * sizeof(tmp)) ,&tmp ,sizeof(tmp));
+	tmp = (rSDIRSP2 >> 24) | ( (rSDIRSP2 >> 8) & 0xff00 ) | ( (rSDIRSP2 & 0xff00) << 8 ) | ( (rSDIRSP2 & 0xff) << 24); 
+	memcpy(p + (2 * sizeof(tmp)) ,&tmp ,sizeof(tmp));
+	tmp = (rSDIRSP3 >> 24) | ( (rSDIRSP3 >> 8) & 0xff00 ) | ( (rSDIRSP3 & 0xff00) << 8 ) | ( (rSDIRSP3 & 0xff) << 24); 
+	memcpy(p + (3 * sizeof(tmp)) ,&tmp ,sizeof(tmp));
+}
+//[*]----------------------------------------------------------------------------------------------------[*]
+void str2cid( CID_regs *regs, unsigned char *buff)
+{
+	int i;
+	regs->mid = buff[0];
+	regs->oid = (buff[1] << 8) | (buff[2]);
+	
+	if(!isMMC) {
+		for(i=0; i < 5; i++)
+			regs->pnm_sd[i] = buff[3+i];
+		regs->pnm_sd[5] = '\0';
+		regs->prv = buff[8];
+		regs->psn = (buff[9] << 24) | (buff[10] << 16) |(buff[11] << 8) | buff[12];
+		regs->mdt_sd = (buff[13] << 8) | buff[14];
+	} /* SD Only*/
+	else {
+		for(i=0; i < 6; i++)
+			regs->pnm[i] = buff[3+i];
+		regs->pnm[6] = '\0';
+		regs->prv = buff[9];
+		regs->psn = (buff[10] << 24) | (buff[11] << 16) |(buff[12] << 8) | buff[13];
+		regs->mdt = buff[14];
+	} /* MMC Only*/		
+}
+//[*]----------------------------------------------------------------------------------------------------[*]
+int str2csd( CSD_regs *regs, unsigned char  *buff, unsigned char  verSD)
+{
+	int ret;
+	regs->csd		= (buff[0] & 0xc0) >> 6;
+	
+	if (regs->csd > 2)
+		return -1;
+
+	if(verSD)
+	{
+		if(regs->csd != 1) goto NOT_SDHC;
+		/* CSD version 2.0; consists mostly of fixed values,
+		 * which host must override and not bother parsing out.
+		 * FIXME: we should parse CSD correctly for HC MMC cards */
+		(regs->taac).man	= 1;
+		(regs->taac).exp	= 6;
+		 regs->nsac			= 0;
+		(regs->tran_speed).man  = (buff[3] & 0x78) >> 3;
+		(regs->tran_speed).exp  = (buff[3]) & 0x07;
+		regs->ccc			= (buff[4] << 4) | ((buff[5] & 0xf0) >> 4);
+		regs->read_len		= 9;
+		regs->read_part		= 0;
+		regs->write_mis		= 0;
+		regs->read_mis		= 0;
+		regs->dsr			= (buff[6] & 0x10) ? 1 : 0;
+		regs->c_size		= ((buff[7] & 0x3f) << 16) | (buff[8] << 8) | buff[9];
+		regs->vcc_r_min		= 7;
+		regs->vcc_r_max		= 6;
+		regs->vcc_w_min		= 7;
+		regs->vcc_w_max		= 6;
+		regs->c_size_mult 	= 10 - 2;
+		regs->er_blk_en		= 1;
+		regs->er_size		= 0x7f;
+		regs->wp_grp_size	= 0;
+		regs->wp_grp_en		= 0;
+		regs->r2w_factor 	= 2;
+		regs->write_len  	= 9;
+		regs->write_part 	= 0;
+		regs->ffmt_grp   	= 0;
+		regs->copy			= (buff[14] & 0x40) ? 1 : 0;
+		regs->perm_wp		= (buff[14] & 0x20) ? 1 : 0;
+		regs->tmp_wp		= (buff[14] & 0x10) ? 1 : 0;
+		regs->ffmt			= 0;
+		
+		ret					= 1;
+	}
+	else
+	{
+NOT_SDHC:
+		if(isMMC) /* MMC */
+			regs->spec_vers	= (buff[0] & 0x3c) >> 2;
+		(regs->taac).man	= (buff[1] & 0x78) >> 3;
+		(regs->taac).exp	= (buff[1]) & 0x07;
+		regs->nsac			= buff[2];
+		(regs->tran_speed).man  = (buff[3] & 0x78) >> 3;
+		(regs->tran_speed).exp  = (buff[3]) & 0x07;
+		regs->ccc			= (buff[4] << 4) | ((buff[5] & 0xf0) >> 4);
+		regs->read_len		= (buff[5] & 0x0f);
+		regs->read_part		= (buff[6] & 0x80) ? 1 : 0;
+		regs->write_mis		= (buff[6] & 0x40) ? 1 : 0;
+		regs->read_mis		= (buff[6] & 0x20) ? 1 : 0;
+		regs->dsr			= (buff[6] & 0x10) ? 1 : 0;
+		regs->c_size		= ((buff[6] & 0x03) << 10) | (buff[7] << 2) | ((buff[8] & 0xc0) >> 6);
+		regs->vcc_r_min		= (buff[8] & 0x38) >> 3;
+		regs->vcc_r_max		= (buff[8] & 0x07);
+		regs->vcc_w_min		= (buff[9] & 0xe0) >> 5;
+		regs->vcc_w_max		= (buff[9] & 0x1c) >> 2;
+		regs->c_size_mult 	= ((buff[9] & 0x03) << 1) | ((buff[10] & 0x80) >> 7);
+		if(!isMMC) {
+			regs->er_blk_en	= (buff[10] & 0x40) ? 1: 0;
+			regs->er_size	= ((buff[10] & 0x3f) | (buff[11] & 0x80)) >> 7;
+			regs->wp_grp_size= (buff[11] & 0x7f);
+		} /* SD */
+		else {
+			regs->er_size   = (buff[10] & 0x7c) >> 2;
+			regs->er_grp_size= ((buff[10] & 0x03) << 3) |((buff[11] & 0xe0) >> 5);
+			regs->wp_grp_size= (buff[11] & 0x1f);
+		} /* MMC */
+		regs->wp_grp_en		= (buff[12] & 0x80) ? 1 : 0;
+		if(isMMC)	/* MMC */
+			regs->dflt_ecc	= (buff[12] & 0x60) >> 5;
+		regs->r2w_factor 	= (buff[12] & 0x1c) >> 2;
+		regs->write_len  	= ((buff[12] & 0x03) << 2) | ((buff[13] & 0xc0) >> 6);
+		regs->write_part 	= (buff[13] & 0x20) ? 1 : 0;
+		regs->ffmt_grp   	= (buff[14] & 0x80) ? 1 : 0;
+		regs->copy			= (buff[14] & 0x40) ? 1 : 0;
+		regs->perm_wp		= (buff[14] & 0x20) ? 1 : 0;
+		regs->tmp_wp		= (buff[14] & 0x10) ? 1 : 0;
+		regs->ffmt			= (buff[14] & 0x0c) >> 2;
+		if(isMMC)	/* MMC */
+			regs->ecc		= (buff[14] & 0x03);
+		
+		ret=0;
+	}
+	
+	return ret;		/* unknown CSD version */
+}
+
+
+
 //[*]----------------------------------------------------------------------------------------------------[*]
 int Chk_MMC_OCR(void)
 {
@@ -297,76 +491,63 @@ int Chk_MMC_OCR(void)
     //-- Negotiate operating condition for MMC, it makes card ready state
     for(i=0;i<15;i++)
     {
-    	rSDICARG=0xffc000;	    	    //CMD1(OCR:2.6V~3.6V)
+    	rSDICARG=0xffc000;	    	    	//CMD1(OCR:2.6V~3.6V)
     	rSDICCON=(0x1<<9)|(0x1<<8)|0x41;    //sht_resp, wait_resp, start, CMD1
 
     	//-- Check end of CMD1
     	if(Chk_CMDend(1, 1) & (rSDIRSP0==0x80ffc000)) 
 		{
 	    	//rSDICSTA=0xa00;	// Clear cmd_end(with rsp)
-	    	return 1;	// Success
+	    	return 1;			// Success
 		}	
     }
-    //rSDICSTA=0xa00;	// Clear cmd_end(with rsp)
-    return 0;		// Fail
+    //rSDICSTA=0xa00;			// Clear cmd_end(with rsp)
+    return 0;					// Fail
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
-int Chk_SD_OCR(void)
+int Chk_SD_OCR(unsigned char* bVer)
 {
     int i=0;
+	int CntVer=0;
+	unsigned long respChk;
 
+   	if(*bVer) respChk = 0xc0ff8000;
+    else respChk = 0x80ff8000;
+    
     //-- Negotiate operating condition for SD, it makes card ready state
-//    for(i=0;i<15;i++)
-    for(i=0;i<150;i++)
-    {
-//    	printf("SD i : %d\t", i);
-    	CMD55();    // Make ACMD
+	for(i=0;i<150;i++)
+	{
+		CMD55();    // Make ACMD
 
-    	rSDICARG = 0x00ff8000;					// ACMD41(OCR:2.7V~3.6V)
+ 		if(*bVer) rSDICARG = 0xff8000 | (1<<30);	// ACMD41(OCR:2.7V~3.6V)
+    	else rSDICARG = 0xff8000;
+    	
     	rSDICCON = (0x1<<9) | (0x1<<8) | 0x69;	// sht_resp, wait_resp, start, ACMD41
-
 		//-- Check end of ACMD41
-	    if(Chk_CMDend(41, 1) & (rSDIRSP0==0x80ff8000)) 
-		{
-		    //rSDICSTA=0xa00;	// Clear cmd_end(with rsp)
-		    return 1;	// Success	    
+	    Chk_CMDend(41, 1);
+	   	if(rSDIRSP0==respChk) 
+	    {
+	    	udelay(20000);	 	// Wait Card power up status
+	    	return 1;			// Success	    
 		}
-		udelay(20000); // Wait Card power up status
+		else
+		{
+			if(*bVer)
+			{
+				if(rSDIRSP0 == 0x80ff8000) CntVer++;
+				else CntVer=0;
+			}
+		
+			if(CntVer==5)
+			{
+				*bVer = 0; 	
+				udelay(20000);
+				return 1;
+			}
+			udelay(20000); 
+    	}
     }
-    //rSDICSTA=0xa00;	// Clear cmd_end(with rsp)
-    return 0;		// Fail
-    
-    
-    /*
-    	struct mmcsd_cmd  cmd;
-retry_sd_ocr:
-	// CMD55, make ACMD 
-	slot->rca = 0;
-	cmd.cmd = MMCSD_CMD55;
-	cmd.arg = (slot->rca << 16) & 0xffff0000;
-	cmd.res_type = MMCSD_RES_TYPE_R1;
-	cmd.res_flag = 0;
-	cmd.t_res = MMCSD_TIME_NCR_MAX;
-	cmd.t_fin = MMCSD_TIME_NRC_MIN;
-    slot->send_cmd(slot, &cmd);
-	
-	// ACMD41, SEND_OP_COND 
-	cmd.cmd = MMCSD_ACMD41;
-	slot->ocr = MMCSD_VDD_27_36;
-	cmd.arg = slot->ocr;
-	cmd.res_type = MMCSD_RES_TYPE_R1;
-	cmd.res_flag = MMCSD_RES_FLAG_NOCRC;
-	cmd.t_res = MMCSD_TIME_NCR_MAX;
-	cmd.t_fin = MMCSD_TIME_NRC_MIN;
-	slot->send_cmd(slot, &cmd);
-
-	if(SDIRSP0 == 0x80ff8000) {
-		mdelay(10);	// wait card power up status
-		return 1;	//success
-	} else
-		goto retry_sd_ocr;
-	return 0;		// fail
-	*/
+    return 0;			// Fail
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
 int CardBusWidth = 0;
@@ -375,13 +556,13 @@ void SetBus(void)
 {
 SET_BUS:
 	CMD55();	// Make ACMD
-	//-- CMD6 implement
+				//-- CMD6 implement
 	rSDICARG = CardBusWidth<<1;	    	//Width 0: 1bit, 1: 4bit
 	rSDICCON=(0x1<<9)|(0x1<<8)|0x46;	//sht_resp, wait_resp, start, CMD55
 
-	if(!Chk_CMDend(6, 1))   // ACMD6
+	if(!Chk_CMDend(6, 1))   			// ACMD6
 		goto SET_BUS;
-	//rSDICSTA=0xa00;	    // Clear cmd_end(with rsp)
+	//rSDICSTA=0xa00;	    			// Clear cmd_end(with rsp)
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
 void Card_sel_desel(char sel_desel)
@@ -405,8 +586,8 @@ RECMDS7:
 	else
 	{
 RECMDD7:
-		rSDICARG=0<<16;		//CMD7(RCA,stuff bit)
-		rSDICCON=(0x1<<8)|0x47;	//no_resp, start, CMD7
+		rSDICARG=0<<16;				//CMD7(RCA,stuff bit)
+		rSDICCON=(0x1<<8)|0x47;		//no_resp, start, CMD7
 
 		//-- Check end of CMD7
 		if(!Chk_CMDend(7, 0))
@@ -421,32 +602,26 @@ unsigned int SD_card_init(void);
 //[*]----------------------------------------------------------------------------------------------------[*]
 ulong mmc_bread(int dev_num, ulong blknr, ulong blkcnt, ulong *dst)
 {
-//	int mmc_block_size = MMC_BLOCK_SIZE;
-//	ulong src = blknr * mmc_block_size + CFG_MMC_BASE;
-
 	if(blkcnt==0)
 	{
 		printf("Why block_cnt == 0?? \n");
 		return 0;
 	}
-//	mmc_read(src, (uchar *)dst, blkcnt*mmc_block_size);
-//	printf("mmc_bread LBA=%d, Count=%d\n",blknr,blkcnt);
+	
+	
 	SD_Read((uchar *)dst, blknr, blkcnt);
-//	printf("mmc_bread end\n");	
 	return blkcnt;
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
 int mmc_write(uchar *src, ulong dst, int size)
 {
 	printf("\nmmc_write should not be called !!!!\n");
-	//SD_Write(
 	return 0;
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
 int mmc_read(ulong src, uchar *dst, int size)
 {
 	printf("\nmmc_read should not be called !!!!\n");
-	//SD_Write(
 	return 0;
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
@@ -482,8 +657,11 @@ int mmc2info(ulong addr)
 unsigned int SD_card_init(void)
 {
 	int i;
-	unsigned long pclk;
-
+	unsigned char bVerSD;
+	unsigned long pclk,tmpRes,blkSizeCnt;
+	unsigned char resVal[RES_LEN_LONG];
+	CSD_regs csd;
+	
 	if(mmc_init_once == 1) return 1;	// already done !!
 	
 	rSDIDCON = 0;
@@ -501,38 +679,19 @@ unsigned int SD_card_init(void)
 	rSDIDTIMERH = 0x001f;
 
 	pclk = get_PCLK();
-	//printf("\nSystem Frequency is %dHz\n",pclk);
-
-	//rSDIPRE = pclk/(INICLK)-1;	// 400KHz
 	rSDIPRE = MMCSD_PCLK/(2*MMCSD_INICLK) -1;
-	//printf("\nInit. Frequency is %dHz\n",(pclk/(rSDIPRE+1)));
-
-	rSDICON = (1<<4) | (1<<1) | 1;	// Type A, clk enable	(For Little Endian by Salamander)
-	
-	//rSDIFSTA   = rSDIFSTA|(1<<16);	// FIFO reset
-	rSDICON = rSDICON | (1<<1);		// FIFO reset
-	rSDIBSIZE  = 0x200;			// 512byte(128word)
+	rSDICON = (1<<4) | (1<<1) | 1;		// Type A, clk enable	(For Little Endian by Salamander)
+	rSDICON = rSDICON | (1<<1);			// FIFO reset
+	rSDIBSIZE  = 0x200;					// 512byte(128word)
 	/* Set timeout count */
 	rSDIDTIMERL = 0xffff;
 	rSDIDTIMERH = 0x001f;
 
-	for(i=0;i<0x1000;i++)	// Wait 74SDCLK for MMC card
+	for(i=0;i<0x1000;i++)				// Wait 74SDCLK for MMC card
 		;  
-
-	CMD0();  // Goto idel state
-
-	//-- Check MMC card OCR
-	if(Chk_MMC_OCR())
-	{
-		printf("\nMMC found.\n");
-		isMMC=1;
-		goto RECMD2;
-	}
-
-	//printf("MMC check end!!\n");
-	
-	//-- Check SD card OCR
-	if(Chk_SD_OCR()) 
+	CMD0();  							// Goto idel state(RESET)
+	bVerSD=CMD8();						// check SD VERSION 
+	if(Chk_SD_OCR(&bVerSD)) 
 	{
 		isMMC=0;
 		printf("\nSD found : ");
@@ -540,34 +699,50 @@ unsigned int SD_card_init(void)
 	else
 	{
 		printf("\nSD Initialize fail..\n\n");
-		return 0;
+		if(Chk_MMC_OCR())
+		{
+			printf("\nMMC found.\n");
+			isMMC=1;
+		}
+		else
+			return 0;
 	}
-
+	
 RECMD2:
-	//-- Check attaced cards, it makes card identification state
+	/* ALL_SEND_CID */
 	rSDICARG=0x0;   // CMD2(stuff bit)
 	rSDICCON=(0x1<<10)|(0x1<<9)|(0x1<<8)|0x42; //lng_resp, wait_resp, start, CMD2
-
-	//-- Check end of CMD2
 	if(!Chk_CMDend(2, 1)) 
 		goto RECMD2;
-	//rSDICSTA=0xa00;	// Clear cmd_end(with rsp)
-
-	//printf("\nEnd id\n");
-
 
 RECMD3:
 	//--Send RCA
-	rSDICARG = 0;	   	// CMD3(MMC:Set RCA, SD:Ask RCA-->SBZ)
-	//rSDICARG = isMMC<<16;	   	// CMD3(MMC:Set RCA, SD:Ask RCA-->SBZ)
-	rSDICCON = (0x1<<9)|(0x1<<8)|0x43;	// sht_resp, wait_resp, start, CMD3
+	rSDICARG = 0;	   			
+	rSDICCON = (0x1<<9)|(0x1<<8)|0x43;	
+	Chk_CMDend(3, 1); 
 
-	//-- Check end of CMD3
-	if(!Chk_CMDend(3, 1)) 
+	tmpRes = rSDIRSP0;
+	if(!(tmpRes & 0x600)) 
+	{
+		printf("CMD3( Read CSD) error \n");
 		goto RECMD3;
- 
-	//rSDICSTA = 0xa00;	// Clear cmd_end(with rsp)
+	} 	
+	
+	RCA = tmpRes >> 16;
+	if(!CMD9()){		
+		printf("CMD9( Read CSD) error \n");
+		goto RECMD3;
+	}	 
 
+	SetResToBuf(resVal);
+ 	sdhc=str2csd(&csd,resVal,bVerSD);
+ 	if(sdhc < 0 ) {
+ 		printf("Not support SD VERSION !!!\n");
+ 		return sdhc; 
+ 	}	
+	
+	if(sdhc) blkSizeCnt = (1 + csd.c_size) * (0x01 << (csd.c_size_mult + 2));
+	
 	//--Publish RCA
 	if(isMMC) 
 	{
@@ -577,29 +752,34 @@ RECMD3:
 	}
 	else
 	{
-		RCA = ( rSDIRSP0 & 0xffff0000 )>>16;
-		//rSDICARG = (RCA<<16) & 0xffff0000;	// CMD7(RCA,stuff bit)
-		
-		//printf("RCA=0x%x\n",RCA);
-//		rSDIPRE=pclk/(SDCLK);	// Salamander pclk=66Mhz, prescaler = 2, SD_CLK = 22Mhz
-		//rSDIPRE=3;  // test 16Mhz
-		//printf("SD Frequency is %dMHz\n",(pclk/(rSDIPRE+1))/1000000);
 		rSDIPRE = MMCSD_PCLK/(2*MMCSD_SD_NORCLK) -1;
-		//rSDIPRE = pclk/(SDCLK+2);	// Salamander pclk=66Mhz, prescaler = 2, SD_CLK = 22Mhz
-#if 0 /* org */
-		printf("SD Frequency is %dMHz\n",(pclk/(rSDIPRE+1))/1000000);
-#else /* shkim patch */
 		printf("SD Frequency is %dMHz\n",(MMCSD_PCLK/(rSDIPRE+1))/(2*1000000));
-#endif
 	}	
-	//--State(stand-by) check
-	if( rSDIRSP0 & (0x1e00!=0x600) )  // CURRENT_STATE check
-		goto RECMD3;
 
-	//printf("\nIn stand-by\n");
+	udelay(20000);
 
+RECMD13:	
+	/* check card-state. if card-state != StandBy, return BUSY */
+	rSDICARG = (RCA << 16) & 0xffff0000;
+	rSDICCON = (0x1<<9)|(0x1<<8)|0x4d;	
+	if(!Chk_CMDend(13, 1)) 
+	{	
+		printf( "CMD13 failed \n");
+		goto RECMD13;
+	}else{
+		tmpRes = rSDIRSP0;
+		if (tmpRes & (0x100000 | 0x80000)) {
+        	printf( "CMD13 failed ecc\n");
+            goto RECMD13;
+        }					
+		if (!(tmpRes & 0x600)) {
+        	printf( "CMD13 failed Busy\n");
+        	goto RECMD13;    
+       	}
+		udelay(20000);
+	}
+	
 	Card_sel_desel(1);	// Select
-
 	if(!isMMC)
 	{
 		CardBusWidth=1;
@@ -610,15 +790,26 @@ RECMD3:
 		CardBusWidth=0;
 		SetBus();	// For MMC
 	}
-
-/*
-	Card_sel_desel(0);	// DeSelect for IDLE
-
-	if(!CMD9())
-		printf("Get CSD fail!!!\n");
-
-	Card_sel_desel(1);	// Select
-*/
+	
+	udelay(50000);
+#if 0	
+	if( (csd.read_len > 9) || (csd.write_len > 9) ) 
+    {
+RECMD16:
+		rSDICARG = 512;	    
+		rSDICCON = (0x1<<9) | (0x1<<8) | 0x50;	// short_rsp, wait_resp, start, CMD8
+		
+		if(!Chk_CMDend(16, 1)){
+			printf("CMD16 failed\n");
+			goto RECMD16;
+		}
+		
+		if(sdhc) blkSizeCnt <<= csd.read_len - 9; 
+		
+		csd.read_len = 9;
+		csd.write_len = 9;
+	}	
+#endif
 
 	{
 		/* fill in device description */
@@ -628,16 +819,8 @@ RECMD3:
 		mmc_dev.type = 0;
 		/* FIXME fill in the correct size (is set to 32MByte) */
 		mmc_dev.blksz = 512;
-		//mmc_dev.lba = 0x10000;
 		mmc_dev.lba = CardSize / 512;
 		mmc_dev.part_type = PART_TYPE_DOS;
-		/*
-		sprintf(mmc_dev.vendor,"Man %02x%02x%02x Snr %02x%02x%02x",
-				cid->id[0], cid->id[1], cid->id[2],
-				cid->sn[0], cid->sn[1], cid->sn[2]);
-		sprintf(mmc_dev.product,"%s",cid->name);
-		sprintf(mmc_dev.revision,"%x %x",cid->hwrev, cid->fwrev);
-		*/
 
 		sprintf(mmc_dev.vendor,"Man aESOP1 Snr 123456");
 		sprintf(mmc_dev.product,"%s","SDxxxMB");
@@ -666,84 +849,62 @@ void SD_Read(unsigned char *pucdata, unsigned long ulLBA, unsigned long ulSector
 	kk = 0;
 
 	rSDICON = rSDICON | (1<<1);		// FIFO reset
-
-//	rSDIDCON=(2<<22)|(1<<19)|(1<<17)|(CardBusWidth<<16)|(1<<14)|(2<<12)|(ulSectors<<0);	//Salamander
 	rSDIDCON = (1<<19) | (1<<17) | (CardBusWidth<<16) | (2<<12) | (ulSectors<<0);
 
-
-	//Word Rx, Rx after cmd, blk, 4bit bus, Rx start, blk num, data start, data transmit mode
-
-	rSDICARG=ulLBA*512;	// CMD17/18(addr)
-//	printf("rSDICARG :%x,ulLBA %x, ulLBA*512 %x\n", rSDICARG, ulLBA, ulLBA*512);
-	//rSDICARG=0x0;	// CMD17/18(addr)
+	if(!sdhc)
+		rSDICARG=ulLBA*512;				// CMD17/18(addr)
+	else
+		rSDICARG=ulLBA;
 
 RERDCMD:
-//	printf("RERCMD!!\n");
-	if(ulSectors<2)	// SINGLE_READ
+	if(ulSectors<2)								// SINGLE_READ
 	{
-		//printf("SINGLE\n");
-		rSDICCON = (0x1<<9)|(0x1<<8)|0x51;    // sht_resp, wait_resp, dat, start, CMD17
-		if(!Chk_CMDend(17, 1))	//-- Check end of CMD17
+		rSDICCON = (0x1<<9)|(0x1<<8)|0x51;    	// sht_resp, wait_resp, dat, start, CMD17
+		if(!Chk_CMDend(17, 1))					//-- Check end of CMD17
 			goto RERDCMD;
 	}
-	else	// MULTI_READ
+	else	
 	{
-		//printf("MULTI\n");
-		rSDICCON = (0x1<<9)|(0x1<<8)|0x52;    // sht_resp, wait_resp, dat, start, CMD18
-		if(!Chk_CMDend(18, 1))	//-- Check end of CMD18 
+		rSDICCON = (0x1<<9)|(0x1<<8)|0x52;    	// sht_resp, wait_resp, dat, start, CMD18
+		if(!Chk_CMDend(18, 1))					//-- Check end of CMD18 
 			goto RERDCMD;
 	}
-	//rSDICSTA=0xa00;			// Clear cmd_end(with rsp)
-
-//	state = rSDICSTA;
-//	rSDICSTA = state;	// Clear cmd_end(with rsp)	    
-//	printf("\n Read CMD end\n");
+	//rSDICSTA=0xa00;							// Clear cmd_end(with rsp)
 
 	total_word = 128*ulSectors*4; 
 	while(rd_cnt < total_word)
 	{
-//		for(kk=0; kk<1; kk++)	;	
 		state = rSDIDSTA;
-		if((state&0x20)==0x20) // Check timeout 
+		if((state&0x20)==0x20) 				// Check timeout 
 		{
-			rSDIDSTA=(0x1<<0x5);  // Clear timeout flag
-			//printf("\n[Time Out !!!] %d, state=%x  status=%x\n",rd_cnt,state,rSDIFSTA);
-			//while(1);
+			rSDIDSTA=(0x1<<0x5);  			// Clear timeout flag
 			break;
 		}
 		status = rSDIFSTA;
-		if( (status&0x1000) == 0x1000 )	// Is Rx data?
+		if( (status&0x1000) == 0x1000 )		// Is Rx data?
 		{
 			*Rx_buffer1++=rSDIDAT;
-			//printf("%02x ",Rx_buffer1[rd_cnt]);
 			rd_cnt++;
-//			printf("%02x ", rd_cnt);
-//			if(rd_cnt%8==0) printf("\n");			
+
 		}
 	}
 
-	//printf("\n After Read loop %d %d\n",rd_cnt, kk);		
-
-	//-- Check end of DATA
-	//printf("\n[Start Chk_DATend !!!]\n");
 	if(!Chk_DATend()) 
 		printf("dat error\n");
 
-    rSDIDSTA = 0x10;	// Clear data Tx/Rx end
-
-	//printf("\n[End Chk_DATend !!!]\n");
+    rSDIDSTA = 0x10;						// Clear data Tx/Rx end
 
 	if(ulSectors>1)
 	{
 RERCMD12:
 		//--Stop cmd(CMD12)
-		rSDICARG=0x0;	    		//CMD12(stuff bit)
+		rSDICARG=0x0;	    				//CMD12(stuff bit)
 		rSDICCON=(0x1<<9)|(0x1<<8)|0x4c;	//sht_resp, wait_resp, start, CMD12
 
 		//-- Check end of CMD12
 		if(!Chk_CMDend(12, 1)) 
 			goto RERCMD12;
-		//rSDICSTA=0xa00;			// Clear cmd_end(with rsp)
+		//rSDICSTA=0xa00;					// Clear cmd_end(with rsp)
 	}
 }
 //[*]----------------------------------------------------------------------------------------------------[*]
@@ -753,18 +914,11 @@ void SD_Write(unsigned char * pucdata, unsigned long ulLBA, unsigned long ulSect
 	unsigned int 	*Tx_buffer1;	//128[word]*16[blk]=8192[byte]
 
 	Tx_buffer1 = (unsigned int *)(pucdata);
-
 	wt_cnt=0;
 
-	printf("### HERE WRITE\n");
-
-	//rSDIFSTA   = rSDIFSTA|(1<<16);	// FIFO reset
-	rSDICON = rSDICON | (1<<1);		// FIFO reset
-
+	rSDICON = rSDICON | (1<<1);					// FIFO reset
 	rSDIDCON = (2<<22)|(1<<20)|(1<<17)|(CardBusWidth<<16)|(1<<14)|(3<<12)|(ulSectors<<0);	
-		//Word Tx, Tx after rsp, blk, 4bit bus, Tx start, blk num
-
-	rSDICARG = ulLBA*512;	    // CMD24/25(addr)
+	rSDICARG = ulLBA*512;	    				// CMD24/25(addr)
 
 REWTCMD:
 	if(ulSectors<2)	// SINGLE_WRITE
@@ -789,7 +943,6 @@ REWTCMD:
 		{
 			rSDIDAT = *Tx_buffer1++;				
 			wt_cnt++;
-//				printf("Block No.=%d, wt_cnt=%d\n",block,wt_cnt);
 		}
 	}
 
@@ -806,7 +959,6 @@ REWTCMD:
 REWCMD12:
 
 		rSDIDCON = (1<<18)|(1<<17)|(0<<16)|(1<<14)|(1<<12)|(ulLBA<<0); 	
-
 		rSDICARG = 0x0;	    		  //CMD12(stuff bit)
 		rSDICCON = (0x1<<9)|(0x1<<8)|0x4c;    //sht_resp, wait_resp, start, CMD12
 

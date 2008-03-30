@@ -1,6 +1,9 @@
 Open2x Bootloader (U-Boot).
 ---------------------------
 
+"DO NOT FLASH THESE FILES TO AN F200 UNLESS YOU WANT A BRICK!"
+"F200 SUPPORT IS IN THE WORKS BUT NOT DONE YET"
+
 Please refer to http://wiki.open2x.org/open2x/wiki/index.php?title=Bootloader before you
 do ANYTHING with these files.
 
