@@ -10,6 +10,10 @@
  * DIGNSYS Inc. < www.dignsys.com >
  * Kane Ahn < hbahn@dignsys.com >
  *
+ * (C) Copyright 2005-2008
+ * Open2x Project
+ * John Willis
+ *
  * See file CREDITS for list of people who contributed to this
  * project.
  *
@@ -152,6 +156,17 @@
 #define SOUND_LOGO_PROCESS	1
 
 #define writeb(b,addr) (*(volatile unsigned char *) (addr) = (b))
+
+#if WINTEK_LCD
+#define CS_HIGH(gpio)	(gpio->GPIOOUT['H'-'A'] = gpio->GPIOOUT['H'-'A'] | (1<<4) )
+#define CS_LOW(gpio) 	(gpio->GPIOOUT['H'-'A'] = gpio->GPIOOUT['H'-'A'] & (~(1<<4)) )
+
+#define SCL_HIGH(gpio) 	(gpio->GPIOOUT['M'-'A'] = gpio->GPIOOUT['M'-'A'] | (1<<4) )
+#define SCL_LOW(gpio) 	(gpio->GPIOOUT['M'-'A'] = gpio->GPIOOUT['M'-'A'] & (~(1<<4)) )
+
+#define SDA_HIGH(gpio) 	(gpio->GPIOOUT['M'-'A'] = gpio->GPIOOUT['M'-'A'] | (1<<3) )
+#define SDA_LOW(gpio) 	(gpio->GPIOOUT['M'-'A'] = gpio->GPIOOUT['M'-'A'] & (~(1<<3)) )
+#endif
 
 #define DEBUG_MMSP2DTK		0
 #if DEBUG_MMSP2DTK

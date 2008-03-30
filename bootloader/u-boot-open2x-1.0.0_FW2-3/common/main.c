@@ -401,9 +401,9 @@ void main_loop (void)
 # endif	/* CONFIG_BOOT_RETRY_TIME */
 
 #ifdef CONFIG_BOOTCOUNT_LIMIT
-	if (bootlimit && (bootcount > bootlimit)) {
-		printf ("Warning: Bootlimit (%u) exceeded. Using altbootcmd.\n",
-		        (unsigned)bootlimit);
+	if (bootlimit && (bootcount > bootlimit)) 
+	{
+		printf ("Warning: Bootlimit (%u) exceeded. Using altbootcmd.\n", (unsigned)bootlimit);
 		s = getenv ("altbootcmd");
 	}
 	else
@@ -601,7 +601,8 @@ void main_loop (void)
 
 	debug ("### main_loop: bootcmd=\"%s\"\n", s ? s : "<UNDEFINED>");
 
-	if (bootdelay >= 0 && s && !abortboot (bootdelay)) {
+	if(bootdelay >= 0 && s && !abortboot (bootdelay)) 
+	{
 # ifdef CONFIG_AUTOBOOT_KEYED
 		int prev = disable_ctrlc(1);	/* disable Control C checking */
 # endif
@@ -609,8 +610,7 @@ void main_loop (void)
 # ifndef CFG_HUSH_PARSER
 		run_command (s, 0);
 # else
-		parse_string_outer(s, FLAG_PARSE_SEMICOLON |
-				    FLAG_EXIT_FROM_LOOP);
+		parse_string_outer(s, FLAG_PARSE_SEMICOLON | FLAG_EXIT_FROM_LOOP);
 # endif
 
 # ifdef CONFIG_AUTOBOOT_KEYED
@@ -619,14 +619,15 @@ void main_loop (void)
 	}
 
 # ifdef CONFIG_MENUKEY
-	if (menukey == CONFIG_MENUKEY) {
+	if (menukey == CONFIG_MENUKEY) 
+	{
 	    s = getenv("menucmd");
-	    if (s) {
+	    if (s) 
+	    {
 # ifndef CFG_HUSH_PARSER
 		run_command (s, bd, 0);
 # else
-		parse_string_outer(s, FLAG_PARSE_SEMICOLON |
-				    FLAG_EXIT_FROM_LOOP);
+		parse_string_outer(s, FLAG_PARSE_SEMICOLON | FLAG_EXIT_FROM_LOOP);
 # endif
 	    }
 	}

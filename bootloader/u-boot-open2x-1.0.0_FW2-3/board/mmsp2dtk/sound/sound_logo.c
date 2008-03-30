@@ -102,6 +102,16 @@ void PlayerSoundLogo(int flag)
 	U32 filesize,memaddr;
 	int ret;
 
+#ifdef CONFIG_GPF200
+	if(flag)
+	{
+		nand_read_func(0x1000000, 0x80000,0xB0000);	
+		return;
+	}
+	
+	flag=0;
+#endif	
+	
 	ret = nand_read_jffs2_func(PA_SOUND_DMA_BASE1, WAV_BASE, 0x40000);
 
 	memcpy(&waveheader ,PA_SOUND_DMA_BASE1 ,sizeof(waveheader));
@@ -117,6 +127,7 @@ void PlayerSoundLogo(int flag)
 		printf("BytesPerSample:%d\n", waveheader.BytesPerSample);
 		printf("BitsPerSample:%d\n", waveheader.BitsPerSample);
 		printf("data_size:%x\n", waveheader.data_size);
+		//nand_read_func(0x1000000, 0x80000,0xB0000);	
 		return;
 	}
 

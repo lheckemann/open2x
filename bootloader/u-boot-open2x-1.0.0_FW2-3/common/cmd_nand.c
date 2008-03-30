@@ -730,7 +730,8 @@ static inline int NanD_Command(struct nand_chip *nand, unsigned char command)
 	/* Lower the CLE line */
 	NAND_CTL_CLRCLE(nandptr);
 #ifdef NAND_NO_RB
-	if(command == NAND_CMD_RESET){
+	if(command == NAND_CMD_RESET)
+	{
 		u_char ret_val;
 		NanD_Command(nand, NAND_CMD_STATUS);
 		do{
@@ -840,7 +841,8 @@ static int NanD_IdentChip(struct nand_chip *nand, int floor, int chip)
 	dprintf("NanD_IdentChip 0\n");
 	NAND_ENABLE_CE(nand);  /* set pin low */
 	/* Reset the chip */
-	if (NanD_Command(nand, NAND_CMD_RESET)) {
+	if (NanD_Command(nand, NAND_CMD_RESET)) 
+	{
 #ifdef NAND_DEBUG
 		printf("NanD_Command (reset) for %d,%d returned true\n",
 		       floor, chip);
@@ -848,14 +850,17 @@ static int NanD_IdentChip(struct nand_chip *nand, int floor, int chip)
 		NAND_DISABLE_CE(nand);  /* set pin high */
 		return 0;
 	}
-        #if 1
+
+#if 1
         NanD_WaitReady(nand, 0);
         NAND_DISABLE_CE(0);
-	NAND_ENABLE_CE(nand);  /* set pin low */
-        #endif
+		NAND_ENABLE_CE(nand);  /* set pin low */
+#endif
+
 	dprintf("NanD_IdentChip 1\n");
 	/* Read the NAND chip ID: 1. Send ReadID command */
-	if (NanD_Command(nand, NAND_CMD_READID)) {
+	if (NanD_Command(nand, NAND_CMD_READID)) 
+	{
 #ifdef NAND_DEBUG
 		printf("NanD_Command (ReadID) for %d,%d returned true\n",
 		       floor, chip);
