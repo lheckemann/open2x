@@ -822,11 +822,16 @@ static void add_task_handler(void *data)
 
 	add_mmcsd_device(slot);
 
+	#ifdef CONFIG_OPEN2X_SD_AUTOMOUNT
 	printk("mount...1 \n");
-#if 1
-	sys_mount("/dev/mmcsd/disc0/part1", "/mnt/sd", "auto", 0xC0ED0000|MS_NOATIME|MS_SYNCHRONOUS, "iocharset=utf8");
-#endif
+
+	argv[0] = "/bin/mount";
+	argv[1] = "/mnt/sd";
+	argv[2] = 0;
+	call_usermodehelper(argv[0], argv, 0);
+
 	printk("mount...2: \n");
+	#endif /* CONFIG_OPEN2X_SD_AUTOMOUNT */
 
 
 #if 1

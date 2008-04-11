@@ -10,6 +10,8 @@ dep_tristate '  NAND Device Support' CONFIG_MTD_NAND $CONFIG_MTD
 if [ "$CONFIG_MTD_NAND" = "y" -o "$CONFIG_MTD_NAND" = "m" ]; then
    bool '    Verify NAND page writes' CONFIG_MTD_NAND_VERIFY_WRITE
    bool '    Simple Block Device for Nand Flash(BON FS)' CONFIG_MTD_NAND_BONFS
+   bool '    Open2x single NAND partition scheme' CONFIG_MTD_OPEN2X_SINGLE_PARTITION
+   bool '    Force erase bad blocks' CONFIG_OPEN2X_IGNORE_BB_ERASE
 fi
 
 if [ "$CONFIG_ARM" = "y" ]; then

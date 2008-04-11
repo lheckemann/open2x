@@ -7,6 +7,7 @@ comment 'MMC/SD Card support'
 tristate 'MMC/SD support' CONFIG_MMCSD
 if [ "$CONFIG_MMCSD" = "y" -o "$CONFIG_MMCSD" = "m" ]; then
   bool '  MMC/SD debugging' CONFIG_MMCSD_DEBUG
+  bool '  Open2x SD automounter' CONFIG_OPEN2X_SD_AUTOMOUNT
   if [ "$CONFIG_MMCSD_DEBUG" = "y" ]; then
     int '  MMC/SD debugging verbosity (0=quiet, 3=noisy)' CONFIG_MMCSD_DEBUG_VERBOSE 0
   fi

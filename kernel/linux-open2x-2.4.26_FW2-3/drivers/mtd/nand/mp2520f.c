@@ -103,6 +103,7 @@ static struct mtd_partition partition_info[] = {
 real 0x220000	    rootfs(YAFFS)	0x1E00000
 	 0x2000000	    YAFFS(FAT)		0x2000000
 */
+#ifdef CONFIG_MTD_OPEN2X_SINGLE_PARTITION
 static struct mtd_partition partition_info[] = {
 	{
 		name:		"Bootloader",
@@ -115,7 +116,29 @@ static struct mtd_partition partition_info[] = {
 		offset:		MTDPART_OFS_APPEND,
 	}, {
 		name:		"Param",
-		size:		0x60000,					/* Real address */
+		size:		0x60000,					/* Real address */				
+		offset:		MTDPART_OFS_APPEND,
+	}, {
+		name:		"Filesystem",
+		size:		MTDPART_SIZ_FULL,					/*   30MB 		*/
+		offset:		MTDPART_OFS_APPEND,
+	}
+};
+#define NUM_PARTITIONS 4
+#else
+static struct mtd_partition partition_info[] = {
+	{
+		name:		"Bootloader",
+		size:		0x80000,
+		offset:		0,
+		mask_flags:	MTD_WRITEABLE,  			/* force read-only */
+	}, {
+		name:		"Kernel",
+		size:		0x120000,
+		offset:		MTDPART_OFS_APPEND,
+	}, {
+		name:		"Param",
+		size:		0x60000,					/* Real address */				
 		offset:		MTDPART_OFS_APPEND,
 	}, {
 		name:		"Filesystem",
@@ -128,7 +151,8 @@ static struct mtd_partition partition_info[] = {
 	}
 };
 #define NUM_PARTITIONS 5
-#endif
+#endif /* CONFIG_MTD_OPEN2X_SINGLE_PARTITION */
+#endif /* 0 */
 
 
 #endif /* CONFIG_MTD_NAND_BONFS */

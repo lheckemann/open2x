@@ -1712,11 +1712,13 @@ static int nand_erase (struct mtd_info *mtd, struct erase_info *instr)
 
 	while (len) {
 		/* Check if we have a bad block, we do not erase bad blocks ! */
+		#ifndef CONFIG_OPEN2X_IGNORE_BB_ERASE
 		if (this->block_bad(mtd, (loff_t) page, 0)) {
 			printk (KERN_WARNING "nand_erase: attempt to erase a bad block at page 0x%08x\n", page);
 			instr->state = MTD_ERASE_FAILED;
 			goto erase_exit;
 		}
+		#endif /* CONFIG_OPEN2X_IGNORE_BB_ERASE */
 
 		/* Send commands to erase a page */
 		this->cmdfunc (mtd, NAND_CMD_ERASE1, -1, page);
