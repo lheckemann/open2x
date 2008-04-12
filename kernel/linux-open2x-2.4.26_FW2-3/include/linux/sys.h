@@ -4,7 +4,7 @@
 /*
  * system call entry points ... but not all are defined
  */
-#define NR_syscalls 270
+#define NR_syscalls 348
 
 /*
  * These are system calls that will be removed at some time

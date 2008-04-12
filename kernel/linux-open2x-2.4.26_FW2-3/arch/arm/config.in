@@ -511,6 +511,7 @@ if [ "$CONFIG_ARCH_SA1100" = "y" -o \
      "$CONFIG_ARCH_INTEGRATOR" = "y" ]; then
    dep_bool 'Support CPU clock change (EXPERIMENTAL)' CONFIG_CPU_FREQ $CONFIG_EXPERIMENTAL
 fi
+bool 'kexec system call' CONFIG_KEXEC
 
 source drivers/pci/Config.in
 bool 'Support for hot-pluggable devices' CONFIG_HOTPLUG

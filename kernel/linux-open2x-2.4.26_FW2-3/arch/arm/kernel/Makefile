@@ -59,6 +59,7 @@ obj-$(CONFIG_MODULES)	+= armksyms.o
 obj-$(CONFIG_ARTHUR)	+= arthur.o
 obj-$(CONFIG_ISA_DMA)	+= dma-isa.o
 obj-$(CONFIG_PCI)	+= bios32.o $(pci-$(MACHINE)) $(pci-y)
+obj-$(CONFIG_KEXEC)     += machine_kexec.o relocate_kernel.o
 
 ifneq ($(MACHINE),ebsa110)
   obj-y		+= io.o

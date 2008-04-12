@@ -10,7 +10,7 @@
  *  This file is included twice in entry-common.S
  */
 #ifndef NR_syscalls
-#define NR_syscalls 288
+#define NR_syscalls 348
 #else
 
 __syscall_start:
@@ -271,6 +271,101 @@ __syscall_start:
 		.long	SYMBOL_NAME(sys_ni_syscall) /* set_thread_area */
 /* 255 */	.long	SYMBOL_NAME(sys_ni_syscall) /* get_thread_area */
 		.long	SYMBOL_NAME(sys_ni_syscall) /* set_tid_address */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 260 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 265 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 270 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 275 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 280 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 285 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 290 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 295 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 300 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 305 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 310 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 315 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 320 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 325 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 330 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 335 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 340 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+/* 345 */	.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+#ifdef CONFIG_KEXEC
+		.long	SYMBOL_NAME(sys_kexec_load)
+#else
+		.long	SYMBOL_NAME(sys_ni_syscall) /* padding */
+#endif
 __syscall_end:
 
 		.rept	NR_syscalls - (__syscall_end - __syscall_start) / 4

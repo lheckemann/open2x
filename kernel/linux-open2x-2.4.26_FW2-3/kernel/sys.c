@@ -14,6 +14,8 @@
 #include <linux/prctl.h>
 #include <linux/init.h>
 #include <linux/highuid.h>
+#include <linux/kernel.h>
+#include <linux/kexec.h>
 
 #include <asm/uaccess.h>
 #include <asm/io.h>
@@ -300,6 +302,7 @@ asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd, void * arg)
 			magic2 != LINUX_REBOOT_MAGIC2B))
 		return -EINVAL;
 
+	printk("KEXEC: sys_reboot(%x)\n", cmd);
 	lock_kernel();
 	switch (cmd) {
 	case LINUX_REBOOT_CMD_RESTART:
@@ -341,6 +344,30 @@ asmlinkage long sys_reboot(int magic1, int magic2, unsigned int cmd, void * arg)
 		printk(KERN_EMERG "Restarting system with command '%s'.\n", buffer);
 		machine_restart(buffer);
 		break;
+#ifdef CONFIG_KEXEC
+    case LINUX_REBOOT_CMD_KEXEC:
+    {
+        struct kimage *image;
+        printk("KEXEC: cmd == LINUX_REBOOT_CMD_KEXEC\n");
+        if (arg) {
+            unlock_kernel();
+            return -EINVAL;
+        }
+        image = xchg(&kexec_image, 0);
+        if (!image) {
+            unlock_kernel();
+            return -EINVAL;
+        }
+        printk("KEXEC: reboot notify\n");
+        notifier_call_chain(&reboot_notifier_list, SYS_RESTART, NULL);
+        //MV system_state = SYSTEM_BOOTING;
+        //MV device_shutdown();
+        printk("KEXEC: Starting new kernel\n");
+        printk(KERN_EMERG "Starting new kernel\n");
+        machine_kexec(image);
+        break;
+    }
+#endif
 
 	default:
 		unlock_kernel();
