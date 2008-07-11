@@ -300,13 +300,16 @@ void GP2X_vgamousecallback(int button, int relative, int dx, int dy)
   }
 }
 
-/* Handle input from tslib */
 static void handle_tslib(_THIS)
 {
   struct ts_sample sample;
   int button;
 
-  while (ts_read(this->hidden->ts_dev, &sample, 1) > 0) {
+//DKS - changed this because there's no point sampling higher than 100hz, the driver
+//	doesn't update more often than that
+////  while (ts_read(this->hidden->ts_dev, &sample, 1) > 0) {
+
+  if (ts_read(this->hidden->ts_dev, &sample, 1) > 0) {
     button = (sample.pressure > 0) ? 1 : 0;
     button <<= 2;  /* must report it as button 3 */
     // Store (semi-)raw touchscreen position (pre mouse clipping)
@@ -319,13 +322,148 @@ static void handle_tslib(_THIS)
     sample.y = ((sample.y * this->hidden->invyscale) >> 16) +
                this->hidden->y_offset;
     GP2X_vgamousecallback(button, 0, sample.x, sample.y);
-  }
+  }  
   return;
+	
 }
 
+//DKS - modifying to improve touchscreen
 /* For now, use MSC, PS/2, and MS protocols
    Driver adapted from the SVGAlib mouse driver code (taken from gpm, etc.)
 */
+//static void handle_mouse(_THIS)
+//{
+//  static int start = 0;
+//  static unsigned char mousebuf[BUFSIZ];
+//  static int relative = 1;
+//
+//  int i, nread;
+//  int button = 0;
+//  int dx = 0, dy = 0;
+//  int packetsize = 0;
+//	
+//  /* Figure out the mouse packet size */
+//  switch (mouse_drv) {
+//  case MOUSE_NONE:
+//    /* Ack! */
+//    read(this->hidden->mouse_fd, mousebuf, BUFSIZ);
+//    return;
+//  case MOUSE_MSC:
+//    packetsize = 5;
+//    break;
+//  case MOUSE_IMPS2:
+//    packetsize = 4;
+//    break;
+//  case MOUSE_PS2:
+//  case MOUSE_MS:
+//  case MOUSE_BM:
+//    packetsize = 3;
+//    break;
+//  case MOUSE_ELO:
+//    packetsize = 0;
+//    break;
+//  case MOUSE_TSLIB:
+//    handle_tslib(this);
+//    return; /* nothing left to do */
+//  case NUM_MOUSE_DRVS:
+//    /* Uh oh.. */
+//    packetsize = 0;
+//    break;
+//  }
+//
+//  /* Read as many packets as possible */
+//  nread = read(this->hidden->mouse_fd, &mousebuf[start], BUFSIZ-start);
+//  if (nread < 0) {
+//    return;
+//  }
+//  nread += start;
+//#ifdef DEBUG_MOUSE
+//  fprintf(stderr, "Read %d bytes from mouse, start = %d\n", nread, start);
+//#endif
+//  for (i=0; i<(nread-(packetsize-1)); i += packetsize) {
+//    switch (mouse_drv) {
+//    case MOUSE_NONE:
+//      break;
+//    case MOUSE_MSC:
+//      /* MSC protocol has 0x80 in high byte */
+//      if ((mousebuf[i] & 0xF8) != 0x80) {
+//	/* Go to next byte */
+//	i -= (packetsize-1);
+//	continue;
+//      }
+//      /* Get current mouse state */
+//      button = (~mousebuf[i]) & 0x07;
+//      dx =   (signed char)(mousebuf[i+1]) +
+//	(signed char)(mousebuf[i+3]);
+//      dy = -((signed char)(mousebuf[i+2]) +
+//	     (signed char)(mousebuf[i+4]));
+//      relative = 1;
+//      break;
+//    case MOUSE_PS2:
+//      /* PS/2 protocol has nothing in high byte */
+//      if ((mousebuf[i] & 0xC0) != 0) {
+//	/* Go to next byte */
+//	i -= (packetsize-1);
+//	continue;
+//      }
+//      /* Get current mouse state */
+//      button = (mousebuf[i] & 0x04) >> 1 | /*Middle*/
+//	(mousebuf[i] & 0x02) >> 1 | /*Right*/
+//	(mousebuf[i] & 0x01) << 2;  /*Left*/
+//      dx = (mousebuf[i] & 0x10) ?
+//	mousebuf[i+1] - 256 : mousebuf[i+1];
+//      dy = (mousebuf[i] & 0x20) ?
+//	-(mousebuf[i+2] - 256) : -mousebuf[i+2];
+//      relative = 1;
+//      break;
+//    case MOUSE_IMPS2:
+//      /* Get current mouse state */
+//      button = (mousebuf[i] & 0x04) >> 1 | /*Middle*/
+//	(mousebuf[i] & 0x02) >> 1 | /*Right*/
+//	(mousebuf[i] & 0x01) << 2 | /*Left*/
+//	(mousebuf[i] & 0x40) >> 3 | /* 4 */
+//	(mousebuf[i] & 0x80) >> 3;  /* 5 */
+//      dx = (mousebuf[i] & 0x10) ?
+//	mousebuf[i+1] - 256 : mousebuf[i+1];
+//      dy = (mousebuf[i] & 0x20) ?
+//	-(mousebuf[i+2] - 256) : -mousebuf[i+2];
+//      switch (mousebuf[i+3]&0x0F) {
+//      case 0x0E: /* DX = +1 */
+//      case 0x02: /* DX = -1 */
+//	break;
+//      case 0x0F: /* DY = +1 (map button 4) */
+//	GP2X_vgamousecallback(button | (1<<3),
+//			      1, 0, 0);
+//	break;
+//      case 0x01: /* DY = -1 (map button 5) */
+//	GP2X_vgamousecallback(button | (1<<4),
+//			      1, 0, 0);
+//	break;
+//      }
+//      break;
+//    case MOUSE_MS:
+//    case MOUSE_BM:
+//    case MOUSE_ELO:
+//      dx = 0;
+//      dy = 0;
+//      break;
+//    case MOUSE_TSLIB:
+//    case NUM_MOUSE_DRVS:
+//      /* Uh oh.. */
+//      dx = 0;
+//      dy = 0;
+//      break;
+//    }
+//    GP2X_vgamousecallback(button, relative, dx, dy);
+//  }
+//  if ( i < nread ) {
+//    memcpy(mousebuf, &mousebuf[i], (nread-i));
+//    start = (nread-i);
+//  } else {
+//    start = 0;
+//  }
+//  return;
+//}
 static void handle_mouse(_THIS)
 {
   static int start = 0;
@@ -336,7 +474,11 @@ static void handle_mouse(_THIS)
   int button = 0;
   int dx = 0, dy = 0;
   int packetsize = 0;
-	
+
+  //DKS for determining if we should read the touchscreen or wait some more
+	static struct timeval lastread = { 0, 0 };
+	static struct timeval now = { 0, 0 };
+
   /* Figure out the mouse packet size */
   switch (mouse_drv) {
   case MOUSE_NONE:
@@ -358,7 +500,21 @@ static void handle_mouse(_THIS)
     packetsize = 0;
     break;
   case MOUSE_TSLIB:
-    handle_tslib(this);
+	//DKS we want to limit the frequency with which the touchscreen is read, as it never
+	//data faster than 100hz anyways.
+#define TSLIB_INTERVAL 5000 	// every 5 ms, which allows us to capture all events but
+	 									// not waste cycles 
+		gettimeofday(&now, NULL);
+		if (((now.tv_sec * 1000000 + now.tv_usec) -
+			(lastread.tv_sec * 1000000 + lastread.tv_usec)) > TSLIB_INTERVAL) {
+			// 5ms has passed, read a touchscreen sample
+			handle_tslib(this);
+			gettimeofday(&lastread, NULL);
+		} else {
+			dx = 0;
+			dy = 0;
+		}
+//    handle_tslib(this);
     return; /* nothing left to do */
   case NUM_MOUSE_DRVS:
     /* Uh oh.. */
