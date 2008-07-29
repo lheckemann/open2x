@@ -893,6 +893,11 @@ static void GP2X_VideoQuit(_THIS)
     }
 
   GP2X_FreeHWSurfaces(this);
+
+//DKS - adding mouse close & keyboard close, they seemed to be missing
+	GP2X_CloseKeyboard(this);
+	GP2X_CloseMouse(this);
+
 }
 
 
