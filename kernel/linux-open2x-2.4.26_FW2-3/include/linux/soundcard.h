@@ -467,6 +467,9 @@ struct sysex_info {
 /* GP2X sound FLAG */
 #define VOLFLAG_0		20
 #define VOLFLAG_1		21
+
+#define GP2X_SKIP		22
+
 /* GP2X EAR/SPK mode sel */
 #define SNDCTL_DSP_SPK_MODE_ON			_SIO  ('P',80)   	
 #define SNDCTL_DSP_EAR_MODE_ON			_SIO  ('P',81)   	
@@ -560,6 +563,7 @@ typedef struct {
 #define SNDCTL_DSP_POST				_SIO  ('P', 8)
 #define SNDCTL_DSP_SUBDIVIDE		_SIOWR('P', 9, int)
 #define SNDCTL_DSP_SETFRAGMENT		_SIOWR('P',10, int)
+
 
 /*	Audio data formats (Note! U8=8 and S16_LE=16 for compatibility) */
 #define SNDCTL_DSP_GETFMTS		_SIOR ('P',11, int) /* Returns a mask */
@@ -961,8 +965,18 @@ typedef unsigned char mixer_record[128];
  * The SOUND_MIXER_PRIVATE# commands can be redefined by low level drivers.
  * These features can be used when accessing device specific features.
  */
+
+//DKS - commandeering these for GP2X master volume scale control
 #define SOUND_MIXER_PRIVATE1		_SIOWR('M', 111, int)
 #define SOUND_MIXER_PRIVATE2		_SIOWR('M', 112, int)
+
+////DKS - make these point to 3 and 4 instead, just so they're still defined, at least
+//#define SOUND_MIXER_PRIVATE1		_SIOWR('M', 113, int)
+//#define SOUND_MIXER_PRIVATE2		_SIOWR('M', 114, int)
+
+//#define SOUND_MIXER_GP2XREADSCALE	_SIOR('M', 111, int)
+//#define SOUND_MIXER_GP2XWRITESCALE	_SIOWR('M', 112, int)
+
 #define SOUND_MIXER_PRIVATE3		_SIOWR('M', 113, int)
 #define SOUND_MIXER_PRIVATE4		_SIOWR('M', 114, int)
 #define SOUND_MIXER_PRIVATE5		_SIOWR('M', 115, int)

@@ -1,5 +1,5 @@
 /*
- * drivers/sound/mp2520f-wm97xx.c
+ * drivers/sound/mp2520f-ac97.c
  *
  * Copyright (C) 2005,2006 Gamepark Holdings, Inc. (www.gp2x.com)
  * Hyun <hyun3678@gp2x.com>
@@ -58,8 +58,13 @@
 
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
-#define IRQ_JACK_DECT	IRQ_GPIO_L(11)
-static struct tq_struct jack_detect_task;
+
+//DKS - I altered a global here to disable this jack detection crap that doesn't appear to
+//actually do anything on GP2X's but somehow was left in by GPH.
+//#ifndef CONFIG_MACH_GP2XF200
+//#define IRQ_JACK_DECT	IRQ_GPIO_L(11)
+//static struct tq_struct jack_detect_task;
+//#endif
 
 static struct completion CAR_completion;
 static int waitingForMask;
@@ -69,11 +74,28 @@ static int audio_dev_dsp;
 static int audio_dev_mixer;
 
 static struct ac97_codec mp2520f_ac97_codec;
-
 static audio_stream_t ac97_audio_out;
-static int audio_jack_dect;
-static int int_cnt=0;
-static int flagAutoDectOff=0;   /* HYUN_DEBUG */
+
+//DKS - the jack insertion detection doesn't appear to do anytyhing, so just disable it
+//#ifndef CONFIG_MACH_GP2XF200
+//static int audio_jack_dect;
+//static int int_cnt=0;
+////DKS - the jack insertion detection doesn't appear to do anytyhing, so just disable it
+////static int flagAutoDectOff=0;
+//static int flagAutoDectOff=1;
+//#endif
+
+//senquack - Changed July 30, 2008.. Added scaling factor, g_volume_scale, this is a global
+//	variable in kernel/sys.c (don't tell linus).  I would place it here, but even when
+//	this is compiled into the kernel, not as a module, globals here get wiped out.
+//	g_volume_scale gets set to values between 0-200 (200 is an arbitrary max for now), where
+//	100 is the default level.  I added two ioctl interfaces,using ones reserved for private
+//	driver useage.  SOUND_MIXER_PRIVATE1 ioctl call reads the current g_volume_scale level,
+//	SOUND_MIXER_PRIVATE2 sets the level.  Setting g_volume_scale to 0 results in a complete
+//	muting of the entire GP2X that no program can change without extreme trickery like
+//	modifying kernel data structures.  I also am providing a userspace utility to easily
+//	issue these ioctl calls from scripts and such.
+extern int g_volume_scale; // defined in kernel/sys.c, sue me, it works..
 
 #ifdef CONFIG_PROC_FS
 
@@ -85,6 +107,7 @@ static int flagAutoDectOff=0;   /* HYUN_DEBUG */
 
 static struct proc_dir_entry *wm97xx_dir = NULL;
 static struct proc_dir_entry *registers_dir = NULL;
+
 
 typedef struct wm97xx_reg_entry {
 	char* name;
@@ -98,8 +121,6 @@ static wm97xx_reg_entry_t wm97xx_registers[] = {
 #include "alc650_registers.h"
 #endif
 };
-
-
 
 int wm97xx_register_proc_entry(char *name, read_proc_t *_read)
 { return create_proc_read_entry(name, 0, wm97xx_dir, _read, NULL) ? 0:-EINVAL; }
@@ -272,100 +293,134 @@ static void mp2520f_ac97_irq(int irq, void *dev_id, struct pt_regs *regs)
 	}
 }
 
+//DKS - Disable this jack detection crap that doesn't appear to
+//actually do anything on GP2X's but somehow was left in by GPH.
+//#ifndef CONFIG_MACH_GP2XF200
+//static void jack_task_handler(void *data)
+//{
+//	u16 val, val_phone;
+//	u32 reg_addr;
+//
+//	//Verify is again dected
+//	if(read_gpio_bit(GPIO_L11)==audio_jack_dect)
+//	{
+//		if(read_gpio_bit(GPIO_L11))
+//		{
+//			audio_jack_dect=0;
+//			set_external_irq(IRQ_JACK_DECT, EINT_LOW_LEVEL, GPIOPU_NOSET);
+//		}
+//		else
+//		{
+//			audio_jack_dect=1;
+//			set_external_irq(IRQ_JACK_DECT, EINT_HIGH_LEVEL, GPIOPU_NOSET);
+//		}
+//
+//		printk("Jack dected BUG....\n");
+//		return;
+//	}
+//
+//	down(&CAR_mutex);
+//
+//	if (!(AC_CAR & AC_CAR_CAIP)) {
+//		waitingForMask = AC_GSR_RD;
+//		AC_STA_EN |= AC_STA_RD;
+//		reg_addr = (u32)&AC_REG_BASE + 0x02;
+//		*(volatile u16 *)(reg_addr);
+//		udelay(50);
+//		val = AC_DATA;
+//	}
+//
+//	if (!(AC_CAR & AC_CAR_CAIP)) {
+//		waitingForMask = AC_GSR_RD;
+//		AC_STA_EN |= AC_STA_RD;
+//		reg_addr = (u32)&AC_REG_BASE + 0x04;
+//		*(volatile u16 *)(reg_addr);
+//		udelay(50);
+//		val_phone = AC_DATA;
+//	}
+//
+//	if(audio_jack_dect)
+//	{
+//		/* SPK MUTE */
+//		val |= 0x8000;
+//		val_phone &= ~0x8000;
+//	}
+//	else
+//	{
+//		/* SPK ON */
+//		val &= ~0x8000;
+//		val_phone |= 0x8000;
+//	}
+//	mp2520f_ac97_codec.phoneJackIn=audio_jack_dect;
+//
+//	if (!(AC_CAR & AC_CAR_CAIP))
+//	{
+//		waitingForMask = AC_GSR_WD;
+//		AC_STA_EN |= AC_STA_WD;
+//		reg_addr = (u32)&AC_REG_BASE + 0x02;
+//		*(volatile u16 *)reg_addr = (val);
+//		udelay(50);
+//	}
+//
+//	if (!(AC_CAR & AC_CAR_CAIP))
+//	{
+//		waitingForMask = AC_GSR_WD;
+//		AC_STA_EN |= AC_STA_WD;
+//		reg_addr = (u32)&AC_REG_BASE + 0x04;
+//		*(volatile u16 *)reg_addr = (val_phone);
+//		udelay(50);
+//	}
+//
+//	up(&CAR_mutex);
+//}
 
-static void jack_task_handler(void *data)
-{
-	u16 val;
-	u32 reg_addr;
-
-	//Verify is again dected
-	if(read_gpio_bit(GPIO_L11)==audio_jack_dect)
-	{
-		if(read_gpio_bit(GPIO_L11))
-		{
-			audio_jack_dect=0;
-			set_external_irq(IRQ_JACK_DECT, EINT_LOW_LEVEL, GPIOPU_NOSET);
-		}
-		else
-		{
-			audio_jack_dect=1;
-			set_external_irq(IRQ_JACK_DECT, EINT_HIGH_LEVEL, GPIOPU_NOSET);
-		}
-
-		printk("Jack dected BUG....\n");
-		return;
-	}
-
-	if (!(AC_CAR & AC_CAR_CAIP)) //read
-	{
-		waitingForMask = AC_GSR_RD;
-		AC_STA_EN |= AC_STA_RD;
-		reg_addr = (u32)&AC_REG_BASE + 0x02;
-		*(volatile u16 *)(reg_addr);
-		udelay(50);
-		val = AC_DATA;
-	}
-	if (AC_ADDR != 0x02)
-		printk("AC_ADDR: 0x%02x, reg: 0x%02x\n", AC_ADDR, val);
-
-	if(audio_jack_dect) val|=0x8000;	/* SPK MUTE */
-	else val&=~0x8000;					/* SPK ON */
-
-	if (!(AC_CAR & AC_CAR_CAIP))
-	{
-		waitingForMask = AC_GSR_WD;
-		AC_STA_EN |= AC_STA_WD;
-		reg_addr = (u32)&AC_REG_BASE + 0x02;
-		*(volatile u16 *)reg_addr = (val);
-		udelay(50);
-	}
-
-	if(AC_ADDR != 0x02)
-		printk("AC_ADDR: 0x%02x, reg: 0x%02x\n", AC_ADDR, val);
-
-}
-
+//DKS - I altered a global here to disable this jack detection crap that doesn't appear to
+//actually do anything on GP2X's but somehow was left in by GPH.
 ///////////////////////////////////////////////////////////////////////////
-static void jack_detect_interrupt(int irq, void *dev_id, struct pt_regs *regs)
-{
-	/* low=jack ON*/
-	if(read_gpio_bit(GPIO_L11)==audio_jack_dect)
-	{
-		udelay(50);		//old 50
-
-		if(int_cnt++ >= 4) 	//old 15
-		{
-			if(read_gpio_bit(GPIO_L11))
-			{
-				audio_jack_dect=0;
-				set_external_irq(IRQ_JACK_DECT, EINT_LOW_LEVEL, GPIOPU_NOSET);
-			}
-			else
-			{
-		 		audio_jack_dect=1;
-		 		set_external_irq(IRQ_JACK_DECT, EINT_HIGH_LEVEL, GPIOPU_NOSET);
-			}
-
-			int_cnt=0;
-
-			*(volatile unsigned short *)io_p2v(0xc0001116) |=(1<<11);	//mask
-			queue_task(&jack_detect_task,&tq_immediate);
-			mark_bh(IMMEDIATE_BH);
-		}
-	}
-	else{
-		udelay(20);
-		int_cnt=0;
-		 *(volatile unsigned short *)io_p2v(0xc0001116) |=(1<<11);	//mask
-	}
-
-}
+//static void jack_detect_interrupt(int irq, void *dev_id, struct pt_regs *regs)
+//{
+//	/* low=jack ON*/
+//	if(read_gpio_bit(GPIO_L11)==audio_jack_dect)
+//	{
+//		udelay(50);		//old 50
+//
+//		if(int_cnt++ >= 4) 	//old 15
+//		{
+//			if(read_gpio_bit(GPIO_L11))
+//			{
+//				audio_jack_dect=0;
+//				set_external_irq(IRQ_JACK_DECT, EINT_LOW_LEVEL, GPIOPU_NOSET);
+//			}
+//			else
+//			{
+//		 		audio_jack_dect=1;
+//		 		set_external_irq(IRQ_JACK_DECT, EINT_HIGH_LEVEL, GPIOPU_NOSET);
+//			}
+//
+//			int_cnt=0;
+//
+//			*(volatile unsigned short *)io_p2v(0xc0001116) |=(1<<11);	//mask
+//			queue_task(&jack_detect_task,&tq_immediate);
+//			mark_bh(IMMEDIATE_BH);
+//		}
+//	}
+//	else{
+//		udelay(20);
+//		int_cnt=0;
+//		 *(volatile unsigned short *)io_p2v(0xc0001116) |=(1<<11);	//mask
+//	}
+//
+//	mp2520f_ac97_codec.phoneJackIn=audio_jack_dect;
+//}
+//#endif
 
 ///////////////////////////////////////////////////////////////////////////
 
 static struct ac97_codec mp2520f_ac97_codec = {
-	.codec_read	 = mp2520f_ac97_read,
+	.codec_read  = mp2520f_ac97_read,
 	.codec_write = mp2520f_ac97_write,
+	.skipflag    = 0,
+	.mVolume     = 0x0A0A,
 };
 
 static DECLARE_MUTEX(mp2520f_ac97_mutex);
@@ -378,7 +433,6 @@ int mp2520f_ac97_get(struct ac97_codec **codec)
 	u32 reg_addr;
 
 	MMSP20_CLOCK_POWER *pPMR_REG;
-
 	pPMR_REG = MMSP20_GetBase_CLOCK_POWER();
 
 	*codec = NULL;
@@ -386,36 +440,40 @@ int mp2520f_ac97_get(struct ac97_codec **codec)
 
 	if (!mp2520f_ac97_refcount)
 	{
+
 		set_gpio_ctrl(GPIO_L6, GPIOMD_ALT1, GPIOPU_NOSET);
 		set_gpio_ctrl(GPIO_L7, GPIOMD_ALT1, GPIOPU_NOSET);
 		set_gpio_ctrl(GPIO_L8, GPIOMD_ALT1, GPIOPU_NOSET);
 		set_gpio_ctrl(GPIO_L9, GPIOMD_ALT1, GPIOPU_NOSET);
 		set_gpio_ctrl(GPIO_L10, GPIOMD_ALT1, GPIOPU_NOSET);
 
-#ifdef CONFIG_MACH_GP2X
-		set_gpio_ctrl(GPIO_L11, GPIOMD_IN, GPIOPU_NOSET);
-		if(!flagAutoDectOff)
-		{
-			if( read_gpio_bit(GPIO_L11) ) audio_jack_dect=0;
-			else audio_jack_dect=1;
-		}
-#endif
+//DKS - I altered a global here to disable this jack detection crap that doesn't appear to
+//actually do anything on GP2X's but somehow was left in by GPH.
+//#ifndef CONFIG_MACH_GP2XF200
+//		set_gpio_ctrl(GPIO_L11, GPIOMD_IN, GPIOPU_NOSET);
+//		if(!flagAutoDectOff)
+//		{
+//			if( read_gpio_bit(GPIO_L11) ) audio_jack_dect=0;
+//			else audio_jack_dect=1;
+//
+//			mp2520f_ac97_codec.phoneJackIn=audio_jack_dect;
+//		}
+//#endif
 
-		pPMR_REG->ASCLKENREG &= ~I2SCLK;	/* I2S clock disable */
-		pPMR_REG->ASCLKENREG |= AC97CLK;	/* ac97 clock enable */
-
-		pPMR_REG->AUDICSETREG &= ~(AUDCLKSRC | AUDCLKDIV);	/* source:ABIT_CLK divider:0 */
+		pPMR_REG->ASCLKENREG &= ~I2SCLK;						/* I2S clock disable */
+		pPMR_REG->ASCLKENREG |= AC97CLK;						/* ac97 clock enable */
+		pPMR_REG->AUDICSETREG &= ~(AUDCLKSRC | AUDCLKDIV);		/* source:ABIT_CLK divider:0 */
 		udelay(100);
 
-		AC_CTL = (AC_CTL_NORM_OP|AC_CTL_ACLINK_OFF); /* ac-link off */
-		AC_CTL = 0;				/* cold reset */
+		AC_CTL = (AC_CTL_NORM_OP|AC_CTL_ACLINK_OFF); 			/* ac-link off */
+		AC_CTL = 0;												/* cold reset */
 		udelay(100);
-		AC_CTL = (AC_CTL_NORM_OP|AC_CTL_ACLINK_OFF); /* ac-link off */
+		AC_CTL = (AC_CTL_NORM_OP|AC_CTL_ACLINK_OFF); 			/* ac-link off */
 
-		AC_CTL = AC_CTL_NORM_OP;	/* normal op & ac-link on */
+		AC_CTL = AC_CTL_NORM_OP;								/* normal op & ac-link on */
 		udelay(1000);
 
-		AC_STA_EN |= AC_STA_REDAY;	/* codec ready */
+		AC_STA_EN |= AC_STA_REDAY;								/* codec ready */
 		while (!(AC_GSR & AC_GSR_REDAY)) {
 			schedule();
 		}
@@ -427,7 +485,6 @@ int mp2520f_ac97_get(struct ac97_codec **codec)
 			up(&mp2520f_ac97_mutex);
 			return ret;
 		}
-
 
 //		AC_STA_EN |= AC_STA_MICIN_OF;
 		AC_CONFIG = 0;			/* data width 16bit */
@@ -441,28 +498,31 @@ int mp2520f_ac97_get(struct ac97_codec **codec)
 			return ret;
 		}
 
-#ifdef CONFIG_MACH_GP2X
-		if(!flagAutoDectOff) 	/* HYUN_DEBUG */
-		{
-			if(audio_jack_dect) set_external_irq(IRQ_JACK_DECT, EINT_HIGH_LEVEL, GPIOPU_NOSET);
-			else set_external_irq(IRQ_JACK_DECT, EINT_LOW_LEVEL, GPIOPU_NOSET);
-
-			ret = request_irq(IRQ_JACK_DECT, jack_detect_interrupt, 0,"JACK_DECT",NULL);
-			if (ret)
-			{
-				printk("Audio jack dect : request_irq failed\n");
-				free_irq(IRQ_AC97, NULL);
-				AC_CTL = AC_CTL_ACLINK_OFF;
-				pPMR_REG->ASCLKENREG &= ~AC97CLK;
-				up(&mp2520f_ac97_mutex);
-				return ret;
-			}
-
-			jack_detect_task.data = NULL;
-			jack_detect_task.routine = jack_task_handler;
-		}
-#endif
+//DKS - I altered a global here to disable this jack detection crap that doesn't appear to
+//actually do anything on GP2X's but somehow was left in by GPH.
+//#ifndef CONFIG_MACH_GP2XF200
+//		if(!flagAutoDectOff)
+//		{
+//			if(audio_jack_dect) set_external_irq(IRQ_JACK_DECT, EINT_HIGH_LEVEL, GPIOPU_NOSET);
+//			else set_external_irq(IRQ_JACK_DECT, EINT_LOW_LEVEL, GPIOPU_NOSET);
+//
+//			ret = request_irq(IRQ_JACK_DECT, jack_detect_interrupt, 0,"JACK_DECT",NULL);
+//			if (ret)
+//			{
+//				printk("Audio jack dect : request_irq failed\n");
+//				free_irq(IRQ_AC97, NULL);
+//				AC_CTL = AC_CTL_ACLINK_OFF;
+//				pPMR_REG->ASCLKENREG &= ~AC97CLK;
+//				up(&mp2520f_ac97_mutex);
+//				return ret;
+//			}
+//
+//			jack_detect_task.data = NULL;
+//			jack_detect_task.routine = jack_task_handler;
+//		}
+//#endif
 	}
+
 	mp2520f_ac97_refcount++;
 	up(&mp2520f_ac97_mutex);
 	*codec = &mp2520f_ac97_codec;
@@ -473,7 +533,6 @@ int mp2520f_ac97_get(struct ac97_codec **codec)
 void mp2520f_ac97_put(void)
 {
 	MMSP20_CLOCK_POWER *pPMR_REG;
-
 	pPMR_REG = MMSP20_GetBase_CLOCK_POWER();
 
 	down(&mp2520f_ac97_mutex);
@@ -483,12 +542,12 @@ void mp2520f_ac97_put(void)
 		pPMR_REG->ASCLKENREG &= ~AC97CLK;
 		free_irq(IRQ_AC97, NULL);
 
-#ifdef CONFIG_MACH_GP2X
-		free_irq(IRQ_JACK_DECT,NULL);
-#endif
-
+//DKS - Disable this jack detection crap that doesn't appear to
+//actually do anything on GP2X's but somehow was left in by GPH.
+//#ifndef CONFIG_MACH_GP2XF200
+//		free_irq(IRQ_JACK_DECT,NULL);
+//#endif
 	}
-
 	up(&mp2520f_ac97_mutex);
 }
 
@@ -566,24 +625,26 @@ static int ac97_ioctl(struct inode *inode, struct file *file,
 	case SNDCTL_DSP_GETFMTS:
 		/* FIXME: can we do other fmts? */
 		return put_user(AFMT_S16_LE, (long *) arg);
-#if 1	/* HYUN_DEBUG */
+//DKS - Disable this jack detection crap that doesn't appear to
+//actually do anything on GP2X's but somehow was left in by GPH.
+#ifndef CONFIG_MACH_GP2XF200
 	case SNDCTL_DSP_SPK_MODE_ON:
-		*(volatile unsigned short *)io_p2v(0xc00010F6) &=~(1<<11);	//interrupt pin off
-		flagAutoDectOff=1;
-		audio_jack_dect=0;
+//		*(volatile unsigned short *)io_p2v(0xc00010F6) &=~(1<<11);	//interrupt pin off
+//		flagAutoDectOff=1;
+//		audio_jack_dect=0;
 		return 0;
 	case SNDCTL_DSP_EAR_MODE_ON:
-		*(volatile unsigned short *)io_p2v(0xc00010F6) &=~(1<<11);	//interrupt pin off
-		flagAutoDectOff=1;
-		audio_jack_dect=1;
+//		*(volatile unsigned short *)io_p2v(0xc00010F6) &=~(1<<11);	//interrupt pin off
+//		flagAutoDectOff=1;
+//		audio_jack_dect=1;
 		return 0;
 	case SNDCTL_DSP_AUTO_MODE:
-		*(volatile unsigned short *)io_p2v(0xc00010F6) |=(1<<11);	//interrupt pin on
-		flagAutoDectOff=0;
+//		*(volatile unsigned short *)io_p2v(0xc00010F6) |=(1<<11);	//interrupt pin on
+//		flagAutoDectOff=0;
 		return 0;
 #endif
-
 	default:
+
 		/* Maybe this is meant for the mixer (As per OSS Docs) */
 		return mixer_ioctl(inode, file, cmd, arg);
 	}
@@ -610,74 +671,26 @@ static audio_state_t ac97_audio_state = {
 
 static int ac97_audio_open(struct inode *inode, struct file *file)
 {
-	int value,ret;
+	int ret;
 	struct ac97_codec *codec;
-	u16 MainValue,readREG;
-#if 1	 /* left Right change buge */
-#if	1   /* skip process volume level bug */
+#ifndef CONFIG_MACH_GP2XF200
 
-	MainValue =  mp2520f_ac97_read(&mp2520f_ac97_codec,0x18);
-	udelay(5);
-	readREG  =  mp2520f_ac97_read(&mp2520f_ac97_codec,0x02);
-	udelay(5);
-#endif
-
-	mp2520f_ac97_put();
-	ret = mp2520f_ac97_get(&codec);
-	if(ret)
-		return ret;
-
-#if	1   /* skip process volume level bug */
-	mp2520f_ac97_write(&mp2520f_ac97_codec,0x18,MainValue);
-	mdelay(1);
-	mp2520f_ac97_write(&mp2520f_ac97_codec,0x4,0x0a0a);		//fixed earvolume
-	mdelay(50);
-
-	if(mp2520f_ac97_read(&mp2520f_ac97_codec,0x18) != MainValue )//Verify vol reg
+	if(!mp2520f_ac97_codec.skipflag)
 	{
-		udelay(10);
-		mp2520f_ac97_write(&mp2520f_ac97_codec,0x18,MainValue);
-		udelay(10);
-	}
-#endif
+		mp2520f_ac97_codec.rate  	= mp2520f_ac97_read(&mp2520f_ac97_codec ,0x2C);
+		mp2520f_ac97_codec.pwr      = mp2520f_ac97_read(&mp2520f_ac97_codec ,0x26);
 
-#endif
+		mp2520f_ac97_put();
+		ret = mp2520f_ac97_get(&codec);
 
-	value=mp2520f_audio_attach(inode, file, &ac97_audio_state);
-	if(audio_jack_dect)
-	{
-		mp2520f_ac97_write(&mp2520f_ac97_codec, 0x02, 0x8000); 			/* SPK MUTE */
-		mdelay(50);
-		if( !(mp2520f_ac97_read(&mp2520f_ac97_codec,0x02) & 0x8000) )
-		{
-			printk("MUTE SPK....");
-			mp2520f_ac97_write(&mp2520f_ac97_codec, 0x02, 0x8000); 		/* SPK MUTE */
-		}
+		if(ret) return ret;
 	}
 	else
-	{
-		readREG&=0x7FFF;
-		mp2520f_ac97_write(&mp2520f_ac97_codec, 0x02, readREG); 	/* SPEAKER ON */
-		mdelay(50);
+		mp2520f_ac97_codec.skipflag = 0;
 
-		if( !(mp2520f_ac97_read(&mp2520f_ac97_codec,0x02) == readREG) )
-		{
-			printk("SPEAKER ON....");
-			mp2520f_ac97_write(&mp2520f_ac97_codec, 0x02, readREG); /* SPEAKER ON */
-		}
+#endif
 
-		mdelay(1);
-	}
-	/* Last check */
-	if(mp2520f_ac97_read(&mp2520f_ac97_codec,0x18) == 0x8000 )
-	{
-		printk("Volume Error\n");
-		udelay(10);
-		mp2520f_ac97_write(&mp2520f_ac97_codec,0x18,MainValue);
-		mdelay(1);
-	}
-
-	return value;
+	return mp2520f_audio_attach(inode, file, &ac97_audio_state);
 }
 
 static struct file_operations ac97_audio_fops = {
@@ -689,6 +702,7 @@ static int __init mp2520f_ac97_init(void)
 {
 	int ret;
 	struct ac97_codec *codec;
+
 
 	ret = mp2520f_ac97_get(&codec);
 	if (ret)

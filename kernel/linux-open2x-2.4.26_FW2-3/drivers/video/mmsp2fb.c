@@ -1,3 +1,6 @@
+/* PULLED FROM GPH 4.1.0 KERNEL SOURCE FOR OPEN2X F200 COMPATIBILITY- senquack */
+/* dansilsby@gmail.com */
+
 /*
  * Copyright (C) 2004,2005 DIGNSYS Inc. (www.dignsys.com)
  * Kane Ahn < hbahn@dignsys.com >
@@ -129,22 +132,53 @@ static void mmsp2fb_lcd_port_init(void)
 
 	//ClkInfo.DISPCLK_SOURCE  = 1;	// FCLK Use PLL Clock.
 	ClkInfo.DISPCLK_SOURCE  = 2;	// UCLK Use PLL Clock.
-
-	/******************************************************************
+/******************************************************************
 		UCLK=96846400
-		UCLK/DIV(10)=9.6Mhz   UCLK/DIV(6)=6.5Mhz
-		UCLK/DIV(7)=13Mhz
-	********************************************************************/
+		UCLK/DIV(15)=6.4Mhz (LG PHILIPS)
+		UCLK/DIV(5)=19Mhz   (ODT)
+********************************************************************/
 
-	ClkInfo.DISPCLK_DIVIDER= 10;   //30(6.4MHZ),32(6MHZ)  //uclk»ç¿ë½Ã  96846400 / 16 ==9
+#ifndef CONFIG_MACH_GP2XF200
+	ClkInfo.DISPCLK_DIVIDER=10;
+#else
+	if( read_gpio_bit(GPIO_I12) ) ClkInfo.DISPCLK_DIVIDER= 5;
+	else ClkInfo.DISPCLK_DIVIDER= 13;
+#endif
 
-	//ClkInfo.DISPCLK_POL = 0;     	// No Inversion..
-	ClkInfo.DISPCLK_POL = 1;     	// Inv
+	ClkInfo.DISPCLK_POL = 1;
 	PMR_SetDispClk(&ClkInfo);
+
+#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
+	ClkInfo.DISPCLK_SOURCE  = 0;
+	ClkInfo.DISPCLK_DIVIDER= 1;
+	ClkInfo.DISPCLK_POL = 0;
+
+	PMR_SetDispClk(&ClkInfo);
+#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
+	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CFALSE,CFALSE, 0, 0, DPC_USE_EXTCLK);
+	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 240, 32, 66, 40, CTRUE, 1, 1, 21, CTRUE);
+#else	/* PAL */
+	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CTRUE,CFALSE, 0, 0, DPC_USE_EXTCLK);
+	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 288, 32, 72, 40, CTRUE, 2, 1, 22, CTRUE);
+#endif
+
+#else	/***********************  LCD MODE  ******************************/
 	DPC_InitHardware(DPC_RGB_666, CFALSE, CFALSE,CFALSE, 0, 0, DPC_USE_PLLCLK);
 
-	DPC_UTIL_HVSYNC_GPX320240(DPC_RGB_666, LCD_WIDTH,LCD_HEIGHT,30, 20, 38, CFALSE, 3, 5, 15,CFALSE,
-	                          CTRUE,CFALSE,CTRUE);
+#ifndef CONFIG_MACH_GP2XF200
+			/* ODT 408 * 262*/
+	DPC_UTIL_HVSYNC_GPX320240(DPC_RGB_666, LCD_WIDTH,LCD_HEIGHT,30, 20, 38, CFALSE, 3, 5, 15,CFALSE,CTRUE,CFALSE,CTRUE);
+#else
+	/* board version check */
+	if( read_gpio_bit(GPIO_I12) ) 	/* ODT 408 * 262*/
+		DPC_UTIL_HVSYNC_GPX320240(DPC_RGB_666, LCD_WIDTH,LCD_HEIGHT,30, 20, 38, CFALSE, 3, 5, 15,CFALSE,CTRUE,CFALSE,CTRUE);
+	else							/* LG PHILIPS LCD */
+		DPC_UTIL_HVSYNC_GPX320240(DPC_RGB_666, LCD_WIDTH,LCD_HEIGHT,30, 20, 38, CFALSE, 3, 5, 15,CFALSE,CFALSE,CTRUE,CFALSE);
+#endif
+
+
+#endif
+
 
 #ifdef CONFIG_MACH_MMSP2_DTK3
 	/*
@@ -314,7 +348,7 @@ palette_pbs(struct fb_var_screeninfo *var)
  ********************************************************/
 static int
 mmsp2fb_setpalettereg(u_int regno, u_int red, u_int green, u_int blue,
-	              u_int trans, struct fb_info *info)
+					   u_int trans, struct fb_info *info)
 {
 	struct mmsp2fb_info *fbi = (struct mmsp2fb_info *)info;
 	u_int val, ret = 1;
@@ -347,7 +381,7 @@ mmsp2fb_setpalettereg(u_int regno, u_int red, u_int green, u_int blue,
  * };
 
  example> aty128fb.c   : aty128_setcolreg()
-	  cyber2000fb.c: cyber2000fb_setcolreg()
+		  cyber2000fb.c: cyber2000fb_setcolreg()
 
  *  Set a single color register. The values supplied are already
  *  rounded down to the hardware's capabilities (according to the
@@ -356,7 +390,7 @@ mmsp2fb_setpalettereg(u_int regno, u_int red, u_int green, u_int blue,
 
 static int
 mmsp2fb_setcolreg(u_int regno, u_int red, u_int green, u_int blue,
-		   u_int trans, struct fb_info *info)
+				   u_int trans, struct fb_info *info)
 {
 	struct mmsp2fb_info *fbi = (struct mmsp2fb_info *)info;
 	struct display *disp = get_con_display(info, fbi->currcon);
@@ -421,7 +455,7 @@ mmsp2fb_setcolreg(u_int regno, u_int red, u_int green, u_int blue,
  */
 static int
 mmsp2fb_validate_var(struct fb_var_screeninfo *var,
-		      struct mmsp2fb_info *fbi)
+					  struct mmsp2fb_info *fbi)
 {
 	int ret = -EINVAL;
 
@@ -610,7 +644,7 @@ __do_set_cmap(struct fb_cmap *cmap, int kspc, int con,
 
 static int
 mmsp2fb_set_cmap(struct fb_cmap *cmap, int kspc, int con,
-		  struct fb_info *info)
+				  struct fb_info *info)
 {
 	struct display *disp = get_con_display(info, con);
 
@@ -1043,7 +1077,13 @@ int __init mmsp2fb_init(void)
 	DPC_Initialize();
 	MLC_Initialize();
 
+#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
+	MLC_isTVCheck(CTRUE);
+	SetTvMode(TV_MODE_NTSC);
+#else
 	MLC_isTVCheck(CFALSE);
+#endif
+
 ///////////////////// 050930 hhsong add for VSYNC Interrupt ///////////////////
 #if 1
 	if(request_irq(IRQ_DISP, dpc_vsync_interrupt, 0, "DPC_VSYNC", NULL))
@@ -1083,19 +1123,15 @@ int __init mmsp2fb_init(void)
 
 	DPC_Run();
 
-#ifndef CONFIG_MACH_GP2X
-#ifdef CONFIG_MACH_MMSP2_DTK3
-	set_gpio_ctrl(GPIO_B0, GPIOMD_OUT, GPIOPU_NOSET);
-	write_gpio_bit(GPIO_B0, 1);
-#elif CONFIG_MACH_MMSP2_DTK4
-	set_gpio_ctrl(GPIO_N0, GPIOMD_OUT, GPIOPU_NOSET);
-	write_gpio_bit(GPIO_N0, 1);		// oyh : LCD On
-#endif
-#else
+#ifndef CONFIG_MACH_GP2XF200
 	/* batt off */
 	set_gpio_ctrl(GPIO_H4, GPIOMD_OUT, GPIOPU_NOSET);
 	write_gpio_bit(GPIO_H4, 1);
+#endif
 
+#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
+#else
+#ifndef CONFIG_MACH_GP2XF200
 	/* lcd set */
 	set_gpio_ctrl(GPIO_H1, GPIOMD_OUT, GPIOPU_NOSET); // LCD_VGH_ONOFF
 	set_gpio_ctrl(GPIO_H2, GPIOMD_OUT, GPIOPU_NOSET); // LCD_BACK_ONOFF
@@ -1105,8 +1141,13 @@ int __init mmsp2fb_init(void)
 	write_gpio_bit(GPIO_H2,1);		//BACK_ON
 	udelay(100);
 	write_gpio_bit(GPIO_B3,1);		//LCD_RESET HIGH
-
+#else
+	set_gpio_ctrl(GPIO_H1, GPIOMD_OUT, GPIOPU_NOSET);  	// LCD_VDD_ONOFF
+	set_gpio_ctrl(GPIO_L11, GPIOMD_OUT, GPIOPU_NOSET);  	// LCD_BACK_ONOFF
+	set_gpio_ctrl(GPIO_B3, GPIOMD_OUT, GPIOPU_NOSET);  	// LCD_RST
 #endif
+#endif
+
 	/* This driver cannot be unloaded at the moment */
 	MOD_INC_USE_COUNT;
 #ifdef CONFIG_MACH_GP2X_DEBUG
@@ -1226,6 +1267,7 @@ static int mmsp2fb_ioctl(struct inode *inode, struct file *file, u_int cmd, u_lo
 		{
 			//PMR_Initialize();
 			//tDispClkInfo ClkInfo;
+#ifndef CONFIG_MACH_GP2XF200
 			DPC_Stop();
 			dispClkDiv=(unsigned int)pdmsg->msgdata[0];
 #ifdef CONFIG_MACH_GP2X_DEBUG
@@ -1236,6 +1278,7 @@ static int mmsp2fb_ioctl(struct inode *inode, struct file *file, u_int cmd, u_lo
 			udelay(10);
 			//ClkInfo.DISPCLK_DIVIDER=BASE_DIV_LCD_CLK + dispClkDiv;
 			DPC_Run();
+#endif
 			break;
 		}
 		case MMSP2_FB0_GET_LCD_TIMING:
@@ -1245,7 +1288,7 @@ static int mmsp2fb_ioctl(struct inode *inode, struct file *file, u_int cmd, u_lo
 			MSG(pdmsg) = dispClkDiv;
 			return (int)dispClkDiv;
 		case MMSP2_FB0_CONSTART:
-        	MLC_LumaEnhance(pdmsg->msgdata[0],128 + (pdmsg->msgdata[1] * 7));  
+        	MLC_LumaEnhance(pdmsg->msgdata[0],128 + (pdmsg->msgdata[1] * 7));
         	break;
         case MMSP2_FB_RGB_ALPHA:
 			MLC_RGB_MixMux(MLC_RGB_RGN_1, MLC_RGB_MIXMUX_ALPHA, pdmsg->msgdata[0] & 0xf);

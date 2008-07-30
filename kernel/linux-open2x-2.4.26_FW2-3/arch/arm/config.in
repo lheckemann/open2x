@@ -183,6 +183,18 @@ fi
 
 endmenu
 
+#DKS - disabling in favor of options pulled from GPH source
+#mainmenu_option next_comment
+#comment 'MMSP2 Implementation'
+#dep_bool '  enable SHADOW' CONFIG_MMSP2_SHADOW_ENABLE $CONFIG_ARCH_MMSP2
+#dep_bool '  MDK(MB2520F or E-PLAY) by MagicEyes.' CONFIG_MACH_MMSP2_MDK $CONFIG_ARCH_MMSP2
+#dep_bool '  DTK 3 board by MagicEyes.' CONFIG_MACH_MMSP2_DTK3 $CONFIG_ARCH_MMSP2
+#dep_bool '  DTK 4 board by MagicEyes.' CONFIG_MACH_MMSP2_DTK4 $CONFIG_ARCH_MMSP2
+#dep_bool '  GP2X board by GameParkHoldings.' CONFIG_MACH_GP2X $CONFIG_ARCH_MMSP2
+#dep_bool '  GP2X DEBUG ENABLE.' CONFIG_MACH_GP2X_DEBUG $CONFIG_ARCH_MMSP2
+#dep_tristate 'MMSP2 USB function support' CONFIG_MMSP2_USBDEV $CONFIG_ARCH_MMSP2
+#dep_tristate '  Support for MMSP2 USB network link function' CONFIG_MMSP2_USBDEV_NETLINK $CONFIG_MMSP2_USBDEV
+#endmenu
 mainmenu_option next_comment
 comment 'MMSP2 Implementation'
 dep_bool '  enable SHADOW' CONFIG_MMSP2_SHADOW_ENABLE $CONFIG_ARCH_MMSP2
@@ -190,9 +202,12 @@ dep_bool '  MDK(MB2520F or E-PLAY) by MagicEyes.' CONFIG_MACH_MMSP2_MDK $CONFIG_
 dep_bool '  DTK 3 board by MagicEyes.' CONFIG_MACH_MMSP2_DTK3 $CONFIG_ARCH_MMSP2
 dep_bool '  DTK 4 board by MagicEyes.' CONFIG_MACH_MMSP2_DTK4 $CONFIG_ARCH_MMSP2
 dep_bool '  GP2X board by GameParkHoldings.' CONFIG_MACH_GP2X $CONFIG_ARCH_MMSP2
+dep_bool '  GP2X-F200 board by GameParkHoldings.' CONFIG_MACH_GP2XF200 $CONFIG_ARCH_MMSP2
 dep_bool '  GP2X DEBUG ENABLE.' CONFIG_MACH_GP2X_DEBUG $CONFIG_ARCH_MMSP2
+dep_bool '  GP2X SVIDEO BOOTING(NTSC).' CONFIG_MACH_GP2X_SVIDEO_NTSC $CONFIG_GP2X_ONLY_TV
+dep_bool '  GP2X SVIDEO BOOTING(PAL).' CONFIG_MACH_GP2X_SVIDEO_PAL $CONFIG_GP2X_ONLY_TV
 dep_tristate 'MMSP2 USB function support' CONFIG_MMSP2_USBDEV $CONFIG_ARCH_MMSP2
-dep_tristate '  Support for MMSP2 USB network link function' CONFIG_MMSP2_USBDEV_NETLINK $CONFIG_MMSP2_USBDEV
+dep_tristate '  Support for MMSP2 USB network link function' CONFIG_MMSP2_USBDEV_NETLINK $CONFI
 endmenu
 
 # Definitions to make life easier

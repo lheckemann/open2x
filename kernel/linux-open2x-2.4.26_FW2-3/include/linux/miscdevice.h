@@ -30,7 +30,13 @@
 #define OV9640_MINOR		230
 #define CX25874_MINOR		231		// CX25874
 #define SAA7113H_MINOR		232		// SAA7113H
+
+#ifdef CONFIG_MMSP_GPX_BATT
 #define BATT_MINOR			250
+#else
+#define  MMSP2ADC_MINOR		250
+#endif
+
 #define PWM_MINOR			251
 #define ISP_MINOR			252
 #define VPP_MINOR           253

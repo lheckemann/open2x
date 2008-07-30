@@ -356,12 +356,10 @@ static inline unsigned int block_size(kdev_t dev)
 	int retval = BLOCK_SIZE;
 	int major = MAJOR(dev);
 
-#if 1
+#ifndef CONFIG_MACH_GP2XF200
 	if( mmsp_get_usbCONN())
 		if(major == 60 ) return 4096;
 #endif
-	
-	
 	
 	if (blksize_size[major]) 
 	{

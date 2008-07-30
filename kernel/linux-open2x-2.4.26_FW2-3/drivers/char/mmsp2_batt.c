@@ -4,8 +4,8 @@
  * Copyright (C) 2005,2006 Gamepark Holdings, Inc. (www.gp2x.com)
  * Hyun <hyun3678@gp2x.com>
  *
- *  GP2X battery check driver
- *  Based on s3c2410_ts.c
+ * GP2X battery check driver
+ * Based on s3c2410_ts.c
  */
 
 #include <linux/module.h>
@@ -275,9 +275,9 @@ TPC_ManReadChannel(unsigned long Channel)
 {
 	unsigned short ReadValue;
 
-	if(Channel == TPC_MAN_READ_X  )
+	if(Channel == TPC_MAN_READ_X  )			/* 1 */
 		TPC_SetChannelEnb(TPC_XY_CH_EN);
-	else if(Channel == TPC_MAN_READ_Y  )
+	else if(Channel == TPC_MAN_READ_Y  )		/* 2 */
 		TPC_SetChannelEnb(TPC_XY_CH_EN);
 	else if(Channel == TPC_MAN_READ_AZ )
 		TPC_SetChannelEnb(TPC_AZ_CH_EN);
@@ -329,7 +329,10 @@ static void ts_interrupt(int irq, void *dev_id, struct pt_regs *regs)
 		TPC_ClrInterruptPend ( 0xffff );
 		TPC_Stop();
 		free_irq(IRQ_ADC,NULL);
+
+#ifndef CONFIG_MACH_GP2XF200
 		write_gpio_bit(GPIO_H4,0);		// Batt LED on
+#endif
 
 	}
 }
@@ -339,7 +342,6 @@ static ssize_t mmsp2_ts_read(struct file *filp, char *buf, size_t count, loff_t 
 {
 	unsigned short getAdc=0;
 	// Read ADC	X
-
 	TPC_SetInterruptEnable(0);
 
 	udelay(10);
@@ -360,14 +362,12 @@ static ssize_t mmsp2_ts_read(struct file *filp, char *buf, size_t count, loff_t 
 
 static int mmsp2_ts_open(struct inode *inode, struct file *filp)
 {
-	if(count==0)
-	{
+	if(count==0) {
 		count = 1;
 		return 0;
 	}
-	else{
-		return -EBUSY;
-	}
+	else return -EBUSY;
+
 }
 
 static int mmsp2_ts_release(struct inode *inode, struct file *filp)

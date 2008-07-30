@@ -1,3 +1,5 @@
+/* PULLED FROM GPH 4.1.0 KERNEL SOURCE FOR OPEN2X F200 COMPATIBILITY- senquack */
+
 /*
  * ac97_codec.c: Generic AC97 mixer/modem module
  *
@@ -58,7 +60,21 @@
 
 #define CODEC_ID_BUFSZ 14
 
+//senquack - Changed July 30, 2008.. Added scaling factor, g_volume_scale, this is a global
+//	variable in kernel/sys.c (don't tell linus).  I would place it here, but even when
+//	this is compiled into the kernel, not as a module, globals here get wiped out.
+//	g_volume_scale gets set to values between 0-200 (200 is an arbitrary max for now), where
+//	100 is the default level.  I added two ioctl interfaces,using ones reserved for private
+//	driver useage.  SOUND_MIXER_PRIVATE1 ioctl call reads the current g_volume_scale level,
+//	SOUND_MIXER_PRIVATE2 sets the level.  Setting g_volume_scale to 0 results in a complete
+//	muting of the entire GP2X that no program can change without extreme trickery like
+//	modifying kernel data structures.  I also am providing a userspace utility to easily
+//	issue these ioctl calls from scripts and such.
+extern int g_volume_scale; // defined in kernel/sys.c, sue me, it works.. 
+
+//senquack - pulled this in from original ac97_codec.c, somehow it got left out
 static void ac97_set_hw_eq(struct ac97_codec *codec,unsigned int Mode );
+
 
 static int ac97_read_mixer(struct ac97_codec *codec, int oss_channel);
 static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
@@ -226,19 +242,19 @@ static struct mixer_defaults {
 } mixer_defaults[SOUND_MIXER_NRDEVICES] = {
 	/* all values 0 -> 100 in bytes */
 	{SOUND_MIXER_VOLUME,	0x4343},
-	{SOUND_MIXER_BASS,	0x4343},
+	{SOUND_MIXER_BASS,		0x4343},
 	{SOUND_MIXER_TREBLE,	0x4343},
-	{SOUND_MIXER_PCM,	0x4343},
+	{SOUND_MIXER_PCM,		0x4343},
 	{SOUND_MIXER_SPEAKER,	0x4343},
-	{SOUND_MIXER_LINE,	0x4343},
-	{SOUND_MIXER_MIC,	0x0000},
-	{SOUND_MIXER_CD,	0x4343},
+	{SOUND_MIXER_LINE,		0x4343},
+	{SOUND_MIXER_MIC,		0x0000},
+	{SOUND_MIXER_CD,		0x4343},
 	{SOUND_MIXER_ALTPCM,	0x4343},
-	{SOUND_MIXER_IGAIN,	0x4343},
-	{SOUND_MIXER_LINE1,	0x4343},
+	{SOUND_MIXER_IGAIN,		0x4343},
+	{SOUND_MIXER_LINE1,		0x4343},
 	{SOUND_MIXER_PHONEIN,	0x4343},
 	{SOUND_MIXER_PHONEOUT,	0x4343},
-	{SOUND_MIXER_VIDEO,	0x4343},
+	{SOUND_MIXER_VIDEO,		0x4343},
 	{-1,0}
 };
 
@@ -248,19 +264,19 @@ static struct ac97_mixer_hw {
 	int scale;
 } ac97_hw[SOUND_MIXER_NRDEVICES]= {
 	[SOUND_MIXER_VOLUME]	=	{AC97_MASTER_VOL_STEREO,64},
-	[SOUND_MIXER_BASS]	=	{AC97_MASTER_TONE,	16},
+	[SOUND_MIXER_BASS]		=	{AC97_MASTER_TONE,	16},
 	[SOUND_MIXER_TREBLE]	=	{AC97_MASTER_TONE,	16},
-	[SOUND_MIXER_PCM]	=	{AC97_PCMOUT_VOL,	32},
+	[SOUND_MIXER_PCM]		=	{AC97_PCMOUT_VOL,	32},
 	[SOUND_MIXER_SPEAKER]	=	{AC97_PCBEEP_VOL,	16},
-	[SOUND_MIXER_LINE]	=	{AC97_LINEIN_VOL,	32},
-	[SOUND_MIXER_MIC]	=	{AC97_MIC_VOL,		32},
-	[SOUND_MIXER_CD]	=	{AC97_CD_VOL,		32},
+	[SOUND_MIXER_LINE]		=	{AC97_LINEIN_VOL,	32},
+	[SOUND_MIXER_MIC]		=	{AC97_MIC_VOL,		32},
+	[SOUND_MIXER_CD]		=	{AC97_CD_VOL,		32},
 	[SOUND_MIXER_ALTPCM]	=	{AC97_HEADPHONE_VOL,	64},
-	[SOUND_MIXER_IGAIN]	=	{AC97_RECORD_GAIN,	16},
-	[SOUND_MIXER_LINE1]	=	{AC97_AUX_VOL,		32},
+	[SOUND_MIXER_IGAIN]		=	{AC97_RECORD_GAIN,	16},
+	[SOUND_MIXER_LINE1]		=	{AC97_AUX_VOL,		32},
 	[SOUND_MIXER_PHONEIN]	= 	{AC97_PHONE_VOL,	32},
 	[SOUND_MIXER_PHONEOUT]	= 	{AC97_MASTER_VOL_MONO,	64},
-	[SOUND_MIXER_VIDEO]	=	{AC97_VIDEO_VOL,	32},
+	[SOUND_MIXER_VIDEO]		=	{AC97_VIDEO_VOL,	32},
 };
 
 /* the following tables allow us to go from OSS <-> ac97 quickly. */
@@ -287,12 +303,12 @@ static const unsigned int ac97_rm2oss[] = {
 
 /* indexed by bit position */
 static const unsigned int ac97_oss_rm[] = {
-	[SOUND_MIXER_MIC] 	= AC97_REC_MIC,
-	[SOUND_MIXER_CD] 	= AC97_REC_CD,
+	[SOUND_MIXER_MIC] 		= AC97_REC_MIC,
+	[SOUND_MIXER_CD] 		= AC97_REC_CD,
 	[SOUND_MIXER_VIDEO] 	= AC97_REC_VIDEO,
 	[SOUND_MIXER_LINE1] 	= AC97_REC_AUX,
-	[SOUND_MIXER_LINE] 	= AC97_REC_LINE,
-	[SOUND_MIXER_IGAIN]	= AC97_REC_STEREO,
+	[SOUND_MIXER_LINE] 		= AC97_REC_LINE,
+	[SOUND_MIXER_IGAIN]		= AC97_REC_STEREO,
 	[SOUND_MIXER_PHONEIN] 	= AC97_REC_PHONE
 };
 
@@ -335,24 +351,53 @@ static int ac97_read_mixer(struct ac97_codec *codec, int oss_channel)
 			right = 100 - ((right * 100) / scale);
 			left = 100 - ((left * 100) / scale);
 		}
-		ret = left | (right << 8);
-	} else if (oss_channel == SOUND_MIXER_SPEAKER) {
-		ret = 100 - ((((val & 0x1e)>>1) * 100) / mh->scale);
-	} else if (oss_channel == SOUND_MIXER_PHONEIN) {
-		ret = 100 - (((val & 0x1f) * 100) / mh->scale);
-	} else if (oss_channel == SOUND_MIXER_PHONEOUT) {
-		scale = (1 << codec->bit_resolution);
-		ret = 100 - (((val & 0x1f) * 100) / scale);
-	} else if (oss_channel == SOUND_MIXER_MIC) {
-		ret = 100 - (((val & 0x1f) * 100) / mh->scale);
-		/*  the low bit is optional in the tone sliders and masking
-		    it lets us avoid the 0xf 'bypass'.. */
-	} else if (oss_channel == SOUND_MIXER_BASS) {
-		ret = 100 - ((((val >> 8) & 0xe) * 100) / mh->scale);
-	} else if (oss_channel == SOUND_MIXER_TREBLE) {
-		ret = 100 - (((val & 0xe) * 100) / mh->scale);
-	}
+		
+		//senquack - scale the values by the new overriding adjustable percentage
+		int tmp_right = 0, tmp_left = 0;
+		tmp_right = (right * 100) / g_volume_scale;
+		tmp_left = (left * 100) / g_volume_scale;
+		
+		if (tmp_right > 100) {
+			tmp_right = 100;
+		} else if (tmp_right < 0) {
+			tmp_right = 0;
+		}
 
+		if (tmp_left > 100) {
+			tmp_left = 100;
+		} else if (tmp_left < 0) {
+			tmp_left = 0;
+		}
+		
+		//		senquack
+//		ret = left | (right << 8);
+		ret = tmp_left | (tmp_right << 8);
+	} else {
+		if (oss_channel == SOUND_MIXER_SPEAKER) {
+			ret = 100 - ((((val & 0x1e)>>1) * 100) / mh->scale);
+		} else if (oss_channel == SOUND_MIXER_PHONEIN) {
+			ret = 100 - (((val & 0x1f) * 100) / mh->scale);
+		} else if (oss_channel == SOUND_MIXER_PHONEOUT) {
+			scale = (1 << codec->bit_resolution);
+			ret = 100 - (((val & 0x1f) * 100) / scale);
+		} else if (oss_channel == SOUND_MIXER_MIC) {
+			ret = 100 - (((val & 0x1f) * 100) / mh->scale);
+			/*  the low bit is optional in the tone sliders and masking
+				 it lets us avoid the 0xf 'bypass'.. */
+		} else if (oss_channel == SOUND_MIXER_BASS) {
+			ret = 100 - ((((val >> 8) & 0xe) * 100) / mh->scale);
+		} else if (oss_channel == SOUND_MIXER_TREBLE) {
+			ret = 100 - (((val & 0xe) * 100) / mh->scale);
+		}
+	
+		//senquack - scale the value by the new overriding adjustable percentage
+		ret = (ret * 100) / g_volume_scale;
+		if (ret > 100) {
+			ret = 100; 
+		} else if (ret < 0) {
+			ret = 0;
+		}
+	}
 #ifdef DEBUG
 	printk("ac97_codec: read OSS mixer %2d (%s ac97 register 0x%02x), "
 	       "0x%04x -> 0x%04x\n",
@@ -363,11 +408,22 @@ static int ac97_read_mixer(struct ac97_codec *codec, int oss_channel)
 	return ret;
 }
 
-/* write the OSS encoded volume to the given OSS encoded mixer, again caller's job to
-   make sure all is well in arg land, call with spinlock held */
+//senquack - Changed July 30, 2008.. Added scaling factor, g_volume_scale, this is a global
+//	variable in kernel/sys.c (don't tell linus).  I would place it here, but even when
+//	this is compiled into the kernel, not as a module, globals here get wiped out.
+//	g_volume_scale gets set to values between 0-200 (200 is an arbitrary max for now), where
+//	100 is the default level.  I added two ioctl interfaces to ones reserved for private
+//	driver useage.  SOUND_MIXER_PRIVATE1 ioctl call reads the current g_volume_scale level,
+//	SOUND_MIXER_PRIVATE2 sets the level.  Setting g_volume_scale to 0 results in a complete
+//	muting of the entire GP2X that no program can change without extreme trickery like
+//	modifying kernel data structures.
+
+///* write the OSS encoded volume to the given OSS encoded mixer, again caller's job to
+//   make sure all is well in arg land, call with spinlock held */
 static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 		      unsigned int left, unsigned int right)
 {
+
 	u16 val = 0;
 	int scale;
 	struct ac97_mixer_hw *mh = &ac97_hw[oss_channel];
@@ -378,6 +434,66 @@ static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 	       oss_channel, codec->id ? "Secondary" : "Primary",
 	       mh->offset, left, right);
 #endif
+			 
+	if ((oss_channel == SOUND_MIXER_VOLUME) || (oss_channel == SOUND_MIXER_PCM))
+	{
+//senquack - removin val_phone, not used on GP2X's
+//		int val_pcm, val_phone;
+		int val_pcm;
+
+		//senquack - Adding new scale factor that is adjustable from user-land, 115 is an
+		//	arbitrary figure.  g_volume_scale defaults to 100, meaning 100%, but 115
+		//	places our eventual figures into a more reasonable level for the amps in
+		//	gp2x's
+		left = (left * g_volume_scale) / 115;
+		right = (right * g_volume_scale) / 115;
+
+		if (left > 100) {
+			left = 100;
+		}
+		if (right > 100) {
+			right = 100;
+		}
+		// end of senquack's scale factor stuff
+
+		if (left == 0 && right == 0)
+		{
+			val = 0x8000;
+//senquack - not actually used on GP2X, it appears
+//			val_phone = 0x8000;
+			val_pcm = 0xE000; /* HADAPONE MUTE & SPEAKER MUTE */
+		}
+		else
+		{
+			int left_pcm, right_pcm;
+			
+			left = (100 - left) >> 1;
+			right = (100 - right) >> 1;
+
+			left_pcm = left >> 1;
+			left -= left_pcm;
+
+			right_pcm = right >> 1;
+			right -= right_pcm;
+			
+			//senquack - ok the above seems to put us somewhere in the range 0-25
+
+#ifdef CONFIG_MACH_GP2XF200
+////			left += 8;
+////			right += 8;
+			//senquack - changed this to 6.  F200s are naturally louder and need this tweak.
+			left += 6;
+			right += 6;
+#endif
+
+			val = (left << 8) | right;
+			val_pcm = (left_pcm << 8) | right_pcm;
+		}
+
+		codec->codec_write(codec, AC97_MASTER_VOL_STEREO, val);
+		codec->codec_write(codec, AC97_PCMOUT_VOL, val_pcm);
+		return;
+	}
 
 	if (AC97_STEREO_MASK & (1 << oss_channel))
 	{
@@ -386,6 +502,7 @@ static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 		{
 			//val = AC97_MUTE;
 			val = 0xE000; /* HADAPONE MUTE & SPEAKER MUTE */
+
 		}
 		else
 		{
@@ -398,21 +515,33 @@ static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 					left = mh->scale-1;
 			} else {
 				/* these may have 5 or 6 bit resolution */
-				if (oss_channel == SOUND_MIXER_VOLUME ||
-				    oss_channel == SOUND_MIXER_ALTPCM)
-					scale = (1 << codec->bit_resolution);
+				if (oss_channel == SOUND_MIXER_VOLUME || oss_channel == SOUND_MIXER_ALTPCM)
+#if 1
+					scale= 20;
+#else
+					scale = (1 << codec->bit_resolution);   //32
+#endif
 				else
 					scale = mh->scale;
 
 				right = ((100 - right) * scale) / 100;
 				left = ((100 - left) * scale) / 100;
+
+#if 1 			/* HYUN DEBUG */
+				/* Limit amp gain = 12-3=>9db */
+				right +=2;   // +4
+				left  +=2;   //+4
+				scale += 5;
+#endif
 				if (right >= scale)
 					right = scale-1;
 				if (left >= scale)
 					left = scale-1;
 			}
 			val = (left << 8) | right;
+
 		}
+
 	} else if (oss_channel == SOUND_MIXER_BASS) {
 		val = codec->codec_read(codec , mh->offset) & ~0x0f00;
 		left = ((100 - left) * mh->scale) / 100;
@@ -452,38 +581,9 @@ static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 		/* the low bit is optional in the tone sliders and masking
 		    it lets us avoid the 0xf 'bypass'.. */
 	}
-#ifdef DEBUG
-	printk(" 0x%04x", val);
-#endif
 
 	codec->codec_write(codec, mh->offset, val);
 
-#ifndef CONFIG_MACH_GP2X
-	val=codec->codec_read(codec, 0x02);
-	val&=~0x7FFF;
-	codec->codec_write(codec, 0x02, val);
-#else
-	if(vflag)
-	{
-		val=codec->codec_read(codec, 0x02);
-		val&=~0x7FFF;
-		val|=(0x0A)|(0x0A<<8);
-		codec->codec_write(codec, 0x02, val);
-	}
-	else
-	{
-		val=codec->codec_read(codec, 0x02);
-		val&=~0x7FFF;
-		codec->codec_write(codec, 0x02, val);
-	}
-#endif
-
-	codec->codec_write(codec, 0x16, 0x500);
-
-#ifdef DEBUG
-	val = codec->codec_read(codec, mh->offset);
-	printk(" -> 0x%04x\n", val);
-#endif
 }
 
 /* a thin wrapper for write_mixer */
@@ -495,27 +595,15 @@ static void ac97_set_mixer(struct ac97_codec *codec, unsigned int oss_mixer, uns
 	right = ((val >> 8)  & 0xff) ;
 	left = (val  & 0xff) ;
 
-#ifndef CONFIG_MACH_GP2X
+	if (right > 100) right = 100;
+	if (left > 100) left = 100;
 
+#ifndef CONFIG_MACH_GP2X
 	if(vflag && (oss_mixer == 4))
 	{
 		right=right>>2;
 		left=left >>2;
-
-		if (right > 25) right = 25;
-		if (left > 25) left = 25;
 	}
-	else
-	{
-		if (right > 100) right = 100;
-		if (left > 100) left = 100;
-	}
-
-#else
-
-	if (right > 100) right = 100;
-	if (left > 100) left = 100;
-
 #endif
 
 	codec->mixer_state[oss_mixer] = (right << 8) | left;
@@ -559,9 +647,33 @@ static int ac97_recmask_io(struct ac97_codec *codec, int rw, int mask)
 	return 0;
 };
 
+//senquack - Changed July 30, 2008.. Added scaling factor, g_volume_scale, this is a global
+//	variable in kernel/sys.c (don't tell linus).  I would place it here, but even when
+//	this is compiled into the kernel, not as a module, globals here get wiped out.
+//	g_volume_scale gets set to values between 0-200 (200 is an arbitrary max for now), where
+//	100 is the default level.  I added two ioctl interfaces to ones reserved for private
+//	driver useage.  SOUND_MIXER_PRIVATE1 ioctl call reads the current g_volume_scale level,
+//	SOUND_MIXER_PRIVATE2 sets the level.  Setting g_volume_scale to 0 results in a complete
+//	muting of the entire GP2X that no program can change without extreme trickery like
+//	modifying kernel data structures.
 static int ac97_mixer_ioctl(struct ac97_codec *codec, unsigned int cmd, unsigned long arg)
 {
 	int i, val = 0;
+
+
+	//senquack - Output current g_volume_scale value
+	if (cmd == SOUND_MIXER_PRIVATE1) {
+		val = g_volume_scale;
+		return put_user(val, (int *)arg);
+	}
+	
+	//senquack - Set new g_volume_scale value
+	if (cmd == SOUND_MIXER_PRIVATE2) {
+		get_user(val, (int *)arg);
+		g_volume_scale = val;
+		return 0;
+	}		
+
 
 	if (cmd == SOUND_MIXER_INFO) {
 		mixer_info info;
@@ -589,6 +701,7 @@ static int ac97_mixer_ioctl(struct ac97_codec *codec, unsigned int cmd, unsigned
 
 	if (_SIOC_DIR(cmd) == _SIOC_READ) {
 		switch (_IOC_NR(cmd)) {
+			
 		case SOUND_MIXER_RECSRC: /* give them the current record source */
 			if (!codec->recmask_io) {
 				val = 0;
@@ -652,7 +765,6 @@ static int ac97_mixer_ioctl(struct ac97_codec *codec, unsigned int cmd, unsigned
 				return -EINVAL;
 
 			ac97_set_mixer(codec, i, val);
-
 			return 0;
 		}
 	}
@@ -968,10 +1080,6 @@ static int ac97_init_mixer(struct ac97_codec *codec)
 	else
 		codec->bit_resolution = 5;
 
-#ifdef CONFIG_MACH_GP2X
-
-#endif
-
 	/* generic OSS to AC97 wrapper */
 	codec->read_mixer = ac97_read_mixer;
 	codec->write_mixer = ac97_write_mixer;
@@ -1158,10 +1266,23 @@ static int wolfson_init05(struct ac97_codec * codec)
 #define LVOL_MASK				8
 #define RLVOL_MASK				0x3F3F
 
+
+
+/* WM9711/12 POWER DOWN REG*/
+#define LEFT_DAC				(1<<14)
+#define RIGHT_DAC				(1<<13)
+#define HP_MIXER_LEFT				(1<<9)
+#define HP_MIXER_RIGHT				(1<<8)
+#define SPK_MIXER				(1<<7)
+#define HP_BUFF					(1<<4)
+#define SPK_OUTPUT				(1<<3)
+
+
 #define INPUT_BIAS				0x1C03
 #define OUT3_BIAS				(1<<5)
 #define MONO_BIAS				(1<<6)
 #define HDPONE					(1<<4)
+
 
 static int wolfson_init11(struct ac97_codec * codec)
 {
@@ -1171,20 +1292,30 @@ static int wolfson_init11(struct ac97_codec * codec)
 	/* Enable variable rate audio mode */
 	codec->codec_write(codec, AC97_EXTENDED_STATUS, AC97_EA_VRA);
 
-
-#ifdef CONFIG_MACH_GP2X
 	reg = codec->codec_read(codec, 0x24);
 	reg|=INPUT_BIAS|OUT3_BIAS|MONO_BIAS;
 	codec->codec_write(codec, 0x24, reg);
-#endif
-
 	codec->codec_write(codec, 0x16, reg);
 	codec->codec_write(codec, 0x16, 0x500);
+	codec->codec_write(codec, AC97_PCMOUT_VOL, 0x0B0B);
+
+//	senquack - on GP2X, it turns out there is no phone jack detection, why did they leave
+//	this crap enabled?
+//#ifdef CONFIG_MACH_GP2XF200
+	codec->codec_write(codec, AC97_MASTER_VOL_STEREO, 0x0C0C);
+//#else
+//	printk("wolfson_init11( codec->mVolume:0x%x \n",codec->mVolume);
+//	if(codec->phoneJackIn){
+//		codec->codec_write(codec, AC97_MASTER_VOL_STEREO, 0x8C0C);
+//		codec->codec_write(codec, AC97_HEADPHONE_VOL, 0x0C0C);
+//	}else{
+//		codec->codec_write(codec, AC97_MASTER_VOL_STEREO, 0x0C0C);
+//		codec->codec_write(codec, AC97_HEADPHONE_VOL, 0x8C0C);
+//	}
+//#endif	//CONFIG_MACH_GP2XF200
 
 	return 0;
 }
-
-
 
 /* wolfson hw eq (WM9711,9712) */
 static void ac97_set_hw_eq(struct ac97_codec *codec,unsigned int Mode )
@@ -1265,6 +1396,9 @@ static void ac97_set_hw_eq(struct ac97_codec *codec,unsigned int Mode )
 			break;
 		case VOLFLAG_1:
 			vflag=1;
+			break;
+		case GP2X_SKIP:
+			codec->skipflag=1;
 			break;
 		default:
 			printk("speaker off\n");
@@ -1401,10 +1535,10 @@ static int crystal_digital_control(struct ac97_codec *codec, int slots, int rate
 
 	switch(rate)
 	{
-		case 0: cv = 0x0; break;	/* SPEN off */
+		case 0: cv = 0x0; break;			/* SPEN off */
 		case 48000: cv = 0x8004; break;	/* 48KHz digital */
 		case 44100: cv = 0x8104; break;	/* 44.1KHz digital */
-		case 32768: 			/* 32Khz */
+		case 32768: 					/* 32Khz */
 		default:
 			return -EINVAL;
 	}
@@ -1488,38 +1622,45 @@ EXPORT_SYMBOL(ac97_probe_codec);
 
 unsigned int ac97_set_dac_rate(struct ac97_codec *codec, unsigned int rate)
 {
-	unsigned int new_rate = rate;
-	u32 dacp;
+	const u32 mute_vol = 0x8000;
 	u32 mast_vol, phone_vol, mono_vol, pcm_vol;
-	u32 mute_vol = 0x8000;	/* The mute volume? */
+	u32 dacp;
+	u32 new_rate = rate;
+	int retry;
 
 	if(rate != codec->codec_read(codec, AC97_PCM_FRONT_DAC_RATE))
 	{
 		/* Mute several registers */
 		mast_vol = codec->codec_read(codec, AC97_MASTER_VOL_STEREO);
-		mono_vol = codec->codec_read(codec, AC97_MASTER_VOL_MONO);
 		phone_vol = codec->codec_read(codec, AC97_HEADPHONE_VOL);
 		pcm_vol = codec->codec_read(codec, AC97_PCMOUT_VOL);
 		codec->codec_write(codec, AC97_MASTER_VOL_STEREO, mute_vol);
 		codec->codec_write(codec, AC97_MASTER_VOL_MONO, mute_vol);
 		codec->codec_write(codec, AC97_HEADPHONE_VOL, mute_vol);
 		codec->codec_write(codec, AC97_PCMOUT_VOL, mute_vol);
+		codec->codec_write(codec, AC97_AUX_VOL, 0x8100);
 
-		/* Power down the DAC */
-		dacp=codec->codec_read(codec, AC97_POWER_CONTROL);
-		codec->codec_write(codec, AC97_POWER_CONTROL, dacp|0x0200);
-		/* Load the rate and read the effective rate */
-		codec->codec_write(codec, AC97_PCM_FRONT_DAC_RATE, rate);
-		new_rate=codec->codec_read(codec, AC97_PCM_FRONT_DAC_RATE);
-		/* Power it back up */
-		codec->codec_write(codec, AC97_POWER_CONTROL, dacp);
+		for (retry = 3; retry; --retry)
+		{
+			/* Power down the DAC */
+			dacp = codec->codec_read(codec, AC97_POWER_CONTROL);
+			codec->codec_write(codec, AC97_POWER_CONTROL, dacp | 0x0200);
+			/* Load the rate and read the effective rate */
+			codec->codec_write(codec, AC97_PCM_FRONT_DAC_RATE, rate);
+			new_rate = codec->codec_read(codec, AC97_PCM_FRONT_DAC_RATE);
+			/* Power it back up */
+			codec->codec_write(codec, AC97_POWER_CONTROL, dacp);
+
+			if (rate == new_rate) break;
+			printk("ac97_set_dac_rate error (%d != %d, retry %d)\n", rate, new_rate, retry);
+		}
 
 		/* Restore volumes */
 		codec->codec_write(codec, AC97_MASTER_VOL_STEREO, mast_vol);
-		codec->codec_write(codec, AC97_MASTER_VOL_MONO, mono_vol);
 		codec->codec_write(codec, AC97_HEADPHONE_VOL, phone_vol);
 		codec->codec_write(codec, AC97_PCMOUT_VOL, pcm_vol);
 	}
+
 	return new_rate;
 }
 
@@ -1538,6 +1679,7 @@ unsigned int ac97_set_adc_rate(struct ac97_codec *codec, unsigned int rate)
 {
 	unsigned int new_rate = rate;
 	u32 dacp;
+
 
 	if(rate != codec->codec_read(codec, AC97_PCM_LR_ADC_RATE))
 	{
@@ -1627,6 +1769,7 @@ void ac97_unregister_driver(struct ac97_driver *driver)
 {
 	struct list_head *l;
 	struct ac97_codec *c;
+
 
 	down(&codec_sem);
 	list_del_init(&driver->list);

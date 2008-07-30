@@ -193,6 +193,7 @@ dep_tristate 'MMSP2 Video Post Processor support' CONFIG_MMSP2_VPP $CONFIG_ARCH_
 dep_tristate 'MMSP2 Image Signal Processor support' CONFIG_MMSP2_ISP $CONFIG_ARCH_MMSP2
 dep_tristate 'MMSP2 Gpio Key interface support' CONFIG_MMSP2_KEY $CONFIG_ARCH_MMSP2
 dep_tristate 'MMSP2 GP2X Battery Check support' CONFIG_MMSP_GPX_BATT $CONFIG_ARCH_MMSP2
+dep_tristate 'MMSP2 GP2X ADC' CONFIG_MMSP_GP2X_ADC $CONFIG_ARCH_MMSP2
 
 source drivers/l3/Config.in
 

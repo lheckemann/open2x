@@ -35,6 +35,9 @@ U32 GPIOALT;
 static unsigned char  sdbitSize;
 static unsigned char usbFlag=0;
 static unsigned char sdMode=2;
+static unsigned int gp2xInfoVarLsb;
+static unsigned int gp2xInfoVarMsb;
+static unsigned char usbHconFlag=0;
 
 void GPIO_Initialize(void) {
         pGPIO_REG = MMSP20_GetBase_GPIO();
@@ -320,9 +323,34 @@ unsigned char mmsp_get_SDCLK(void)
 	return sdMode;
 }
 
+void SetGp2xInfo(unsigned int info,int infoFlag)
+{
+	if(infoFlag) gp2xInfoVarLsb=info;
+	else gp2xInfoVarMsb=info;
+}
+
+unsigned int GetGp2xInfo(int infoFlag)
+{
+	if(infoFlag) return gp2xInfoVarLsb;
+	else return gp2xInfoVarMsb;
+}
+
+void SetUsbHcon(unsigned char flag)
+{
+	usbHconFlag	= flag;
+}
+
+unsigned char GetUshHcon(void)
+{
+	return usbHconFlag;
+}
+
+EXPORT_SYMBOL(SetUsbHcon);
+EXPORT_SYMBOL(GetUshHcon);
+EXPORT_SYMBOL(GetGp2xInfo);
+EXPORT_SYMBOL(SetGp2xInfo);
 EXPORT_SYMBOL(mmsp_set_SDCLK);
 EXPORT_SYMBOL(mmsp_get_SDCLK);
-EXPORT_SYMBOL(mmsp_get_usbCONN);
 EXPORT_SYMBOL(mmsp_set_usbCONN);
 EXPORT_SYMBOL(mmsp_get_sdsize);
 EXPORT_SYMBOL(set_gpio_ctrl);

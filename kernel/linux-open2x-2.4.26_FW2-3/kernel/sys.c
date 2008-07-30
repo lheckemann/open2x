@@ -39,6 +39,19 @@
 # define GET_FPEXC_CTL(a,b)	(-EINVAL)
 #endif
 
+
+//senquack - Changed July 30, 2008.. Added scaling factor, g_volume_scale, this is a global
+//	variable in kernel/sys.c (don't tell linus).  I would place it here, but even when
+//	this is compiled into the kernel, not as a module, globals here get wiped out.
+//	g_volume_scale gets set to values between 0-200 (200 is an arbitrary max for now), where
+//	100 is the default level.  I added two ioctl interfaces,using ones reserved for private
+//	driver useage.  SOUND_MIXER_PRIVATE1 ioctl call reads the current g_volume_scale level,
+//	SOUND_MIXER_PRIVATE2 sets the level.  Setting g_volume_scale to 0 results in a complete
+//	muting of the entire GP2X that no program can change without extreme trickery like
+//	modifying kernel data structures.  I also am providing a userspace utility to easily
+//	issue these ioctl calls from scripts and such.
+int g_volume_scale = 100; // sue me, it works
+
 /*
  * this is where the system-wide overflow UID and GID are defined, for
  * architectures that now have 32-bit UID/GID but didn't in the past

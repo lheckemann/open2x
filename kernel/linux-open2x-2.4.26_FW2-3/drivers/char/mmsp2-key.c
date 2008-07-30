@@ -1,3 +1,6 @@
+/* PULLED FROM GPH 4.1.0 KERNEL SOURCE FOR OPEN2X F200 COMPATIBILITY- senquack */
+/* dansilsby@gmail.com */
+
 /*
  * drivers/char/mmsp2-key.c
  *
@@ -37,26 +40,46 @@
 #define FUNC2_KEY_BASE		GPIO_M0
 #define VOL_UP				GPIO_D7
 #define VOL_DOWN			GPIO_D6
-#define TACT_SW				GPIO_D11
 
-#define MAX_FUNC_KEY		8
+#ifndef CONFIG_MACH_GP2XF200
+#define TACT_SW				GPIO_D11
+#else
+#define USB_CHECK			GPIO_F5
+#define USB_TO_SD			GPIO_F2
+#define CPU_TO_SD			GPIO_F6
+#define USB_CPU_RESET		GPIO_F1
+#define TACT_MASK		((1<<1)|(1<<3)|(1<<5)|(1<<7))
+#endif
+
+#define MAX_FUNC_KEY1			8
+#ifndef CONFIG_MACH_GP2XF200
+#define MAX_FUNC_KEY2			8
+#else
+#define MAX_FUNC_KEY2			4
+#endif
 
 /* IOCTL  CMD*/
-#define BACK_LIGHT_OFF		0
-#define BACK_LIGHT_ON		1
-#define BATT_LED_ON			2
-#define BATT_LED_OFF		3
+#define BACK_LIGHT_OFF			0
+#define BACK_LIGHT_ON			1
+#define BATT_LED_ON				2
+#define BATT_LED_OFF			3
 
-#define FCLK_200			10
-#define FCLK_166			11
-#define FCLK_133			12
-#define FCLK_100			13
-#define FCLK_78				14
-#define FCLK_64				15
-#define FCLK_DEFUALT		16
-#define SD_CLK_MODE_0		17		/* 5Mhz */
-#define SD_CLK_MODE_1		18		/* 15Mhz */
-#define SD_CLK_MODE_2		19		/* 25Mhz */
+#define FCLK_200				10
+#define FCLK_166				11
+#define FCLK_133				12
+#define FCLK_100				13
+#define FCLK_78					14
+#define FCLK_64					15
+#define FCLK_DEFUALT			16
+#define SD_CLK_MODE_0			17		/* 5Mhz */
+#define SD_CLK_MODE_1			18		/* 15Mhz */
+#define SD_CLK_MODE_2			19		/* 25Mhz */
+#define GP2X_INFO_LSB			20
+#define GP2X_INFO_MSB			21
+#define GP2X_GET_USBHCHK		30
+#define USB_CONNECT_START		31
+#define USB_CONNECT_END			32
+
 
 /* UCLK = 95.xxxMHz. It's default value. */
 #define U_MDIV		(0x60)
@@ -72,42 +95,52 @@
 struct timeval cur_tv;
 static unsigned int old_tv_usec = 0;
 
-//This function returns 0 if the allowed microseconds have elapsed since the last call to ths function, otherwise it returns 1 to indicate a bounce condition
-static unsigned int bounce()
-{
+#ifdef CONFIG_MACH_GP2XF200
 
-    unsigned int elapsed_time;
+/* GP2X JOSYSTICK SDL MAPING */
+#define NON_KEY			 0
+#define VK_UP			(1<<0)
+#define VK_UP_LEFT		(1<<1)
+#define VK_LEFT			(1<<2)
+#define VK_DOWN_LEFT	(1<<3)
+#define VK_DOWN			(1<<4)
+#define VK_DOWN_RIGHT	(1<<5)
+#define VK_RIGHT		(1<<6)
+#define VK_UP_RIGHT		(1<<7)
 
-    do_gettimeofday (&cur_tv);
+/*
+.... : NON_KEY
+U... : VK_UP
+.D.. : VK_DOWN
+UD.. : NON_KEY
 
-    if (!old_tv_usec)
-    {
-        //init condition
-        old_tv_usec = cur_tv.tv_usec;
-        return 0;
-    }
+..L. : VK_LEFT
+U.L. : VK_UP_LEFT
+.DL. : VK_DOWN_LEFT
+UDL. : VK_LEFT
 
-    if(cur_tv.tv_usec > old_tv_usec)
-    {
-        // If there hasn't been rollover
-        elapsed_time =  ((cur_tv.tv_usec - old_tv_usec));
-    }
-    else
-    {
-        // Accounting for rollover
-        elapsed_time =  ((1000000 - old_tv_usec + cur_tv.tv_usec));
-    }
+...R : VK_RIGHT
+U..R : VK_UP_RIGHT
+.D.R : VK_DOWN_RIGHT
+UD.R : VK_RIGHT
 
-    if (elapsed_time > 250000)
-    {
-        old_tv_usec = 0;	//reset the bounce time
-        return 0;
-    }
+..LR : NON_KEY
+U.LR : VK_UP
+.DLR : VK_DOWN
+UDLR : NON_KEY
+*/
 
-    return 1;
+unsigned char KeyTable[16] =
+	{
+		NON_KEY, VK_UP, VK_DOWN, NON_KEY,
+		VK_LEFT, VK_UP_LEFT, VK_DOWN_LEFT , VK_LEFT,
+		VK_RIGHT, VK_UP_RIGHT ,VK_DOWN_RIGHT, VK_RIGHT,
+		NON_KEY, VK_UP, VK_DOWN, NON_KEY
+	};
 
-}
+unsigned char KeyPos[]={GPIO_M0,GPIO_M4,GPIO_M2,GPIO_M6}; // final
 
+#endif
 
 int MMSP2key_open(struct inode *inode, struct file *filp)
 {
@@ -123,32 +156,49 @@ int MMSP2key_release(struct inode *inode, struct file *filp)
 
 ssize_t MMSP2key_read(struct file *filp, char *Putbuf, size_t length, loff_t *f_pos)
 {
-	int i;
 	unsigned long keyValue=0;
+	int i;
 	unsigned char keyTemp=0;
 
-		/* Check KEY */
-	for(i=0;i<MAX_FUNC_KEY;i++)
+	for(i=0;i<MAX_FUNC_KEY2;i++)
+#ifndef CONFIG_MACH_GP2XF200
 		keyTemp|=((read_gpio_bit(FUNC2_KEY_BASE+i)) << i);
+#else
+		keyTemp|=((read_gpio_bit(KeyPos[i])) << i);
+#endif
+
+#ifndef CONFIG_MACH_GP2XF200
 	keyValue=(unsigned long)~keyTemp;
+#else
+	keyValue=(unsigned long) KeyTable[(~keyTemp)& 0x0f];
+#endif
 
 	keyTemp=0;
-	for(i=0;i<MAX_FUNC_KEY;i++)
+	for(i=0;i<MAX_FUNC_KEY1;i++)
 		keyTemp|=((read_gpio_bit(FUNC1_KEY_BASE+i)) << i);
-	keyValue&=(unsigned long)(((~keyTemp) << 8)|0xFF);
 
+#ifndef CONFIG_MACH_GP2XF200
+	keyValue&=(unsigned long)(((~keyTemp) << 8)|0xFF);
+#else
+	keyValue|=(unsigned long) (((~keyTemp) & 0xFF) << 8);
+#endif
+
+#ifndef CONFIG_MACH_GP2XF200
 	keyTemp=0;
-	keyTemp=read_gpio_bit(VOL_UP);
+	keyTemp|=read_gpio_bit(VOL_UP);
 	keyTemp|=read_gpio_bit(VOL_DOWN)<<1;
 	keyTemp|=read_gpio_bit(TACT_SW)<<2;
+	keyTemp|=1<<3;
 	keyValue&=(unsigned long)(((~keyTemp)<<16)|0xFFFF);
-
-/*
-	if(bounce())
-		return 1;
-*/
-   	copy_to_user( Putbuf, &keyValue, 4);
-
+#else
+	keyTemp=0;
+	keyTemp|=read_gpio_bit(VOL_UP);
+	keyTemp|=read_gpio_bit(VOL_DOWN)<<1;
+	keyTemp=(~keyTemp)& 0x03;
+	keyTemp|=read_gpio_bit(USB_CHECK)<<3;
+	keyValue|=(unsigned long) keyTemp << 16;
+#endif
+	copy_to_user( Putbuf, &keyValue, 4);
 	return length;
 }
 
@@ -161,19 +211,37 @@ int MMSP2key_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,unsi
 	switch(arg)
 	{
 		case 0:
+#ifndef CONFIG_MACH_GP2XF200
 			write_gpio_bit(GPIO_H1,0);		//LCD VGH oFF
 			write_gpio_bit(GPIO_H2,0);		//LCD Back oFF
+#else
+			write_gpio_bit(GPIO_H1,0);		//5V OFF
+			write_gpio_bit(GPIO_L11,0);		//LCD Back oFF
+#endif
 			break;
 		case 1:
+#ifndef CONFIG_MACH_GP2XF200
 			write_gpio_bit(GPIO_H1,1);		//LCD VGH on
 			write_gpio_bit(GPIO_H2,1);		//LCD Back on
+#else
+			write_gpio_bit(GPIO_H1,1);		//5V ON
+			write_gpio_bit(GPIO_L11,1);		//LCD Back ON
+#endif
 			break;
 		case BATT_LED_ON:
+#ifndef CONFIG_MACH_GP2XF200
 			write_gpio_bit(GPIO_H4,0);		//Batt LED on
+#endif
 			break;
 		case BATT_LED_OFF:
+#ifndef CONFIG_MACH_GP2XF200
 			write_gpio_bit(GPIO_H4,1);		//Batt LED oFF
+#endif
 			break;
+		case GP2X_INFO_LSB:
+			return GetGp2xInfo(1);
+		case GP2X_INFO_MSB:
+			return GetGp2xInfo(0);
 		case FCLK_200:
 			pPMR_REG->FPLLSETVREG  = ((0x49 << 8) + (1 << 2) + 0);
 			udelay(4000);
@@ -189,6 +257,7 @@ int MMSP2key_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,unsi
 		case FCLK_100:
 			pPMR_REG->FPLLSETVREG  = ((0x20 << 8) + (1 << 2) + 0);
 			udelay(4000);
+			printk("fclk 100MHZ\n");
 			break;
 		case FCLK_78:
 			pPMR_REG->FPLLSETVREG  = ((0x18 << 8) + (1 << 2) + 0);
@@ -198,15 +267,23 @@ int MMSP2key_ioctl(struct inode *inode, struct file *filp, unsigned int cmd,unsi
 			pPMR_REG->FPLLSETVREG  = ((0x12 << 8) + (1 << 2) + 0);
 			udelay(4000);
 			break;
-		case SD_CLK_MODE_0:
-			mmsp_set_SDCLK(0);
+#ifdef CONFIG_MACH_GP2XF200
+		case USB_CONNECT_START:
+			/* Usb to SD mode */
+			write_gpio_bit(CPU_TO_SD,1);
+			write_gpio_bit(USB_TO_SD,0);
+			write_gpio_bit(USB_CPU_RESET,1);
+			udelay(50);
 			break;
-		case SD_CLK_MODE_1:
-			mmsp_set_SDCLK(1);
+		case USB_CONNECT_END:
+			/* SD to usb mode */
+			write_gpio_bit(USB_CPU_RESET,0);
+			write_gpio_bit(CPU_TO_SD,0);
+			write_gpio_bit(USB_TO_SD,1);
 			break;
-		case SD_CLK_MODE_2:
-			mmsp_set_SDCLK(2);
-			break;
+#endif
+		case GP2X_GET_USBHCHK:
+			return GetUshHcon();
 		case FCLK_DEFUALT:
 			break;
 	}
@@ -227,14 +304,35 @@ static int __init MMSP2key_init(void)
 {
 	int i;
 
-	for(i=0;i<MAX_FUNC_KEY;i++) set_gpio_ctrl(FUNC1_KEY_BASE,GPIOMD_IN,GPIOPU_EN);
-	for(i=0;i<MAX_FUNC_KEY;i++) set_gpio_ctrl(FUNC2_KEY_BASE,GPIOMD_IN,GPIOPU_EN);
+	for(i=0;i<MAX_FUNC_KEY1;i++) set_gpio_ctrl(FUNC1_KEY_BASE+i,GPIOMD_IN,GPIOPU_EN);
+#ifndef CONFIG_MACH_GP2XF200
+	for(i=0;i<MAX_FUNC_KEY2;i++) set_gpio_ctrl(FUNC2_KEY_BASE+i,GPIOMD_IN,GPIOPU_EN);
+#else
+	for(i=0;i<MAX_FUNC_KEY2;i++) set_gpio_ctrl(KeyPos[i],GPIOMD_IN,GPIOPU_EN);
+
+#if 0
+	set_gpio_ctrl(FUNC2_KEY_BASE+0 ,GPIOMD_IN,GPIOPU_EN);
+	set_gpio_ctrl(FUNC2_KEY_BASE+5 ,GPIOMD_IN,GPIOPU_EN);	/* ORG M4 */
+	set_gpio_ctrl(FUNC2_KEY_BASE+2 ,GPIOMD_IN,GPIOPU_EN);
+	set_gpio_ctrl(FUNC2_KEY_BASE+7 ,GPIOMD_IN,GPIOPU_EN);	/* ORG M6 */
+#endif
+#endif
 
 	set_gpio_ctrl(VOL_UP,GPIOMD_IN,GPIOPU_EN);
 	set_gpio_ctrl(VOL_DOWN,GPIOMD_IN,GPIOPU_EN);
+
+#ifndef CONFIG_MACH_GP2XF200
 	set_gpio_ctrl(TACT_SW,GPIOMD_IN,GPIOPU_EN);
-
-
+#else
+	set_gpio_ctrl(USB_CHECK,GPIOMD_IN,GPIOPU_EN);
+	set_gpio_ctrl(CPU_TO_SD,GPIOMD_OUT,GPIOPU_EN);
+	set_gpio_ctrl(USB_TO_SD,GPIOMD_OUT,GPIOPU_EN);
+	set_gpio_ctrl(USB_CPU_RESET,GPIOMD_OUT,GPIOPU_EN);
+	/* Cpu to sd mode */
+	write_gpio_bit(CPU_TO_SD,0);
+	write_gpio_bit(USB_TO_SD,1);
+	write_gpio_bit(USB_CPU_RESET,0);
+#endif
 	if( !register_chrdev( MMSP2_KEY_MAJOR, MMSP2_KEY_NAME, &MMSP2key_fops ) ) {
 #ifdef CONFIG_MACH_GP2X_DEBUG
 		printk(" register device %s OK\n", MMSP2_KEY_NAME );

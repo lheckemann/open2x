@@ -1,3 +1,5 @@
+/* PULLED FROM GPH 4.0.0 KERNEL SOURCE FOR OPEN2X F200 COMPATIBILITY- senquack */
+
 /*
  * ac97_plugin_wm97xx.c  --  Touch screen driver for Wolfson WM9705 and WM9712
  *                           AC97 Codecs.
@@ -51,7 +53,7 @@
  *  Revision history
  *    7th May 2003   Initial version.
  *    6th June 2003  Added non module support and AC97 registration.
- *   18th June 2003  Added AUX adc sampling. 
+ *   18th June 2003  Added AUX adc sampling.
  *   23rd June 2003  Did some minimal reformatting, fixed a couple of
  *		     locking bugs and noted a race to fix.
  *   24th June 2003  Added power management and fixed race condition.
@@ -61,27 +63,38 @@
 #include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
-#include <linux/fs.h>
+#include <linux/input.h>
 #include <linux/delay.h>
-#include <linux/poll.h>
 #include <linux/string.h>
 #include <linux/proc_fs.h>
 #include <linux/miscdevice.h>
 #include <linux/pm.h>
-#include <linux/wm97xx.h>       /* WM97xx registers and bits */
-#include <asm/uaccess.h>        /* get_user,copy_to_user */
+#include <linux/wm97xx.h>
+#include <asm/uaccess.h>        		/* get_user,copy_to_user */
 #include <asm/io.h>
 
-#define TS_NAME "ac97_plugin_wm97xx"
+#define TS_NAME "wm97xx"
 #define TS_MINOR 16
-#define WM_TS_VERSION "0.6"
+#define WM_TS_VERSION "1.0"
 #define AC97_NUM_REG 64
 
+static DECLARE_WAIT_QUEUE_HEAD(wq);
+/* #define DECT_TOUCH_INTERRUPT	1  */
+/* #define DECT_TOUCH_EVENT		1 */
+static struct tq_struct touch_detect_task;
+
+/*
+ * Machine specific set up.
+ *
+ * This is for targets that can support a PEN down interrupt and/or
+ * streaming back touch data in an AC97 slot (not slot 1). The
+ * streaming touch data is read back via the targets AC97 FIFO's
+*/
 
 /*
  * Debug
  */
- 
+
 #define PFX TS_NAME
 #define WM97XX_TS_DEBUG 0
 
@@ -97,8 +110,8 @@
 /*
  * Module parameters
  */
-	
-	
+
+
 /*
  * Set the codec sample mode.
  *
@@ -107,10 +120,10 @@
  *
  * Polling:-     The driver polls the codec and issues 3 seperate commands
  *               over the AC97 link to read X,Y and pressure.
- * 
+ *
  * Coordinate: - The driver polls the codec and only issues 1 command over
  *               the AC97 link to read X,Y and pressure. This mode has
- *               strict timing requirements and may drop samples if 
+ *               strict timing requirements and may drop samples if
  *               interrupted. However, it is less demanding on the AC97
  *               link. Note: this mode requires a larger delay than polling
  *               mode.
@@ -120,65 +133,68 @@
  *               same method used by the codec when recording audio.
  *
  * Set mode = 0 for polling, 1 for coordinate and 2 for continuous.
- *            
+ *
  */
 MODULE_PARM(mode,"i");
 MODULE_PARM_DESC(mode, "Set WM97XX operation mode");
-static int mode = 0;	
-	
+/* static int mode = 0; */
+static int mode = 1;
+/* static int mode = 2;  */
+
 /*
- * WM9712 - Set internal pull up for pen detect. 
- * 
+ * WM9712 - Set internal pull up for pen detect.
+ *
  * Pull up is in the range 1.02k (least sensitive) to 64k (most sensitive)
  * i.e. pull up resistance = 64k Ohms / rpu.
- * 
- * Adjust this value if you are having problems with pen detect not 
+ *
+ * Adjust this value if you are having problems with pen detect not
  * detecting any down events.
  */
 MODULE_PARM(rpu,"i");
 MODULE_PARM_DESC(rpu, "Set internal pull up resitor for pen detect.");
-static int rpu = 0;	
+static int rpu = 0;
 
 /*
- * WM9705 - Pen detect comparator threshold. 
- * 
+ * WM9705 - Pen detect comparator threshold.
+ *
  * 0 to Vmid in 15 steps, 0 = use zero power comparator with Vmid threshold
  * i.e. 1 =  Vmid/15 threshold
  *      15 =  Vmid/1 threshold
- * 
- * Adjust this value if you are having problems with pen detect not 
+ *
+ * Adjust this value if you are having problems with pen detect not
  * detecting any down events.
  */
 MODULE_PARM(pdd,"i");
 MODULE_PARM_DESC(pdd, "Set pen detect comparator threshold");
-static int pdd = 0;	
-	
+static int pdd = 0;
+
 /*
  * Set current used for pressure measurement.
  *
- * Set pil = 2 to use 400uA 
+ * Set pil = 2 to use 400uA
  *     pil = 1 to use 200uA and
  *     pil = 0 to disable pressure measurement.
  *
  * This is used to increase the range of values returned by the adc
- * when measureing touchpanel pressure. 
+ * when measureing touchpanel pressure.
  */
 MODULE_PARM(pil,"i");
 MODULE_PARM_DESC(pil, "Set current used for pressure measurement.");
 static int pil = 0;
+/* static int pil = 2; */
 
 /*
  * WM9712 - Set five_wire = 1 to use a 5 wire touchscreen.
- * 
+ *
  * NOTE: Five wire mode does not allow for readback of pressure.
  */
 MODULE_PARM(five_wire,"i");
 MODULE_PARM_DESC(five_wire, "Set 5 wire touchscreen.");
-static int five_wire = 0;	
+static int five_wire = 0;
 
 /*
  * Set adc sample delay.
- * 
+ *
  * For accurate touchpanel measurements, some settling time may be
  * required between the switch matrix applying a voltage across the
  * touchpanel plate and the ADC sampling the signal.
@@ -190,103 +206,89 @@ static int five_wire = 0;
  */
 MODULE_PARM(delay,"i");
 MODULE_PARM_DESC(delay, "Set adc sample delay.");
-static int delay = 4;	
+static int delay = 4;
 
+/*
+ * Pen down detection
+ *
+ * Pen down detection can either be via an interrupt (preferred) or
+ * by polling the PDEN bit. This is an option because some systems may
+ * not support the pen down interrupt.
+ *
+ * Set pen_int to 1 to enable interrupt driven pen down detection.
+ */
+MODULE_PARM(pen_int,"i");
+MODULE_PARM_DESC(pen_int, "Set pen down interrupt");
+static int pen_int = 0;
 
-/* +++++++++++++ Lifted from include/linux/h3600_ts.h ++++++++++++++*/
-typedef struct {
-	unsigned short pressure;  // touch pressure
-	unsigned short x;         // calibrated X
-	unsigned short y;         // calibrated Y
-	unsigned short millisecs; // timestamp of this event
-} TS_EVENT;
-
-typedef struct {
-	int xscale;
-	int xtrans;
-	int yscale;
-	int ytrans;
-	int xyswap;
-} TS_CAL;
-
-/* Use 'f' as magic number */
-#define IOC_MAGIC  'f'
-
-#define TS_GET_RATE             _IO(IOC_MAGIC, 8)
-#define TS_SET_RATE             _IO(IOC_MAGIC, 9)
-#define TS_GET_CAL              _IOR(IOC_MAGIC, 10, TS_CAL)
-#define TS_SET_CAL              _IOW(IOC_MAGIC, 11, TS_CAL)
-
-/* +++++++++++++ Done lifted from include/linux/h3600_ts.h +++++++++*/
-
-#define TS_GET_COMP1			_IOR(IOC_MAGIC, 12, short)
-#define TS_GET_COMP2			_IOR(IOC_MAGIC, 13, short)
-#define TS_GET_BMON			_IOR(IOC_MAGIC, 14, short)
-#define TS_GET_WIPER			_IOR(IOC_MAGIC, 15, short)
-
-#ifdef WM97XX_TS_DEBUG
-/* debug get/set ac97 codec register ioctl's */
-#define TS_GET_AC97_REG			_IOR(IOC_MAGIC, 20, short)
-#define TS_SET_AC97_REG			_IOW(IOC_MAGIC, 21, short)
-#define TS_SET_AC97_INDEX		_IOW(IOC_MAGIC, 22, short)
-#endif
-
-#define EVENT_BUFSIZE 128
 
 typedef struct {
-	TS_CAL cal;                       /* Calibration values */
-	TS_EVENT event_buf[EVENT_BUFSIZE];/* The event queue */
-	int nextIn, nextOut;
-	int event_count;
-	int is_wm9712:1;                  /* are we a WM912 or a WM9705 */
+	int is_wm9712:1;                  /* are we a WM9705/12 */
 	int is_registered:1;              /* Is the driver AC97 registered */
+	int adc_errs;                     /* sample read back errors */
+	spinlock_t lock;
+	struct ac97_codec *codec;
+#if defined(CONFIG_PROC_FS)
+	struct proc_dir_entry *wm97xx_ts_ps;
+#endif
+#if defined(CONFIG_PM)
+	struct pm_dev * pm;
 	int line_pgal:5;
 	int line_pgar:5;
 	int phone_pga:5;
 	int mic_pgal:5;
 	int mic_pgar:5;
-	int overruns;                     /* event buffer overruns */
-	int adc_errs;                     /* sample read back errors */
-#ifdef WM97XX_TS_DEBUG
-	short ac97_index;
 #endif
-	struct fasync_struct *fasync;     /* asynch notification */
-	struct timer_list acq_timer;      /* Timer for triggering acquisitions */
-	wait_queue_head_t wait;           /* read wait queue */
-	spinlock_t lock;
-	struct ac97_codec *codec;
-	struct proc_dir_entry *wm97xx_ts_ps;
-#ifdef WM97XX_TS_DEBUG
-	struct proc_dir_entry *wm97xx_debug_ts_ps;
-#endif
-	struct pm_dev * pm;
+	struct input_dev *idev;		/* input */
+	struct completion thread_init;
+	struct completion thread_exit;
+	struct task_struct *rtask;
+	struct semaphore  sem;
+	int use_count;
+	int restart;
 } wm97xx_ts_t;
+
+//DKS - add pad short since GCC likely adds it anyway on ARM and other code expects it
+//typedef struct {
+//	unsigned short pressure;  // touch pressure
+//	unsigned short x;         // calibrated X
+//	unsigned short y;         // calibrated Y
+//} TS_EVENT;
+typedef struct {
+	unsigned short pressure;  // touch pressure
+	unsigned short x;         // calibrated X
+	unsigned short y;         // calibrated Y
+	unsigned short pad;
+} TS_EVENT;
+
+
 
 static inline void poll_delay (void);
 static int __init wm97xx_ts_init_module(void);
-static int wm97xx_poll_read_adc (wm97xx_ts_t* ts, u16 adcsel, u16* sample);
-static int wm97xx_coord_read_adc (wm97xx_ts_t* ts, u16* x, u16* y, 
-                                  u16* pressure);
 static inline int pendown (wm97xx_ts_t *ts);
-static void wm97xx_acq_timer(unsigned long data);
-static int wm97xx_fasync(int fd, struct file *filp, int mode);
-static int wm97xx_ioctl(struct inode * inode, struct file *filp,
-	                    unsigned int cmd, unsigned long arg);
-static unsigned int wm97xx_poll(struct file * filp, poll_table * wait);
-static ssize_t wm97xx_read(struct file * filp, char * buf, size_t count, 
-	                       loff_t * l);
-static int wm97xx_open(struct inode * inode, struct file * filp);
-static int wm97xx_release(struct inode * inode, struct file * filp);
+static void wm97xx_interrupt(int irq, void *dev_id, struct pt_regs *regs);
+static int wm97xx_poll_read_adc (wm97xx_ts_t* ts, u16 adcsel, u16* sample);
 static void init_wm97xx_phy(void);
-static int adc_get (wm97xx_ts_t *ts, unsigned short *value, int id);
 static int wm97xx_probe(struct ac97_codec *codec, struct ac97_driver *driver);
 static void wm97xx_remove(struct ac97_codec *codec,  struct ac97_driver *driver);
 static void wm97xx_ts_cleanup_module(void);
+static int wm97xx_ts_evt_add(wm97xx_ts_t* ts, u16 pressure, u16 x, u16 y);
+static int wm97xx_ts_evt_release(wm97xx_ts_t* ts);
+static ssize_t wm97xx_read(struct file *filp, char *buf, size_t count, loff_t *l);
+static int wm97xx_open(struct inode * inode, struct file * filp);
+static int wm97xx_release(struct inode * inode, struct file * filp);
+
+#if defined(CONFIG_PM)
 static int wm97xx_pm_event(struct pm_dev *dev, pm_request_t rqst, void *data);
 static void wm97xx_suspend(void);
 static void wm97xx_resume(void);
 static void wm9712_pga_save(wm97xx_ts_t* ts);
 static void wm9712_pga_restore(wm97xx_ts_t* ts);
+#endif
+
+/* we only support a single touchscreen */
+static wm97xx_ts_t wm97xx_ts;
+static struct input_dev wm97xx_input;
 
 /* AC97 registration info */
 static struct ac97_driver wm9705_driver = {
@@ -305,16 +307,15 @@ static struct ac97_driver wm9712_driver = {
 	remove: __devexit_p(wm97xx_remove),
 };
 
-/* we only support a single touchscreen */
-static wm97xx_ts_t wm97xx_ts;
+
 
 /*
  * ADC sample delay times in uS
  */
 static const int delay_table[16] = {
-	21,		// 1 AC97 Link frames
-	42,		// 2
-	84,		// 4
+	21,			// 1 AC97 Link frames
+	42,			// 2
+	84,			// 4
 	167,		// 8
 	333,		// 16
 	667,		// 32
@@ -327,8 +328,18 @@ static const int delay_table[16] = {
 	4667,		// 224
 	5333,		// 256
 	6000,		// 288
-	0 		// No delay, switch matrix always on
+	0 			// No delay, switch matrix always on
 };
+
+
+#ifdef DECT_TOUCH_INTERRUPT
+static void wm97xx_interrupt(int irq, void *dev_id, struct pt_regs *regs)
+{
+	printk("touch interrupt\n");
+	if(!pen_int) pen_int=1;
+}
+
+#endif
 
 /*
  * Delay after issuing a POLL command.
@@ -337,68 +348,10 @@ static const int delay_table[16] = {
  */
 
 static inline void poll_delay(void)
-{ 
+{
 	int pdelay = 3 * AC97_LINK_FRAME + delay_table[delay];
 	udelay (pdelay);
 }
-
-
-/*
- * sample the auxillary ADC's 
- */
-
-static int adc_get(wm97xx_ts_t* ts, unsigned short * value, int id)
-{
-	short adcsel = 0;
-	
-	/* first find out our adcsel flag */
-	if (ts->is_wm9712) {
-		switch (id) {
-			case TS_COMP1:
-				adcsel = WM9712_ADCSEL_COMP1;
-				break;
-			case TS_COMP2:
-				adcsel = WM9712_ADCSEL_COMP2;
-				break;
-			case TS_BMON:
-				adcsel = WM9712_ADCSEL_BMON;
-				break;
-			case TS_WIPER:
-				adcsel = WM9712_ADCSEL_WIPER;
-				break;
-		}
-	} else {
-		switch (id) {
-			case TS_COMP1:
-				adcsel = WM9705_ADCSEL_PCBEEP;
-				break;
-			case TS_COMP2:
-				adcsel = WM9705_ADCSEL_PHONE;
-				break;
-			case TS_BMON:
-				adcsel = WM9705_ADCSEL_BMON;
-				break;
-			case TS_WIPER:
-				adcsel = WM9705_ADCSEL_AUX;
-				break;
-		}
-	}
-	
-	/* now sample the adc */
-	if (mode == 1) {
-		/* coordinate mode - not currently available (TODO) */
-			return 0;
-	}
-	else
-	{
-		/* polling mode */
-		if (!wm97xx_poll_read_adc(ts, adcsel, value))
-			return 0;	
-	}
-	
-	return 1;
-}
-
 
 /*
  * Read a sample from the adc in polling mode.
@@ -409,18 +362,18 @@ static int wm97xx_poll_read_adc (wm97xx_ts_t* ts, u16 adcsel, u16* sample)
 	int timeout = 5 * delay;
 
 	/* set up digitiser */
-	dig1 = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1); 
+	dig1 = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1);
 	dig1&=0x0fff;
-	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER1, dig1 | adcsel |
-		WM97XX_POLL); 
+	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER1, dig1 | adcsel |WM97XX_POLL);
 
 	/* wait 3 AC97 time slots + delay for conversion */
 	poll_delay();
 
 	/* wait for POLL to go low */
-	while ((ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1) & WM97XX_POLL) && timeout) { 
+	while ((ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1) & WM97XX_POLL) && timeout)
+	{
 		udelay(AC97_LINK_FRAME);
-		timeout--;	
+		timeout--;
 	}
 	if (timeout > 0)
 		*sample = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER_RD);
@@ -429,12 +382,16 @@ static int wm97xx_poll_read_adc (wm97xx_ts_t* ts, u16 adcsel, u16* sample)
 		err ("adc sample timeout");
 		return 0;
 	}
-	
+
 	/* check we have correct sample */
-	if ((*sample & 0x7000) != adcsel ) { 
+	if ((*sample & 0x7000) != adcsel )
+	{
+#if 1
 		err ("adc wrong sample, read %x got %x", adcsel, *sample & 0x7000);
+#endif
 		return 0;
 	}
+
 	return 1;
 }
 
@@ -447,359 +404,130 @@ static int wm97xx_coord_read_adc(wm97xx_ts_t* ts, u16* x, u16* y, u16* pressure)
 	int timeout = 5 * delay;
 
 	/* set up digitiser */
-	dig1 = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1); 
+	dig1 = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1);
 	dig1&=0x0fff;
-	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER1, dig1 | WM97XX_ADCSEL_PRES |
-		WM97XX_POLL); 
+	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER1, dig1 | WM97XX_ADCSEL_PRES |WM97XX_POLL);
 
 	/* wait 3 AC97 time slots + delay for conversion */
 	poll_delay();
-	
+
 	/* read X then wait for 1 AC97 link frame + settling delay */
 	*x = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER_RD);
 	udelay (AC97_LINK_FRAME + delay_table[delay]);
 
 	/* read Y */
 	*y = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER_RD);
-	
+
 	/* wait for POLL to go low and then read pressure */
-	while ((ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1) & WM97XX_POLL)&& timeout) {
+	while ((ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1) & WM97XX_POLL)&& timeout)
+	{
 			udelay(AC97_LINK_FRAME);
 			timeout--;
 	}
-	if (timeout > 0)		
+	if (timeout > 0)
 		*pressure = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER_RD);
 	else {
 		ts->adc_errs++;
 		err ("adc sample timeout");
 		return 0;
 	}
-	
+
 	/* check we have correct samples */
-	if (((*x & 0x7000) == 0x1000) && ((*y & 0x7000) == 0x2000) && 
-		((*pressure & 0x7000) == 0x3000)) { 
+	if (((*x & 0x7000) == 0x1000) && ((*y & 0x7000) == 0x2000) && ((*pressure & 0x7000) == 0x3000))
+	{
 		return 1;
 	} else {
 		ts->adc_errs++;
+#if 0
 		err ("adc got wrong samples, got x 0x%x y 0x%x pressure 0x%x", *x, *y, *pressure);
+#endif
 		return 0;
 	}
 }
 
 /*
- * Is the pen down ?
+ * Sample the touchscreen in polling mode
  */
+#ifdef DECT_TOUCH_EVENT
+int wm97xx_poll_touch(wm97xx_ts_t *ts)
+{
+	u16 x, y, p;
+	if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_X, &x))
+	{
+		info("x %d\n", x);
+		return -EIO;
+ 	}
+
+	if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_Y, &y))
+	{
+		info("y %d\n", y);
+		return -EIO;
+ 	}
+	if (pil && !five_wire)
+	{
+		if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_PRES, &p))
+		{
+			info("p %d\n", p);
+			return -EIO;
+		}
+	}
+	else
+	{
+		p = 0xffff;
+	}
+
+	wm97xx_ts_evt_add(ts, p, x, y);
+
+	return 1;
+}
+
+/*
+ * Sample the touchscreen in polling coordinate mode
+*/
+
+int wm97xx_poll_coord_touch(wm97xx_ts_t *ts)
+{
+	u16 x, y, p;
+
+	if (wm97xx_coord_read_adc(ts, &x, &y, &p))
+	{
+		wm97xx_ts_evt_add(ts, p, x, y);
+		return 1;
+	} else
+		return -EIO;
+}
+
+/*
+ * Sample the touchscreen in continous mode
+ */
+int wm97xx_cont_touch(wm97xx_ts_t *ts)
+{
+	u16 x, y,val,dig1;
+	int count;
+
+	/* Not support gp2x */
+	/*                  */
+	wm97xx_ts_evt_add(ts, 0xffff, x, y);
+	return count;
+}
+#endif
+
+/** Is the pen down */
 static inline int pendown (wm97xx_ts_t *ts)
 {
 	return ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER_RD) & WM97XX_PEN_DOWN;
 }
 
-/*
- * X,Y coordinates and pressure aquisition function.
- * This function is run by a kernel timer and it's frequency between
- * calls is the touchscreen polling rate;
- */
- 
-static void wm97xx_acq_timer(unsigned long data)
+
+#ifndef DECT_TOUCH_EVENT
+static struct file_operations ts_fops =
 {
-	wm97xx_ts_t* ts = (wm97xx_ts_t*)data;
-	unsigned long flags;
-	long x,y;
-	TS_EVENT event;
-	
-	spin_lock_irqsave(&ts->lock, flags);
-
-	/* are we still registered ? */
-	if (!ts->is_registered) {
-		spin_unlock_irqrestore(&ts->lock, flags);
-		return; /* we better stop then */
-	}
-	
-	/* read coordinates if pen is down */
-	if (!pendown(ts))
-		goto acq_exit;
-	
-	if (mode == 1) {
-		/* coordinate mode */
-		if (!wm97xx_coord_read_adc(ts, (u16*)&x, (u16*)&y, &event.pressure))
-			goto acq_exit;
-	} else
-	{
-		/* polling mode */
-		if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_X, (u16*)&x))
-			goto acq_exit;
-		if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_Y, (u16*)&y))
-			goto acq_exit;
-		
-		/* only read pressure if we have to */
-		if (!five_wire && pil) {
-			if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_PRES, &event.pressure))
-				goto acq_exit;
-		}
-		else
-			event.pressure = 0;
-	}
-	/* timestamp this new event. */
-	event.millisecs = jiffies;
-
-	/* calibrate and remove unwanted bits from samples */
-	event.pressure &= 0x0fff;
-	
-	x &= 0x00000fff;
-	x = ((ts->cal.xscale * x) >> 8) + ts->cal.xtrans;
-	event.x = (u16)x;
-	
-	y &= 0x00000fff;
-	y = ((ts->cal.yscale * y) >> 8) + ts->cal.ytrans;
-	event.y = (u16)y;
-	
-	/* add this event to the event queue */
-	ts->event_buf[ts->nextIn++] = event;
-	if (ts->nextIn == EVENT_BUFSIZE)
-		ts->nextIn = 0;
-	if (ts->event_count < EVENT_BUFSIZE) {
-		ts->event_count++;
-	} else {
-		/* throw out the oldest event */
-		if (++ts->nextOut == EVENT_BUFSIZE) {
-			ts->nextOut = 0;
-			ts->overruns++;
-		}
-	}
-
-	/* async notify */
-	if (ts->fasync)
-		kill_fasync(&ts->fasync, SIGIO, POLL_IN);
-	/* wake up any read call */
-	if (waitqueue_active(&ts->wait))
-		wake_up_interruptible(&ts->wait);
-
-	/* schedule next acquire */
-acq_exit:
-	ts->acq_timer.expires = jiffies + HZ / 100;
-	add_timer(&ts->acq_timer);
-
-	spin_unlock_irqrestore(&ts->lock, flags);
-}
-	
-	
-/* +++++++++++++ File operations ++++++++++++++*/
-
-static int wm97xx_fasync(int fd, struct file *filp, int mode)
-{
-	wm97xx_ts_t* ts = (wm97xx_ts_t*)filp->private_data;
-	return fasync_helper(fd, filp, mode, &ts->fasync);
-}
-
-static int wm97xx_ioctl(struct inode * inode, struct file *filp,
-	     unsigned int cmd, unsigned long arg)
-{
-	unsigned short adc_value;
-#ifdef WM97XX_TS_DEBUG
-	short data;
-#endif	
-	wm97xx_ts_t* ts = (wm97xx_ts_t*)filp->private_data;
-
-	switch(cmd) {
-	case TS_GET_RATE:       /* TODO: what is this? */
-		break;
-	case TS_SET_RATE:       /* TODO: what is this? */
-		break;
-	case TS_GET_CAL:
-		if(copy_to_user((char *)arg, (char *)&ts->cal, sizeof(TS_CAL)))
-			return -EFAULT;
-		break;
-	case TS_SET_CAL:
-		if(copy_from_user((char *)&ts->cal, (char *)arg, sizeof(TS_CAL)))
-			return -EFAULT;
-		break;
-	case TS_GET_COMP1:
-		if (adc_get(ts, &adc_value, TS_COMP1)) {
-			if(copy_to_user((char *)arg, (char *)&adc_value, sizeof(adc_value)))
-				return -EFAULT;
-		}
-		else
-			return -EIO;
-		break;
-	case TS_GET_COMP2:
-		if (adc_get(ts, &adc_value, TS_COMP2)) {
-			if(copy_to_user((char *)arg, (char *)&adc_value, sizeof(adc_value)))
-				return -EFAULT;
-		}
-		else
-			return -EIO;
-		break;
-	case TS_GET_BMON:
-		if (adc_get(ts, &adc_value, TS_BMON)) {
-			if(copy_to_user((char *)arg, (char *)&adc_value, sizeof(adc_value)))
-				return -EFAULT;
-		}
-		else
-			return -EIO;
-		break;
-	case TS_GET_WIPER:
-		if (adc_get(ts, &adc_value, TS_WIPER)) {
-			if(copy_to_user((char *)arg, (char *)&adc_value, sizeof(adc_value)))
-				return -EFAULT;
-		}
-		else
-			return -EIO;
-		break;
-#ifdef WM97XX_TS_DEBUG
-		/* debug get/set ac97 codec register ioctl's 
-		 *
-		 * This is direct IO to the codec registers - BE CAREFULL
-		 */
-	case TS_GET_AC97_REG: /* read from ac97 reg (index) */
-		data = ts->codec->codec_read(ts->codec, ts->ac97_index);
-		if(copy_to_user((char *)arg, (char *)&data, sizeof(data)))
-			return -EFAULT;
-		break;
-	case TS_SET_AC97_REG: /* write to ac97 reg (index) */
-		if(copy_from_user((char *)&data, (char *)arg, sizeof(data)))
-			return -EFAULT;
-		ts->codec->codec_write(ts->codec, ts->ac97_index, data);
-		break;
-	case TS_SET_AC97_INDEX: /* set ac97 reg index */
-		if(copy_from_user((char *)&ts->ac97_index, (char *)arg, sizeof(ts->ac97_index)))
-			return -EFAULT;
-		break;
-#endif
-	default:
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static unsigned int wm97xx_poll(struct file * filp, poll_table * wait)
-{
-	wm97xx_ts_t *ts = (wm97xx_ts_t *)filp->private_data;
-	poll_wait(filp, &ts->wait, wait);
-	if (ts->event_count)
-		return POLLIN | POLLRDNORM;
-	return 0;
-}
-
-static ssize_t wm97xx_read(struct file *filp, char *buf, size_t count, loff_t *l)
-{
-	wm97xx_ts_t* ts = (wm97xx_ts_t*)filp->private_data;
-	unsigned long flags;
-	TS_EVENT event;
-	int i;
-
-	/* are we still registered with AC97 layer ? */
-	spin_lock_irqsave(&ts->lock, flags);
-	if (!ts->is_registered) {
-		spin_unlock_irqrestore(&ts->lock, flags);
-		return -ENXIO;
-	}
-	
-	if (ts->event_count == 0) {
-		if (filp->f_flags & O_NONBLOCK)
-			return -EAGAIN;
-		spin_unlock_irqrestore(&ts->lock, flags);
-
-		wait_event_interruptible(ts->wait, ts->event_count != 0);
-		
-		/* are we still registered after sleep ? */
-		spin_lock_irqsave(&ts->lock, flags);
-		if (!ts->is_registered) {
-			spin_unlock_irqrestore(&ts->lock, flags);
-			return -ENXIO;
-		}
-		if (signal_pending(current))
-			return -ERESTARTSYS;
-	}
-	
-	for (i = count; i >= sizeof(TS_EVENT);
-	    i -= sizeof(TS_EVENT), buf += sizeof(TS_EVENT)) {
-		if (ts->event_count == 0)
-			break;
-		spin_lock_irqsave(&ts->lock, flags);
-		event = ts->event_buf[ts->nextOut++];
-		if (ts->nextOut == EVENT_BUFSIZE)
-			ts->nextOut = 0;
-		if (ts->event_count)
-			ts->event_count--;
-		spin_unlock_irqrestore(&ts->lock, flags);
-		if(copy_to_user(buf, &event, sizeof(TS_EVENT)))
-			return i != count  ? count - i : -EFAULT;
-	}
-	return count - i;
-}
-
-
-static int wm97xx_open(struct inode * inode, struct file * filp)
-{
-	wm97xx_ts_t* ts;
-	unsigned long flags;
-	u16 val;
-	int minor = MINOR(inode->i_rdev);
-	
-	if (minor != TS_MINOR)
-		return -ENODEV;
-	
-	filp->private_data = ts = &wm97xx_ts;
-
-	spin_lock_irqsave(&ts->lock, flags);
-	
-	/* are we registered with AC97 layer ? */
-	if (!ts->is_registered) {
-		spin_unlock_irqrestore(&ts->lock, flags);
-		return -ENXIO;
-	}
-	
-	/* start digitiser */
-	val = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER2);
-	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2, 
-		val | WM97XX_PRP_DET_DIG);
-	
-	/* flush event queue */
-	ts->nextIn = ts->nextOut = ts->event_count = 0;
-	
-	/* Set up timer. */
-	init_timer(&ts->acq_timer);
-	ts->acq_timer.function = wm97xx_acq_timer;
-	ts->acq_timer.data = (unsigned long)ts;
-	ts->acq_timer.expires = jiffies + HZ / 100;
-	add_timer(&ts->acq_timer);
-
-	spin_unlock_irqrestore(&ts->lock, flags);
-	return 0;
-}
-
-static int wm97xx_release(struct inode * inode, struct file * filp)
-{
-	wm97xx_ts_t* ts = (wm97xx_ts_t*)filp->private_data;
-	unsigned long flags;
-	u16 val;
-	
-	wm97xx_fasync(-1, filp, 0);
-	del_timer_sync(&ts->acq_timer);
-
-	spin_lock_irqsave(&ts->lock, flags);
-	
-	/* stop digitiser */
-	val = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER2);
-	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2, 
-		val & ~WM97XX_PRP_DET_DIG);
-	
-	spin_unlock_irqrestore(&ts->lock, flags);
-	return 0;
-}
-
-static struct file_operations ts_fops = {
 	owner:		THIS_MODULE,
-	read:           wm97xx_read,
-	poll:           wm97xx_poll,
-	ioctl:		wm97xx_ioctl,
-	fasync:         wm97xx_fasync,
+	read:       wm97xx_read,
 	open:		wm97xx_open,
 	release:	wm97xx_release,
 };
-
-/* +++++++++++++ End File operations ++++++++++++++*/
+#endif
 
 #ifdef CONFIG_PROC_FS
 static int wm97xx_read_proc (char *page, char **start, off_t off,
@@ -809,12 +537,12 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 	u16 dig1, dig2, digrd, adcsel, adcsrc, slt, prp, rev;
 	unsigned long flags;
 	char srev = ' ';
-	
+
 	wm97xx_ts_t* ts;
 
 	if ((ts = data) == NULL)
 		return -ENODEV;
-	
+
 	spin_lock_irqsave(&ts->lock, flags);
 	if (!ts->is_registered) {
 		spin_unlock_irqrestore(&ts->lock, flags);
@@ -824,11 +552,14 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 
 	dig1 = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER1);
 	dig2 = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER2);
+	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER1, dig1 | WM97XX_POLL);
+	poll_delay();
+
 	digrd = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER_RD);
 	rev = (ts->codec->codec_read(ts->codec, AC97_WM9712_REV) & 0x000c) >> 2;
 
 	spin_unlock_irqrestore(&ts->lock, flags);
-	
+
 	adcsel = dig1 & 0x7000;
 	adcsrc = digrd & 0x7000;
 	slt = (dig1 & 0x7) + 5;
@@ -837,7 +568,7 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 
 	/* driver version */
 	len += sprintf (page+len, "Wolfson WM97xx Version %s\n", WM_TS_VERSION);
-	
+
 	/* what we are using */
 	len += sprintf (page+len, "Using %s", ts->is_wm9712 ? "WM9712" : "WM9705");
 	if (ts->is_wm9712) {
@@ -858,7 +589,7 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 		len += sprintf (page+len, " silicon rev %c\n",srev);
 	} else
 		len += sprintf (page+len, "\n");
-		
+
 	/* WM97xx settings */
 	len += sprintf (page+len, "Settings     :\n%s%s%s%s",
 			dig1 & WM97XX_POLL ? " -sampling adc data(poll)\n" : "",
@@ -866,7 +597,7 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 			adcsel ==  WM97XX_ADCSEL_Y ? " -adc set to Y coordinate\n" : "",
 			adcsel ==  WM97XX_ADCSEL_PRES ? " -adc set to pressure\n" : "");
 	if (ts->is_wm9712) {
-		len += sprintf (page+len, "%s%s%s%s", 
+		len += sprintf (page+len, "%s%s%s%s",
 			adcsel ==  WM9712_ADCSEL_COMP1 ? " -adc set to COMP1/AUX1\n" : "",
 			adcsel ==  WM9712_ADCSEL_COMP2 ? " -adc set to COMP2/AUX2\n" : "",
 			adcsel ==  WM9712_ADCSEL_BMON ? " -adc set to BMON\n" : "",
@@ -878,7 +609,7 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 			adcsel ==  WM9705_ADCSEL_BMON ? " -adc set to BMON\n" : "",
 			adcsel ==  WM9705_ADCSEL_AUX ? " -adc set to AUX\n" : "");
 		}
-		
+
 	len += sprintf (page+len, "%s%s%s%s%s%s",
 			dig1 & WM97XX_COO ? " -coordinate sampling\n" : " -individual sampling\n",
 			dig1 & WM97XX_CTC ? " -continuous mode\n" : " -polling mode\n",
@@ -886,11 +617,11 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 			prp == WM97XX_PRP_DETW ? " -pen detect enabled, wake up\n" : "",
 			prp == WM97XX_PRP_DET_DIG ? " -pen digitiser and pen detect enabled\n" : "",
 			dig1 & WM97XX_SLEN ? " -read back using slot " : " -read back using AC97\n");
-	
-	if ((dig1 & WM97XX_SLEN) && slt !=12)	
+
+	if ((dig1 & WM97XX_SLEN) && slt !=12)
 		len += sprintf(page+len, "%d\n", slt);
 	len += sprintf (page+len, " -adc sample delay %d uSecs\n", delay_table[(dig1 & 0x00f0) >> 4]);
-	
+
 	if (ts->is_wm9712) {
 		if (prpu)
 			len += sprintf (page+len, " -rpu %d Ohms\n", 64000/ prpu);
@@ -900,13 +631,13 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 		len += sprintf (page+len, " -pressure current %s uA\n", dig2 & WM9705_PIL ? "400" : "200");
 		len += sprintf (page+len, " -%s impedance for PHONE and PCBEEP\n", dig2 & WM9705_PHIZ ? "high" : "low");
 	}
-	
+
 	/* WM97xx digitiser read */
 	len += sprintf(page+len, "\nADC data:\n%s%d\n%s%s\n",
 		" -adc value (decimal) : ", digrd & 0x0fff,
 		" -pen ", digrd & 0x8000 ? "Down" : "Up");
 	if (ts->is_wm9712) {
-		len += sprintf (page+len, "%s%s%s%s", 
+		len += sprintf (page+len, "%s%s%s%s",
 			adcsrc ==  WM9712_ADCSEL_COMP1 ? " -adc value is COMP1/AUX1\n" : "",
 			adcsrc ==  WM9712_ADCSEL_COMP2 ? " -adc value is COMP2/AUX2\n" : "",
 			adcsrc ==  WM9712_ADCSEL_BMON ? " -adc value is BMON\n" : "",
@@ -918,61 +649,25 @@ static int wm97xx_read_proc (char *page, char **start, off_t off,
 			adcsrc ==  WM9705_ADCSEL_BMON ? " -adc value is BMON\n" : "",
 			adcsrc ==  WM9705_ADCSEL_AUX ? " -adc value is AUX\n" : "");
 		}
-		
+
 	/* register dump */
 	len += sprintf(page+len, "\nRegisters:\n%s%x\n%s%x\n%s%x\n",
 		" -digitiser 1    (0x76) : 0x", dig1,
 		" -digitiser 2    (0x78) : 0x", dig2,
 		" -digitiser read (0x7a) : 0x", digrd);
-		
+
 	/* errors */
-	len += sprintf(page+len, "\nErrors:\n%s%d\n%s%d\n",
-		" -buffer overruns ", ts->overruns,
-		" -coordinate errors ", ts->adc_errs);
-		
+	len += sprintf(page+len, "\nErrors:\n%s%d\n",
+		       " -coordinate errors ", ts->adc_errs);
 	return len;
 }
-
-#ifdef WM97XX_TS_DEBUG
-/* dump all the AC97 register space */
-static int wm_debug_read_proc (char *page, char **start, off_t off,
-		    int count, int *eof, void *data)
-{
-	int len = 0, i;
-	unsigned long flags;
-	wm97xx_ts_t* ts;
-	u16 reg[AC97_NUM_REG];
-
-	if ((ts = data) == NULL)
-		return -ENODEV;
-
-	spin_lock_irqsave(&ts->lock, flags);
-	if (!ts->is_registered) {
-		spin_unlock_irqrestore(&ts->lock, flags);
-		len += sprintf (page+len, "Not registered\n");
-		return len;
-	}
-	
-	for (i=0; i < AC97_NUM_REG; i++) {
-		reg[i] = ts->codec->codec_read(ts->codec, i * 2);
-	}
-	spin_unlock_irqrestore(&ts->lock, flags);
-	
-	for (i=0; i < AC97_NUM_REG; i++) {
-		len += sprintf (page+len, "0x%2.2x : 0x%4.4x\n",i * 2, reg[i]);
-	}
-		
-	return len;
-}
-#endif
-
 #endif
 
 #ifdef CONFIG_PM
 /* WM97xx Power Management
- * The WM9712 has extra powerdown states that are controlled in 
+ * The WM9712 has extra powerdown states that are controlled in
  * seperate registers from the AC97 power management.
- * We will only power down into the extra WM9712 states and leave 
+ * We will only power down into the extra WM9712 states and leave
  * the AC97 power management to the sound driver.
  */
 static int wm97xx_pm_event(struct pm_dev *dev, pm_request_t rqst, void *data)
@@ -996,40 +691,40 @@ static void wm97xx_suspend(void)
 	wm97xx_ts_t* ts = &wm97xx_ts;
 	u16 reg;
 	unsigned long flags;
-	
+
 	/* are we registered */
 	spin_lock_irqsave(&ts->lock, flags);
 	if (!ts->is_registered) {
 		spin_unlock_irqrestore(&ts->lock, flags);
 		return;
 	}
-	
+
 	/* wm9705 does not have extra PM */
 	if (!ts->is_wm9712) {
 		spin_unlock_irqrestore(&ts->lock, flags);
 		return;
 	}
-	
+
 	/* save and mute the PGA's */
 	wm9712_pga_save(ts);
-	
+
 	reg = ts->codec->codec_read(ts->codec, AC97_PHONE_VOL);
 	ts->codec->codec_write(ts->codec, AC97_PHONE_VOL, reg | 0x001f);
-	
+
 	reg = ts->codec->codec_read(ts->codec, AC97_MIC_VOL);
 	ts->codec->codec_write(ts->codec, AC97_MIC_VOL, reg | 0x1f1f);
-	
+
 	reg = ts->codec->codec_read(ts->codec, AC97_LINEIN_VOL);
 	ts->codec->codec_write(ts->codec, AC97_LINEIN_VOL, reg | 0x1f1f);
-	
+
 	/* power down, dont disable the AC link */
 	ts->codec->codec_write(ts->codec, AC97_WM9712_POWER, WM9712_PD(14) | WM9712_PD(13) |
-							WM9712_PD(12) | WM9712_PD(11) | WM9712_PD(10) |                    
+							WM9712_PD(12) | WM9712_PD(11) | WM9712_PD(10) |
 							WM9712_PD(9) | WM9712_PD(8) | WM9712_PD(7) |
 							WM9712_PD(6) | WM9712_PD(5) | WM9712_PD(4) |
 							WM9712_PD(3) | WM9712_PD(2) | WM9712_PD(1) |
 							WM9712_PD(0));
-	
+
 	spin_unlock_irqrestore(&ts->lock, flags);
 }
 
@@ -1040,14 +735,14 @@ static void wm97xx_resume(void)
 {
 	wm97xx_ts_t* ts = &wm97xx_ts;
 	unsigned long flags;
-	
+
 	/* are we registered */
 	spin_lock_irqsave(&ts->lock, flags);
 	if (!ts->is_registered) {
 		spin_unlock_irqrestore(&ts->lock, flags);
 		return;
 	}
-	
+
 	/* wm9705 does not have extra PM */
 	if (!ts->is_wm9712) {
 		spin_unlock_irqrestore(&ts->lock, flags);
@@ -1056,10 +751,10 @@ static void wm97xx_resume(void)
 
 	/* power up */
 	ts->codec->codec_write(ts->codec, AC97_WM9712_POWER, 0x0);
-	
+
 	/* restore PGA state */
 	wm9712_pga_restore(ts);
-	
+
 	spin_unlock_irqrestore(&ts->lock, flags);
 }
 
@@ -1078,10 +773,10 @@ static void wm9712_pga_save(wm97xx_ts_t* ts)
 static void wm9712_pga_restore(wm97xx_ts_t* ts)
 {
 	u16 reg;
-	
+
 	reg = ts->codec->codec_read(ts->codec, AC97_PHONE_VOL);
 	ts->codec->codec_write(ts->codec, AC97_PHONE_VOL, reg | ts->phone_pga);
-	
+
 	reg = ts->codec->codec_read(ts->codec, AC97_LINEIN_VOL);
 	ts->codec->codec_write(ts->codec, AC97_LINEIN_VOL, reg | ts->line_pgar | (ts->line_pgal << 8));
 
@@ -1092,7 +787,7 @@ static void wm9712_pga_restore(wm97xx_ts_t* ts)
 #endif
 
 /*
- * set up the physical settings of the device 
+ * set up the physical settings of the device
  */
 
 static void init_wm97xx_phy(void)
@@ -1101,55 +796,60 @@ static void init_wm97xx_phy(void)
 	wm97xx_ts_t *ts = &wm97xx_ts;
 
 	/* default values */
-	dig1 = WM97XX_DELAY(4) | WM97XX_SLT(6);
+/* 	dig1 = WM97XX_DELAY(4) | WM97XX_SLT(6); */
+	dig1 = WM97XX_DELAY(4) | WM97XX_SLT(5);
 	if (ts->is_wm9712)
 		dig2 = WM9712_RPU(1);
 	else {
 		dig2 = 0x0;
-		
-		/* 
-		 * mute VIDEO and AUX as they share X and Y touchscreen 
-		 * inputs on the WM9705 
+
+		/*
+		 * mute VIDEO and AUX as they share X and Y touchscreen
+		 * inputs on the WM9705
 		 */
 		aux = ts->codec->codec_read(ts->codec, AC97_AUX_VOL);
 		if (!(aux & 0x8000)) {
 			info("muting AUX mixer as it shares X touchscreen coordinate");
 			ts->codec->codec_write(ts->codec, AC97_AUX_VOL, 0x8000 | aux);
 		}
-		
+
 		vid = ts->codec->codec_read(ts->codec, AC97_VIDEO_VOL);
 		if (!(vid & 0x8000)) {
 			info("muting VIDEO mixer as it shares Y touchscreen coordinate");
 			ts->codec->codec_write(ts->codec, AC97_VIDEO_VOL, 0x8000 | vid);
 		}
 	}
-	
+
 	/* WM9712 rpu */
-	if (ts->is_wm9712 && rpu) {
+	if (ts->is_wm9712 && rpu)
+	{
 		dig2 &= 0xffc0;
 		dig2 |= WM9712_RPU(rpu);
 		info("setting pen detect pull-up to %d Ohms",64000 / rpu);
 	}
-	
+
 	/* touchpanel pressure */
-	if  (pil == 2) {
+	if  (pil == 2) {    	/* 400uA */
 		if (ts->is_wm9712)
 			dig2 |= WM9712_PIL;
 		else
 			dig2 |= WM9705_PIL;
 		info("setting pressure measurement current to 400uA.");
-	} else if (pil) 
+	} else if (pil)
 		info ("setting pressure measurement current to 200uA.");
-	
+
 	/* WM9712 five wire */
-	if (ts->is_wm9712 && five_wire) {
+	if (ts->is_wm9712 && five_wire)
+	{
 		dig2 |= WM9712_45W;
 		info("setting 5-wire touchscreen mode.");
-	}		
-	
+	}
+
 	/* sample settling delay */
-	if (delay!=4) {
-		if (delay < 0 || delay > 15) {
+	if (delay!=4)
+	{
+		if (delay < 0 || delay > 15)
+		{
 			info ("supplied delay out of range.");
 			delay = 4;
 		}
@@ -1157,21 +857,39 @@ static void init_wm97xx_phy(void)
 		dig1 |= WM97XX_DELAY(delay);
 		info("setting adc sample delay to %d u Secs.", delay_table[delay]);
 	}
-	
+
 	/* coordinate mode */
-	if (mode == 1) {
+	if (mode == 1)
+	{
 		dig1 |= WM97XX_COO;
+#ifdef CONFIG_MACH_GP2X_DEBUG
 		info("using coordinate mode");
-	}		
-	
+#endif
+	}
+
+	/* continous mode */
+	if (mode == 2)
+	{
+		/* dig1 |= WM97XX_CTC | WM97XX_COO | WM97XX_CM_RATE_375 | WM97XX_SLEN | WM97XX_SLT(5); */
+		dig1 &= ~(WM97XX_COO);
+		dig1 |= WM97XX_CTC | WM97XX_CM_RATE_375 | WM97XX_SLEN | WM97XX_SLT(5) | WM97XX_ADCSEL_PRES;
+		info("using continous mode");
+
+		if (ts->is_wm9712)
+			dig2 |= WM9712_PDEN;
+		else
+			dig2 |= WM9705_PDEN;
+	}
+
 	/* WM9705 pdd */
-	if (pdd && !ts->is_wm9712) {
+	if (pdd && !ts->is_wm9712)
+	{
 		dig2 |= (pdd & 0x000f);
 		info("setting pdd to Vmid/%d", 1 - (pdd & 0x000f));
 	}
-	
+
 	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER1, dig1);
-	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2, dig2); 
+	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2, dig2);
 }
 
 
@@ -1182,33 +900,35 @@ static void init_wm97xx_phy(void)
 
 static int wm97xx_probe(struct ac97_codec *codec, struct ac97_driver *driver)
 {
-	 unsigned long flags;
+	unsigned long flags;
 	u16 id1, id2;
 	wm97xx_ts_t *ts = &wm97xx_ts;
-		
+
 	spin_lock_irqsave(&ts->lock, flags);
-	
+
 	/* we only support 1 touchscreen at the moment */
 	if (ts->is_registered) {
 		spin_unlock_irqrestore(&ts->lock, flags);
 		return -1;
 	}
-	
-	/* 
+
+	/*
 	 * We can only use a WM9705 or WM9712 that has been *first* initialised
-	 * by the AC97 audio driver. This is because we have to use the audio 
-	 * drivers codec read() and write() functions to sample the touchscreen	
-	 *	
-	 * If an initialsed WM97xx is found then get the codec read and write 
-	 * functions.		 
+	 * by the AC97 audio driver. This is because we have to use the audio
+	 * drivers codec read() and write() functions to sample the touchscreen
+	 *
+	 * If an initialsed WM97xx is found then get the codec read and write
+	 * functions.
 	 */
-	
+
 	/* test for a WM9712 or a WM9705 */
 	id1 = codec->codec_read(codec, AC97_VENDOR_ID1);
 	id2 = codec->codec_read(codec, AC97_VENDOR_ID2);
 	if (id1 == WM97XX_ID1 && id2 == WM9712_ID2) {
 		ts->is_wm9712 = 1;
+#ifdef CONFIG_MACH_GP2X_DEBUG
 		info("registered a WM9712");
+#endif
 	} else if (id1 == WM97XX_ID1 && id2 == WM9705_ID2) {
 		    ts->is_wm9712 = 0;
 		    info("registered a WM9705");
@@ -1218,17 +938,17 @@ static int wm97xx_probe(struct ac97_codec *codec, struct ac97_driver *driver)
 		spin_unlock_irqrestore(&ts->lock, flags);
 		return -1;
 	}
-	
+
 	/* set up AC97 codec interface */
 	ts->codec = codec;
 	codec->driver_private = (void*)&ts;
-	codec->codec_unregister = 0;
-	
+
 	/* set up physical characteristics */
 	init_wm97xx_phy();
-		
+
 	ts->is_registered = 1;
 	spin_unlock_irqrestore(&ts->lock, flags);
+
 	return 0;
 }
 
@@ -1239,85 +959,484 @@ static void wm97xx_remove(struct ac97_codec *codec, struct ac97_driver *driver)
 	unsigned long flags;
 	u16 dig1, dig2;
 	wm97xx_ts_t *ts = codec->driver_private;
-	
+
 	spin_lock_irqsave(&ts->lock, flags);
-			
+
 	/* check that are registered */
 	if (!ts->is_registered) {
 		err("double unregister");
 		spin_unlock_irqrestore(&ts->lock, flags);
 		return;
 	}
-	
+
 	ts->is_registered = 0;
-	wake_up_interruptible(&ts->wait); /* So we see its gone */
-	
+
 	/* restore default digitiser values */
 	dig1 = WM97XX_DELAY(4) | WM97XX_SLT(6);
 	if (ts->is_wm9712)
 		dig2 = WM9712_RPU(1);
-	else 
+	else
 		dig2 = 0x0;
-		
+
 	codec->codec_write(codec, AC97_WM97XX_DIGITISER1, dig1);
-	codec->codec_write(codec, AC97_WM97XX_DIGITISER2, dig2); 
+	codec->codec_write(codec, AC97_WM97XX_DIGITISER2, dig2);
 	ts->codec = NULL;
-		
+
 	spin_unlock_irqrestore(&ts->lock, flags);
+
 }
 
-static struct miscdevice wm97xx_misc = { 
+#ifndef DECT_TOUCH_EVENT
+static struct miscdevice wm97xx_misc = {
 	minor:	TS_MINOR,
 	name:	"touchscreen/wm97xx",
 	fops:	&ts_fops,
 };
+#endif
+
+
+
+#ifdef DECT_TOUCH_EVENT
+/*
+ * add a touch event
+ */
+static int wm97xx_ts_evt_add(wm97xx_ts_t* ts, u16 pressure, u16 x, u16 y)
+{
+	/* add event and remove adc src bits */
+	input_report_abs(ts->idev, ABS_X, x & 0xfff);
+	input_report_abs(ts->idev, ABS_Y, y & 0xfff);
+	input_report_abs(ts->idev, ABS_PRESSURE, pressure & 0xfff);
+
+	//input_sync(ts->idev);
+
+	return 0;
+}
+/*
+ * add a pen up event
+ */
+static int wm97xx_ts_evt_release(wm97xx_ts_t* ts)
+{
+	input_report_abs(ts->idev, ABS_PRESSURE, 0);
+	return 0;
+}
+
+/*
+ * The touchscreen sample reader thread
+ */
+static int wm97xx_thread(void *_ts)
+{
+	wm97xx_ts_t *ts = (wm97xx_ts_t *)_ts;
+	struct task_struct *tsk = current;
+	int valid = 0;
+
+	ts->rtask = tsk;
+
+	/* set up thread context */
+	daemonize();
+	reparent_to_init();
+	strcpy(tsk->comm, "ktsd");
+	tsk->tty = NULL;
+
+#if 1
+	/* we will die when we receive SIGKILL */
+	spin_lock_irq(&tsk->sigmask_lock);
+	siginitsetinv(&tsk->blocked, sigmask(SIGKILL));
+	recalc_sigpending(tsk);
+	spin_unlock_irq(&tsk->sigmask_lock);
+#else
+	siginitsetinv(&tsk->blocked, sigmask(SIGINT) |
+			sigmask(SIGTERM) | sigmask(SIGKILL) |
+			sigmask(SIGUSR1));
+
+	spin_lock_irq(&tsk->sigmask_lock);
+	flush_signals(tsk);
+	recalc_sigpending(tsk);
+	spin_unlock_irq(&tsk->sigmask_lock);
+#endif
+	/* init is complete */
+	complete(&ts->thread_init);
+
+	/* touch reader loop */
+	for (;;)
+	{
+		ts->restart = 0;
+
+		if(signal_pending(tsk))
+			break;
+
+		if(pendown(ts))
+		{
+			switch (mode)
+			{
+				case 0:
+					wm97xx_poll_touch(ts);
+					valid = 1;
+					break;
+				case 1:
+					wm97xx_poll_coord_touch(ts);
+					valid = 1;
+					break;
+				case 2:
+					wm97xx_cont_touch(ts);
+					valid = 1;
+					break;
+			}
+		} else {
+			if (valid) {
+				valid = 0;
+				wm97xx_ts_evt_release(ts);
+			}
+		}
+
+		set_task_state(tsk, TASK_INTERRUPTIBLE);
+		if (HZ >= 100)
+			schedule_timeout(HZ/50);   //old 100
+		else
+			schedule_timeout(1);
+
+	}
+
+	ts->rtask = NULL;
+	complete_and_exit(&ts->thread_exit, 0);
+
+	return 0;
+
+}
+#endif
+
+static ssize_t wm97xx_read(struct file *filp, char *buf, size_t count, loff_t *l)
+{
+	wm97xx_ts_t* ts = (wm97xx_ts_t*)filp->private_data;
+	unsigned long flags;
+	TS_EVENT event;
+	u16 x=0,y=0,p=0;
+
+	/* are we still registered with AC97 layer ? */
+	spin_lock_irqsave(&ts->lock, flags);
+
+	if (!ts->is_registered)
+	{
+		spin_unlock_irqrestore(&ts->lock, flags);
+		return -ENXIO;
+	}
+
+#ifdef DECT_TOUCH_INTERRUPT
+	if(pen_int)
+	{
+		if (!wm97xx_coord_read_adc(ts, &x, &y, &p))
+		{
+					pen_int= 0;
+					spin_unlock_irqrestore(&ts->lock, flags);
+					return -EIO;
+		}
+		pen_int= 0;
+	}
+#else
+	if(pendown(ts))
+	{
+
+		switch (mode)
+		{
+			case 0:
+				if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_X, &x))
+				{
+					spin_unlock_irqrestore(&ts->lock, flags);
+					return -EIO;
+ 				}
+ 				if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_Y, &y))
+				{
+					spin_unlock_irqrestore(&ts->lock, flags);
+					return -EIO;
+				}
+ 				if (pil && !five_wire)
+				{
+					if (!wm97xx_poll_read_adc(ts, WM97XX_ADCSEL_PRES, &p))
+					{
+						spin_unlock_irqrestore(&ts->lock, flags);
+						return -EIO;
+					}
+				}
+				else p = 0xffff;
+				break;
+			case 1:
+				if (!wm97xx_coord_read_adc(ts, &x, &y, &p))
+				{
+					spin_unlock_irqrestore(&ts->lock, flags);
+					return -EIO;
+				}
+				break;
+			case 2:
+					/* not support */
+				break;
+
+		}
+
+	}
+#endif
+
+
+	x&=0xfff,y&=0xfff;
+
+#if 0
+	if((x==0xfff) || (y==0xfff)) {
+		event.x=event.y=event.pressure=0;
+	}
+	else{
+		event.x=x ,event.y=y ,event.pressure=p;
+	}
+#else
+	event.x=x ,event.y=y ,event.pressure=p;
+#endif
+
+#if 0
+	if(x && y)
+		printk("event.x=:0x%x ,event.y=0x%x ,event.pressure=0x%x\n",event.x,event.y,event.pressure);
+#endif
+
+	spin_unlock_irqrestore(&ts->lock, flags);
+
+	if(copy_to_user(buf, &event, sizeof(TS_EVENT)))
+		return -EFAULT;
+
+	return sizeof(TS_EVENT);
+}
+
+
+static int wm97xx_open(struct inode * inode, struct file * filp)
+{
+	wm97xx_ts_t* ts;
+	unsigned long flags;
+	u16 val;
+	int minor = MINOR(inode->i_rdev);
+#ifdef DECT_TOUCH_INTERRUPT
+	int ret;
+#endif
+
+	if (minor != TS_MINOR)
+		return -ENODEV;
+
+	filp->private_data = ts = &wm97xx_ts;
+
+	spin_lock_irqsave(&ts->lock, flags);
+
+	/* are we registered with AC97 layer ? */
+	if (!ts->is_registered)
+	{
+		spin_unlock_irqrestore(&ts->lock, flags);
+		return -ENXIO;
+	}
+
+#ifdef DECT_TOUCH_INTERRUPT
+		set_gpio_ctrl(GPIO_F4, GPIOMD_IN, GPIOPU_EN);
+
+		/* PENDWON PIN OUTPUT */
+		val = ts->codec->codec_read(ts->codec, 0x4C);
+		val &=0xfff7;
+		ts->codec->codec_write(ts->codec, 0x4C,val);
+
+		/* PENDWON PIN ENABLE */
+		val = ts->codec->codec_read(ts->codec, 0x56);
+		val |=0x08;
+		ts->codec->codec_write(ts->codec, 0x56,val);
+
+		set_external_irq(GPIO_F4, EINT_LOW_LEVEL, GPIOPU_EN);
+		if ((ret = request_irq(GPIO_F4, wm97xx_interrupt, 0, "AC97-touchscreen", &ts)) != 0)
+		{
+			err("can't get irq %d falling back to pendown polling\n", GPIO_F4);
+			pen_int = 0;
+		}
+#endif
+
+	/* start digitiser */
+	val = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER2);
+	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2,
+		val | WM97XX_PRP_DET_DIG);
+
+	spin_unlock_irqrestore(&ts->lock, flags);
+	return 0;
+}
+
+
+/*
+ * Start the touchscreen thread and
+ * the touch digitiser.
+*/
+#ifdef DECT_TOUCH_EVENT
+static int wm97xx_ts_input_open(struct input_dev *idev)
+{
+	wm97xx_ts_t *ts = (wm97xx_ts_t *) &wm97xx_ts;
+	u32 flags;
+	int ret, val;
+
+	spin_lock_irqsave( &ts->lock, flags );
+	if ( ts->use_count++ == 0 )
+	{
+
+#ifdef DECT_TOUCH_INTERRUPT
+		set_gpio_ctrl(GPIO_F4, GPIOMD_IN, GPIOPU_EN);
+		/* PENDWON PIN OUTPUT */
+		val = ts->codec->codec_read(ts->codec, 0x4C);
+		val &=0xfff7;
+		ts->codec->codec_write(ts->codec, 0x4C,val);
+
+		/* PENDWON PIN ENABLE */
+		val = ts->codec->codec_read(ts->codec, 0x56);
+		val |=0x08;
+		ts->codec->codec_write(ts->codec, 0x56,val);
+
+		set_external_irq(GPIO_F4, EINT_LOW_LEVEL, GPIOPU_NOSET);
+		if ((ret = request_irq(GPIO_F4, wm97xx_interrupt, 0, "AC97-touchscreen", &ts)) != 0)
+		{
+			err("can't get irq %d falling back to pendown polling\n", GPIO_F4);
+			pen_int = 0;
+		}
+#endif
+		/* start touchscreen thread */
+		ts->idev = idev;
+		init_completion(&ts->thread_init);
+		ret = kernel_thread(wm97xx_thread, ts, 0);
+		if (ret >= 0)
+			wait_for_completion(&ts->thread_init);
+
+		/* start digitiser */
+		val = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER2);
+		ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2,
+								   val | WM97XX_PRP_DET_DIG);
+	}
+	spin_unlock_irqrestore( &ts->lock, flags );
+	return 0;
+}
+#endif
+
+
+#ifndef DECT_TOUCH_EVENT
+static int wm97xx_release(struct inode * inode, struct file * filp)
+{
+	wm97xx_ts_t* ts = (wm97xx_ts_t*)filp->private_data;
+	unsigned long flags;
+	u16 val;
+
+	spin_lock_irqsave(&ts->lock, flags);
+
+#ifdef DECT_TOUCH_INTERRUPT
+
+	free_irq(GPIO_F4, NULL);
+
+	/* PENDWON PIN INPUPUT */
+	val = ts->codec->codec_read(ts->codec, 0x4C);
+	val |=0x08;
+	ts->codec->codec_write(ts->codec, 0x4C,val);
+
+		/* PENDWON PIN DISABLE */
+	val = ts->codec->codec_read(ts->codec, 0x56);
+	val |=0x08;
+	ts->codec->codec_write(ts->codec, 0x56,val);
+#endif
+
+	/* stop digitiser */
+	val = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER2);
+	ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2,
+		val & ~WM97XX_PRP_DET_DIG);
+
+	spin_unlock_irqrestore(&ts->lock, flags);
+	return 0;
+}
+
+#else
+/*
+ * Kill the touchscreen thread and stop
+ * the touch digitiser.
+ */
+static void wm97xx_ts_input_close(struct input_dev *idev)
+{
+	wm97xx_ts_t *ts = (wm97xx_ts_t *) &wm97xx_ts;
+	u32 flags;
+	int val;
+
+	spin_lock_irqsave(&ts->lock, flags);
+	if (--ts->use_count == 0)
+	{
+#ifdef DECT_TOUCH_INTERRUPT
+
+		free_irq(GPIO_F4, NULL);
+		/* PENDWON PIN OUTPUT */
+		val = ts->codec->codec_read(ts->codec, 0x4C);
+		val |=0x08;
+		ts->codec->codec_write(ts->codec, 0x4C,val);
+
+		/* PENDWON PIN DISABLE */
+		val = ts->codec->codec_read(ts->codec, 0x56);
+		val |=0x08;
+		ts->codec->codec_write(ts->codec, 0x56,val);
+#endif
+		/* kill thread */
+		init_completion(&ts->thread_exit);
+		if (ts->rtask)
+		{
+			send_sig(SIGKILL, ts->rtask, 1);
+			wait_for_completion(&ts->thread_exit);
+		}
+
+		/* stop digitiser */
+		val = ts->codec->codec_read(ts->codec, AC97_WM97XX_DIGITISER2);
+		ts->codec->codec_write(ts->codec, AC97_WM97XX_DIGITISER2,
+				       val & ~WM97XX_PRP_DET_DIG);
+
+
+	}
+
+	spin_unlock_irqrestore(&ts->lock, flags);
+}
+#endif
+
 
 static int __init wm97xx_ts_init_module(void)
 {
 	wm97xx_ts_t* ts = &wm97xx_ts;
 	int ret;
 	char proc_str[64];
-	
+
+#ifdef CONFIG_MACH_GP2X_DEBUG
 	info("Wolfson WM9705/WM9712 Touchscreen Controller");
 	info("Version %s  liam.girdwood@wolfsonmicro.com", WM_TS_VERSION);
-	
+#endif
+
 	memset(ts, 0, sizeof(wm97xx_ts_t));
-	
+
+#ifdef DECT_TOUCH_EVENT
+	wm97xx_input.name = "wm97xx touchscreen";
+	wm97xx_input.open = wm97xx_ts_input_open;
+	wm97xx_input.close = wm97xx_ts_input_close;
+	/* absolute position */
+	__set_bit(EV_ABS, wm97xx_input.evbit);
+	/* absolute position XY */
+	__set_bit(ABS_X, wm97xx_input.absbit);
+	__set_bit(ABS_Y, wm97xx_input.absbit);
+	__set_bit(ABS_PRESSURE, wm97xx_input.absbit);
+	input_register_device(&wm97xx_input);
+#else
 	/* register our misc device */
-	if ((ret = misc_register(&wm97xx_misc)) < 0) {
+	if ((ret = misc_register(&wm97xx_misc)) < 0)
+	{
 		err("can't register misc device");
 		return ret;
 	}
-	
-	init_waitqueue_head(&ts->wait);
+#endif
+
 	spin_lock_init(&ts->lock);
-	
-	// initial calibration values
-	ts->cal.xscale = 256;
-	ts->cal.xtrans = 0;
-	ts->cal.yscale = 256;
-	ts->cal.ytrans = 0;
-	
-	/* reset error counters */
-	ts->overruns = 0;
-	ts->adc_errs = 0;
-	
+	init_MUTEX(&ts->sem);
+
 	/* register with the AC97 layer */
 	ac97_register_driver(&wm9705_driver);
-	ac97_register_driver(&wm9712_driver);
-	
+	ac97_register_driver(&wm9712_driver); /* wm97xx_probe call */
+
 #ifdef CONFIG_PROC_FS
 	/* register proc interface */
 	sprintf(proc_str, "driver/%s", TS_NAME);
-	if ((ts->wm97xx_ts_ps = create_proc_read_entry (proc_str, 0, NULL,
-					     wm97xx_read_proc, ts)) == 0)
+	if ((ts->wm97xx_ts_ps = create_proc_read_entry (proc_str, 0, NULL,wm97xx_read_proc, ts)) == 0)
 		err("could not register proc interface /proc/%s", proc_str);
-#ifdef WM97XX_TS_DEBUG
-	if ((ts->wm97xx_debug_ts_ps = create_proc_read_entry ("driver/ac97_registers",
-		0, NULL,wm_debug_read_proc, ts)) == 0)
-		err("could not register proc interface /proc/driver/ac97_registers");
 #endif
-#endif
+
 #ifdef CONFIG_PM
 	if ((ts->pm = pm_register(PM_UNKNOWN_DEV, PM_SYS_UNKNOWN, wm97xx_pm_event)) == 0)
 		err("could not register with power management");
@@ -1327,14 +1446,17 @@ static int __init wm97xx_ts_init_module(void)
 
 static void wm97xx_ts_cleanup_module(void)
 {
-	wm97xx_ts_t* ts = &wm97xx_ts;
 
 #ifdef CONFIG_PM
-	pm_unregister (ts->pm);
+	pm_unregister (wm97xx_ts.pm);
 #endif
+
 	ac97_unregister_driver(&wm9705_driver);
 	ac97_unregister_driver(&wm9712_driver);
-	misc_deregister(&wm97xx_misc);
+
+#ifdef DECT_TOUCH_EVENT
+	input_unregister_device(&wm97xx_input);
+#endif
 }
 
 /* Module information */

@@ -72,7 +72,7 @@ static void audio_clear_buf(audio_stream_t * s)
 	mmsp2_dma_flush_all(s->dma_ch);
 
 	if (s->buffers) {
-		#if 0
+#if 0
 		int frag;
 
 		for (frag = 0; frag < s->nbfrags; frag++) {
@@ -82,7 +82,7 @@ static void audio_clear_buf(audio_stream_t * s)
 					s->buffers[frag].master,
 					s->buffers[frag].dma_addr);
 		}
-		#endif
+#endif
 		kfree(s->buffers);
 		s->buffers = NULL;
 	}
@@ -196,12 +196,7 @@ static void audio_dmaout_done_callback(void *buf_id, int size)
 	s->bytecount += size;
 	s->fragcount++;
 
-	/* Recycle buffer */
-//	if (s->mapped)
-//		mmsp2_dma_queue_buffer(s->dma_ch, buf_id,
-//					b->dma_addr, s->fragsize);
-//	else
-		up(&b->sem);
+	up(&b->sem);
 
 	/* And any process polling on write. */
 	wake_up(&s->wq);
@@ -323,7 +318,8 @@ static int audio_write(struct file *file, const char *buffer,
 	if (!s->buffers && audio_setup_buf(s))
 		return -ENOMEM;
 
-	while (count > 0) {
+	while (count > 0)
+	{
 		audio_buf_t *b = s->buf;
 
 		/* Wait for a buffer to become free */
@@ -338,14 +334,15 @@ static int audio_write(struct file *file, const char *buffer,
 		}
 
 		/* Feed the current buffer */
-		if (s->channels == 2) {
+		if (s->channels == 2)
+		{
 			chunksize = s->fragsize - b->size;
 
 			if (chunksize > count)
 				chunksize = count;
 			ds_printk("write %d to %d\n", chunksize, s->buf_idx);
-			if (copy_from_user(b->start + b->size, buffer,
-					   chunksize)) {
+			if (copy_from_user(b->start + b->size, buffer, chunksize))
+			{
 				up(&b->sem);
 				return -EFAULT;
 			}
@@ -375,8 +372,7 @@ static int audio_write(struct file *file, const char *buffer,
 
 		/* Send current buffer to dma */
 		s->active = 1;
-		mmsp2_dma_queue_buffer(s->dma_ch, (void *) b,
-					 b->dma_addr, b->size);
+		mmsp2_dma_queue_buffer(s->dma_ch, (void *) b,b->dma_addr, b->size);
 		b->size = 0;
 		NEXT_BUF(s, buf);
 	}
@@ -752,10 +748,13 @@ static int audio_ioctl(struct inode *inode, struct file *file,
 
 static int audio_release(struct inode *inode, struct file *file)
 {
+
 	audio_state_t *state = (audio_state_t *)file->private_data;
 
 	ds_printk("mp2520f audio_release\n");
-
+#ifdef CONFIG_MACH_GP2XF200
+	if(!GetTVCheck()) write_gpio_bit(GPIO_F3,0);  //AMP_OFF
+#endif
 	down(&state->sem);
 
 	if (file->f_mode & FMODE_READ) {
@@ -772,6 +771,7 @@ static int audio_release(struct inode *inode, struct file *file)
 	}
 
 	up(&state->sem);
+
 	return 0;
 }
 
@@ -783,7 +783,6 @@ int mp2520f_audio_attach(struct inode *inode, struct file *file,
 	int err, need_tx_dma;
 
 	ds_printk("mp2520f audio_open\n");
-
 	down(&state->sem);
 
 	/* access control */
@@ -793,6 +792,7 @@ int mp2520f_audio_attach(struct inode *inode, struct file *file,
 	if ((file->f_mode & FMODE_READ) && !is)
 		goto out;
 	err = -EBUSY;
+
 	if ((file->f_mode & FMODE_WRITE) && state->wr_ref)
 		goto out;
 	if ((file->f_mode & FMODE_READ) && state->rd_ref)
@@ -806,7 +806,6 @@ int mp2520f_audio_attach(struct inode *inode, struct file *file,
 		is->dma_ch = mmsp2_request_dma(/*DMA_AC97_MIC_IN*/DMA_AC97_LRPCM_IN,
 			(dma_callback_t)audio_dmain_done_callback);
 	}
-
 
 	file->private_data = state;
 	file->f_op->release = audio_release;
@@ -835,6 +834,10 @@ int mp2520f_audio_attach(struct inode *inode, struct file *file,
 	}
 
 	err = 0;
+
+#ifdef CONFIG_MACH_GP2XF200
+	if(!GetTVCheck()) write_gpio_bit(GPIO_F3,1);  //AMP_ON
+#endif
 
 out:
 	up(&state->sem);

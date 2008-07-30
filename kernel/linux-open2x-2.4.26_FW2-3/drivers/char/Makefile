@@ -1,3 +1,5 @@
+# senquack modified this to support F200s
+
 #
 # Makefile for the kernel character device drivers.
 #
@@ -209,6 +211,8 @@ obj-$(CONFIG_MMSP2_VPP) += vpp.o
 obj-$(CONFIG_MMSP2_ISP) += mmsp2_isp.o
 obj-$(CONFIG_MMSP2_KEY) += mmsp2-key.o
 obj-$(CONFIG_MMSP_GPX_BATT)+= mmsp2_batt.o
+#DKS - added this to support F200s:
+obj-$(CONFIG_MMSP_GP2X_ADC)+= mmsp2_ADC.o
 
 ifndef CONFIG_SUN_KEYBOARD
   obj-$(CONFIG_VT) += keyboard.o $(KEYMAP) $(KEYBD)
