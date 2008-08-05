@@ -1,0 +1,166 @@
+gp2x_tslib.lo gp2x_tslib.o: gp2x_tslib.c \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdlib.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/features.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/cdefs.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gnu/stubs.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stddef.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/types.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/types.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wordsize.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/typesizes.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/time.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/endian.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/endian.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/select.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/select.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sigset.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/time.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/sysmacros.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/pthreadtypes.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sched.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/alloca.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdio.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/libio.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/_G_config.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/wchar.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wchar.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gconv.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stdarg.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio_lim.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sys_errlist.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/unistd.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix_opt.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/confname.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/getopt.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/fcntl.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/fcntl.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/fcntl.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/stat.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stat.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/errno.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/errno.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/errno.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/asm/errno.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/limits.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/syslimits.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/limits.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix1_lim.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/local_lim.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/limits.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix2_lim.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/string.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string2.h \
+  tslib.h \
+  /home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/time.h
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdlib.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/features.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/cdefs.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gnu/stubs.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stddef.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/types.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/types.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wordsize.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/typesizes.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/time.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/endian.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/endian.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/select.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/select.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sigset.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/time.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/sysmacros.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/pthreadtypes.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sched.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/alloca.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdio.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/libio.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/_G_config.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/wchar.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wchar.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gconv.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stdarg.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio_lim.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sys_errlist.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stdio.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/unistd.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix_opt.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/confname.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/getopt.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/fcntl.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/fcntl.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/fcntl.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/stat.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/stat.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/errno.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/errno.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/errno.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/asm/errno.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/limits.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/syslimits.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/limits.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix1_lim.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/local_lim.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/limits.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix2_lim.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/string.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string2.h:
+
+tslib.h:
+
+/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/time.h:
