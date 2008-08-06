@@ -77,7 +77,11 @@
   #undef LINUX22
 #endif
 
+//senquack
 #define LPP_BPP ((p->var.bits_per_pixel+7)/8)
+//senquack - changing it to this did nothing to fix progress bug:
+//#define LPP_BPP 2
+
 #define LPP_CHAR_HEIGHT 11
 #define LPP_CHAR_WIDTH 8
 
@@ -265,7 +269,10 @@ static int module_permission(struct inode *inode, int op)
 void fbcon_draw( unsigned char *pic)
 {
    int y;
+	//   senquack - fix for progress bar disappearing after init is called.. changing 
+	//   	[fg_console] to [0] did nothing to help with progress bar in the end..
    struct display *p = &fb_display[fg_console];
+//   struct display *p = &fb_display[0];
    int line = p->next_line;
    unsigned char *fb = p->screen_base + ICON_X*LPP_BPP + ICON_Y * line;
 
@@ -319,6 +326,7 @@ static ssize_t module_input( struct file *file, const char *buf, size_t length, 
 
   if(value > 100 )
     ignore_proc= 1;
+  
   if( !ignore_proc ) fbcon_progress(value, buffer);
 
   return i;
@@ -349,7 +357,8 @@ static ssize_t module_output( struct file *file, char *buf, size_t len, loff_t *
 
 void fbcon_render_char( int offset, int x, int y, unsigned char fgcol[], unsigned char bgcol[] )
 {
-    struct display *p = &fb_display[fg_console]; /* draw to vt in foreground */
+//    struct display *p = &fb_display[fg_console]; /* draw to vt in foreground */
+    struct display *p = &fb_display[0]; /* draw to vt in foreground */
     int line = p->next_line;
     int depth=LPP_BPP;
     unsigned char *fb = p->screen_base + x + y * line;
@@ -375,9 +384,20 @@ void fbcon_write( char *str, int x, int y, int len, unsigned char fgcol[], unsig
   char *idx= "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789():;-+. ";
   char z;
   int offset, k, x_pos= x, sw;
+  
+  //senquack - moved this up here so LPP_BPP macro will work
+
+	//   senquack - fix for progress bar disappearing after init is called.. changing 
+	//   	[fg_console] to [0] did nothing to help with progress bar in the end..
+  struct display *p = &fb_display[fg_console];
+//  struct display *p = &fb_display[0];
+
+  //senquack - fixing character offsets
+  x_pos *= LPP_BPP;
 
 #ifdef LPP_TEXT_BLOCK_HEIGHT
-  struct display *p = &fb_display[fg_console];
+  //  senquack
+//  struct display *p = &fb_display[fg_console];
   int line = p->next_line;
   char *tmp = (p->screen_base+x*LPP_BPP + y * line);
 
@@ -400,7 +420,9 @@ void fbcon_write( char *str, int x, int y, int len, unsigned char fgcol[], unsig
     }
 
     fbcon_render_char( offset, x_pos, y, fgcol, bgcol );
-    x_pos+= LPP_CHAR_WIDTH;
+	 //senquack - fix
+//    x_pos+= LPP_CHAR_WIDTH;
+    x_pos+= LPP_CHAR_WIDTH * LPP_BPP;
   }
 }
 
@@ -431,7 +453,9 @@ void fbcon_progress( unsigned int progress, char *text )
 {
     /* Redraw entire progress bar. */
 
-    struct display *p = &fb_display[fg_console]; /* draw to vt in foreground */
+	//   senquack - fix for progress bar disappearing after init is called
+//    struct display *p = &fb_display[fg_console]; /* draw to vt in foreground */
+    struct display *p = &fb_display[0]; /* draw to vt in foreground */
     int depth = p->var.bits_per_pixel;
     int line = p->next_line;                     /* _bytes_/screen line */
     unsigned char *fb = p->screen_base;
@@ -477,7 +501,11 @@ void fbcon_progress( unsigned int progress, char *text )
 
 void fbcon_progress_setup(unsigned char *fb, unsigned int line){
    /* line = number of bytes/screen line, _not_ the number of pixels. */
-   struct display *p = &fb_display[fg_console]; /* draw to vt in foreground */
+	//
+	//   senquack - fix for progress bar disappearing after init is called
+//   struct display *p = &fb_display[fg_console]; /* draw to vt in foreground */
+   struct display *p = &fb_display[0]; /* draw to vt in foreground */
+
    int depth = LPP_BPP;
    int y;
 

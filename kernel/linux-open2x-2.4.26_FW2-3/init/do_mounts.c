@@ -925,13 +925,17 @@ void prepare_namespace(void)
 		}
 	} else if (is_floppy && rd_doload && rd_load_disk(0))
 		ROOT_DEV = MKDEV(RAMDISK_MAJOR, 0);
-	PROGRESS(48, "Mounting root filesystem");
+	//senquack
+//	PROGRESS(48, "Mounting root filesystem");
+	PROGRESS(40, "Mount root fs");
 	mount_root();
 out:
 	sys_umount("/dev", 0);
 	sys_mount(".", "/", NULL, MS_MOVE, NULL);
 	sys_chroot(".");
-	PROGRESS(49, "Mounting devfs filesystem");
+	//senquack
+//	PROGRESS(49, "Mounting devfs filesystem");
+	PROGRESS(55, "Mount devfs");
 	mount_devfs_fs ();
 }
 

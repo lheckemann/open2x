@@ -484,7 +484,9 @@ static void __init do_basic_setup(void)
 	 */
 	child_reaper = current;
 
-	PROGRESS(1,"Booting System...");
+	//senquack
+//	PROGRESS(1,"Booting System...");
+	PROGRESS(1,"Booting Linux");
 
 #if defined(CONFIG_MTRR)	/* Do this after SMP initialization */
 /*
@@ -541,7 +543,9 @@ static void __init do_basic_setup(void)
 #endif
 
 	/* Networking initialization needs a process context */
-	PROGRESS(3,"Initialising network context");
+	//	senquack
+//	PROGRESS(3,"Initialising network context");
+//	PROGRESS(3,"Init net context");
 	sock_init();
 
 	start_context_thread();
@@ -603,9 +607,15 @@ static int init(void * unused)
 	 * trying to recover a really broken machine.
 	 */
 
-	PROGRESS(50, "Starting init");
+	//senquack - modifying for GP2X
+//	PROGRESS(50, "Starting init");
+	PROGRESS(65, "loading userspace");
 	#ifdef CONFIG_LPP
-	fbcon_register_progress();
+	//senquack - there is a bug somewhere that blanks the progress bar when /proc/progress
+	//	is written to (though I can see it display at a wrong offset when I write to it
+	//	at a command prompt).  I spent an hour fruitlessly trying to fix it.  I will just
+	//	leave it unenabled and do all progress updates from inside the kernel for now.
+//	fbcon_register_progress();
 	#endif
 
 	if (execute_command)

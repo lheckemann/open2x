@@ -740,7 +740,9 @@ static struct file_operations memory_fops = {
 
 int __init chr_dev_init(void)
 {
-	PROGRESS(6,"setting up character devices");
+	//senquack - fixing for GP2X
+//	PROGRESS(6,"setting up character devices");
+	PROGRESS(6,"char devices");
 	if (devfs_register_chrdev(MEM_MAJOR,"mem",&memory_fops))
 		printk("unable to get major %d for memory devs\n", MEM_MAJOR);
 	memory_devfs_register();

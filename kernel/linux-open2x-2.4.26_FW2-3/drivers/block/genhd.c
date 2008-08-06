@@ -244,19 +244,25 @@ extern int atmdev_init(void);
 
 int __init device_init(void)
 {
-	PROGRESS(9,"setting up block devices");
+	//senquack - text too long for GP2X
+//	PROGRESS(9,"setting up block devices");
+	PROGRESS(12,"block devices");
 	blk_dev_init();
 	sti();
 #ifdef CONFIG_NET
-	PROGRESS(26, "setting up network devices");
+	//senquqack - shortening text
+//	PROGRESS(26, "setting up network devices");
+	PROGRESS(26, "network devices");
 	net_dev_init();
 #endif
 #ifdef CONFIG_ATM
-	PROGRESS(28, "setting up ATM");
+	//	senquack
+//	PROGRESS(28, "setting up ATM");
 	(void) atmdev_init();
 #endif
 #ifdef CONFIG_VT
-	PROGRESS(29, "setting up console");
+	//senquack
+//	PROGRESS(29, "setting up console");
 	console_map_init();
 #endif
 	return 0;

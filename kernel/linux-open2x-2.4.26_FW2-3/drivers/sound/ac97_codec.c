@@ -671,6 +671,7 @@ static int ac97_mixer_ioctl(struct ac97_codec *codec, unsigned int cmd, unsigned
 	if (cmd == SOUND_MIXER_PRIVATE2) {
 		get_user(val, (int *)arg);
 		g_volume_scale = val;
+		printk("\nKernel: got new g_volume_scale value: %d\n", g_volume_scale);
 		return 0;
 	}		
 

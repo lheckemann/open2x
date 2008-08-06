@@ -150,7 +150,8 @@ int __init parport_init (void)
 	if (io[0] == PARPORT_DISABLE) 
 		return 1;
 
-	PROGRESS(4,"setting up parport");
+	//	senquack - no parport on GP2X
+//	PROGRESS(4,"setting up parport");
 #ifdef CONFIG_SYSCTL
 	parport_default_proc_register ();
 #endif
