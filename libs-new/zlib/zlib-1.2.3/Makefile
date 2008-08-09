@@ -16,18 +16,18 @@
 # To install in $HOME instead of /usr/local, use:
 #    make install prefix=$HOME
 
-CC=cc
+CC=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc
 
 #CFLAGS=-O
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
-CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS=-O3 -ffast-math -fomit-frame-pointer -mcpu=arm920t -DARM -D_ARM_ASSEM_ -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/libxml2 -I/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/SDL -DUSE_MMAP
 
-LDFLAGS=libz.a
-LDSHARED=$(CC)
-CPP=$(CC) -E
+LDFLAGS=-L. libz.so.1.2.3
+LDSHARED=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -shared -Wl,-soname,libz.so.1
+CPP=/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/arm-open2x-linux-gcc -E
 
-LIBS=libz.a
+LIBS=libz.so.1.2.3
 SHAREDLIB=libz.so
 SHAREDLIBV=libz.so.1.2.3
 SHAREDLIBM=libz.so.1
@@ -38,11 +38,11 @@ TAR=tar
 SHELL=/bin/sh
 EXE=
 
-prefix = /usr/local
-exec_prefix = ${prefix}
-libdir = ${exec_prefix}/lib
-includedir = ${prefix}/include
-mandir = ${prefix}/share/man
+prefix =/opt/open2x/gcc-4.1.1-glibc-2.3.6
+exec_prefix =${prefix}
+libdir =${exec_prefix}/lib
+includedir =${prefix}/include
+mandir =${prefix}/share/man
 man3dir = ${mandir}/man3
 
 OBJS = adler32.o compress.o crc32.o gzio.o uncompr.o deflate.o trees.o \
