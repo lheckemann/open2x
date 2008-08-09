@@ -742,7 +742,7 @@ int __init chr_dev_init(void)
 {
 	//senquack - fixing for GP2X
 //	PROGRESS(6,"setting up character devices");
-	PROGRESS(6,"char devices");
+	PROGRESS(6,"Char devices");
 	if (devfs_register_chrdev(MEM_MAJOR,"mem",&memory_fops))
 		printk("unable to get major %d for memory devs\n", MEM_MAJOR);
 	memory_devfs_register();

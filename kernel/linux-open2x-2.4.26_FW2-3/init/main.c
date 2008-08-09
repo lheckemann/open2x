@@ -609,7 +609,7 @@ static int init(void * unused)
 
 	//senquack - modifying for GP2X
 //	PROGRESS(50, "Starting init");
-	PROGRESS(65, "loading userspace");
+	PROGRESS(65, "Loading userspace");
 	#ifdef CONFIG_LPP
 	//senquack - there is a bug somewhere that blanks the progress bar when /proc/progress
 	//	is written to (though I can see it display at a wrong offset when I write to it

@@ -246,13 +246,13 @@ int __init device_init(void)
 {
 	//senquack - text too long for GP2X
 //	PROGRESS(9,"setting up block devices");
-	PROGRESS(12,"block devices");
+	PROGRESS(12,"Block devices");
 	blk_dev_init();
 	sti();
 #ifdef CONFIG_NET
 	//senquqack - shortening text
 //	PROGRESS(26, "setting up network devices");
-	PROGRESS(26, "network devices");
+	PROGRESS(26, "Network devices");
 	net_dev_init();
 #endif
 #ifdef CONFIG_ATM

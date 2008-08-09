@@ -445,8 +445,11 @@ static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 		//	arbitrary figure.  g_volume_scale defaults to 100, meaning 100%, but 115
 		//	places our eventual figures into a more reasonable level for the amps in
 		//	gp2x's
-		left = (left * g_volume_scale) / 115;
-		right = (right * g_volume_scale) / 115;
+		//senquack - 115 proved to be too quiet for some apps like Supertux
+//		left = (left * g_volume_scale) / 115;
+//		right = (right * g_volume_scale) / 115;
+		left = (left * g_volume_scale) / 105;
+		right = (right * g_volume_scale) / 105;
 
 		if (left > 100) {
 			left = 100;
