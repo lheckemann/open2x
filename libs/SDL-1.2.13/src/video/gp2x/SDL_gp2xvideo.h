@@ -50,6 +50,9 @@ static char rcsid =
 #define GP2X_SCREEN_OFFSET 0
 //0x1101000
 
+// This is used in both gp2xvideo and gp2xyuv, so I put it here to make maintenance easier
+#define GP2X_UPPER_MEM_START 0x2000000
+
 // Number of native modes supported
 #define SDL_NUMMODES 8
 

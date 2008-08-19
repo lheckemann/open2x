@@ -1,6 +1,6 @@
 # sdl pkg-config source file
 
-prefix=/home/senquack/projects/open2x/build/open2x/gcc-4.1.1-glibc-2.3.6
+prefix=/opt/open2x/gcc-4.1.1-glibc-2.3.6
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
