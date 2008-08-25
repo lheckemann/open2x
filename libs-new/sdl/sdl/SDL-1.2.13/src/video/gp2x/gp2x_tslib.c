@@ -1165,20 +1165,66 @@ int linear_init(const char *params)
   //  DKS
 //  linear_dev.swap_xy = 0;
 
-  if ((calfile = getenv("TSLIB_CALIBFILE")) == NULL) calfile = defaultcalfile;
-  if (stat(calfile, &sbuf) == 0) {
-    pcal_fd = open(calfile, O_RDONLY);
-    read(pcal_fd, pcalbuf, 200);
-    linear_dev.a[0] = atoi(strtok(pcalbuf, " "));
-    index = 1;
-    while (index < 7) {
-      tokptr = strtok(NULL, " ");
-      if (*tokptr != '\0') {
-	linear_dev.a[index] = atoi(tokptr);
-	index++;
-      }
-    }
-    close(pcal_fd);
+
+  //DKS - new sanity checks for pointercal file having good values to fix segfault on empty /etc/pointercal
+//  if ((calfile = getenv("TSLIB_CALIBFILE")) == NULL) calfile = defaultcalfile;
+//  if (stat(calfile, &sbuf) == 0) {
+//    pcal_fd = open(calfile, O_RDONLY);
+//    read(pcal_fd, pcalbuf, 200);
+//    linear_dev.a[0] = atoi(strtok(pcalbuf, " "));
+//    index = 1;
+//    while (index < 7) {
+//      tokptr = strtok(NULL, " ");
+//      if (*tokptr != '\0') {
+//	linear_dev.a[index] = atoi(tokptr);
+//	index++;
+//      }
+//    }
+//    close(pcal_fd);
+//  }
+
+	TSLIB_LINEAR tmp_linear_dev;
+	memset(pcalbuf, 0, 200);
+	int got_good_values = 1;	// only when this remains 1 throughout reading of /etc/pointercal will values be accepted into driver
+
+	if ((calfile = getenv("TSLIB_CALIBFILE")) == NULL) calfile = defaultcalfile;
+	if (stat(calfile, &sbuf) == 0) {
+		pcal_fd = open(calfile, O_RDONLY);
+		if (pcal_fd != -1) {
+			int bytes_read = read(pcal_fd, pcalbuf, 200);
+			if (bytes_read > 0) { 
+				tokptr = strtok(pcalbuf, " ");
+				if (tokptr && (isdigit(*tokptr) || (*tokptr == '-'))) {
+					tmp_linear_dev.a[0] = atoi(tokptr);
+					index = 1;
+					while ((index < 7) && got_good_values) {
+						tokptr = strtok(NULL, " ");
+						if (tokptr && (isdigit(*tokptr) || (*tokptr == '-'))) {
+							tmp_linear_dev.a[index] = atoi(tokptr);
+							index++;
+						} else {
+							got_good_values = 0;
+						}
+					}
+				} else {
+					got_good_values = 0;
+				}
+			} else {
+				got_good_values = 0;
+			}
+			
+			close(pcal_fd);
+
+		} else {
+			got_good_values = 0;
+		}
+
+		if (got_good_values) {
+			linear_dev = tmp_linear_dev;
+			fprintf(stderr, "Successfully loaded saved touchscreen calibration values.\n");
+		} else {
+			fprintf(stderr, "Error loading saved touchscreen calibration, using default values\n");
+		}
   }
   //  DKS
 //  if (tslib_parse_vars(linear_vars, NR_LINEAR_VARS, params))
