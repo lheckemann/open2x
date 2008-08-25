@@ -44,7 +44,6 @@ static char rcsid =
 #include "SDL_video.h"
 #include "SDL_mouse.h"
 
-//senquack - had to add path prefixes to all of these to get this to compile
 #include "../SDL_sysvideo.h"
 #include "../SDL_pixels_c.h"
 #include "../../events/SDL_events_c.h"
@@ -52,6 +51,7 @@ static char rcsid =
 #include "SDL_gp2xvideo.h"
 #include "SDL_gp2xevents_c.h"
 #include "SDL_gp2xmouse_c.h"
+#include "SDL_gp2xyuv_c.h"
 #include "mmsp2_regs.h"
 
 #define GP2XVID_DRIVER_NAME "GP2X"
@@ -189,7 +189,7 @@ static SDL_VideoDevice *GP2X_CreateDevice(int devindex)
   device->VideoInit = GP2X_VideoInit;
   device->ListModes = GP2X_ListModes;
   device->SetVideoMode = GP2X_SetVideoMode;
-  device->CreateYUVOverlay = NULL;
+  device->CreateYUVOverlay = GP2X_CreateYUVOverlay;
   device->SetColors = GP2X_SetColors;
   device->UpdateRects = GP2X_UpdateRects;
   device->VideoQuit = GP2X_VideoQuit;
@@ -257,7 +257,7 @@ static int GP2X_VideoInit(_THIS, SDL_PixelFormat *vformat)
     return -1;
   }
   data->vmem = mmap(NULL, GP2X_VIDEO_MEM_SIZE, PROT_READ|PROT_WRITE,
-		    MAP_SHARED, data->memory_fd, 0x2000000);
+		    MAP_SHARED, data->memory_fd, GP2X_UPPER_MEM_START);
   if (data->vmem == (char *)-1) {
     SDL_SetError("Unable to get video memory");
     data->vmem = NULL;
@@ -812,11 +812,14 @@ static int GP2X_FlipHWSurface(_THIS, SDL_Surface *surface)
   GP2X_DummyBlit(this);
   do {} while (data->fio[MESGSTATUS] & MESG_BUSY);
 
+  // Waiting for vblank can be used by the YUV stuff too, so I moved it into a separate function
+  GP2X_WaitVBlank(data);
+
   // wait for vblank to start, choose transition type by polarity
-  if (data->vsync_polarity)
-    do {} while ((data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
-  else
-    do {} while (!(data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+//  if (data->vsync_polarity)
+//    do {} while ((data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
+//  else
+//    do {} while (!(data->io[GPIOB_PINLVL] & GPIOB_VSYNC));
 
   // Wait to be on even field (non-interlaced always returns 0)
   //  do {} while (data->io[SC_STATUS] & SC_DISP_FIELD);
@@ -1560,7 +1563,7 @@ void SDL_GP2X_AllowGfxMemory(char *start, int size)
 {
   SDL_PrivateVideoData *data = current_video->hidden;
   char *end = start + size;
-  char *block = (char*)0x2000000;  // Start of upper memory
+  char *block = (char*)GP2X_UPPER_MEM_START;  // Start of upper memory
 
   data->allow_scratch_memory = 1;
 }

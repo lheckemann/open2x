@@ -51,12 +51,9 @@ static char rcsid =
 
 #include "SDL.h"
 #include "SDL_mutex.h"
-  
-//senquack - had to add path prefixes to all of these to get this to compile
-#include "../../events/SDL_sysevents.h"
 #include "../SDL_sysvideo.h"
 #include "../../events/SDL_events_c.h"
-
+#include "../../events/SDL_sysevents.h"
 #include "SDL_gp2xvideo.h"
 #include "SDL_gp2xevents_c.h"
 #include "SDL_gp2xkeys.h"
@@ -211,8 +208,7 @@ int GP2X_OpenMouse(_THIS)
   if (mousedev == NULL) {
     /* FIXME someday... allow multiple mice in this driver */
     static const char * const ps2mice[] = {
-      "/dev/input/mouse/0", NULL
-      //      "/dev/input/mouse/0", "/dev/usbmouse", "/dev/psaux", NULL
+      "/dev/input/mouse/0", "/dev/usbmouse", "/dev/psaux", NULL
     };
     /* Now try to use a modern PS/2 mouse */
     for (i=0; (this->hidden->mouse_fd < 0) && ps2mice[i]; ++i ) {

@@ -722,206 +722,7 @@ typedef struct {
 	int y;
 } XYHIST;
 
-//#define XYHISTLENGTH 15
-//XYHIST average_xyhist[XYHISTLENGTH];
-//
-//static inline int average_read(TSDEV *ts, TS_SAMPLE *samp, int nr)
-//{
-//
-//	int ret = 0;
-//	int newx, newy;
-//
-//	int flush_history = 0; // variance module will tell us if we are getting fast movements
-//	static int flush_count = 0; // when we get enough fast movements, flush the history
-//	static int xyhist_full = 0; //DKS - when we have a full four samples, this is 1 
-//	static int xyhist_counter = 0; // DKS - how many entires in history?
-//	static int xyhist_index = 0;	//xyhist_index - 1 is index to most-recent sample in array
-//
-//	ret = variance_read(ts, samp, nr, &flush_history);
-//	flush_count += flush_history;
-//	struct ts_sample *s;
-//	s = samp + (ret - 1); // this module can handle more than one sample, but the gp2x
-//								// touchscreen driver only ever provides 1 sample each read so
-//								// it's not really necessary but not really inefficient either way
-//	int i;
-//
-//	for( i = ret; i > 0; i--, s--) {
-//		if ((s->pressure == 0) || (flush_count > 7)) {
-//			// when pen is lifted, or a fast movement is detected, flush stored history
-//			xyhist_full = 0;
-//			xyhist_counter = 0;
-//			xyhist_index = 0;
-//			flush_count = 0;
-//		} else {
-//			average_xyhist[xyhist_index].x = s->x;
-//			average_xyhist[xyhist_index].y = s->y;
-//			
-//			xyhist_counter++;
-//			if (xyhist_counter == XYHISTLENGTH) {
-//				xyhist_full = 1;
-//			}
-//
-//			xyhist_index++;
-//			if (xyhist_index == XYHISTLENGTH) {
-//				xyhist_index = 0; // point back at beginning since array is full
-//			}
-//
-//			if (xyhist_full) {
-//				//we have a full sample history, we can average this sample with the others
-//
-//				int j = xyhist_index - 1; // point j to most recent entry in history
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}
-//
-//				// 15-sample weighted average, pyramid, provides great smoothing for precise
-//				// operations like menus and drawing
-//
-//				// sample 1 has weight of * 1
-//				newx = average_xyhist[j].x;
-//				newy = average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//				
-//				// sample 2 has weight of * 2
-//				newx += average_xyhist[j].x << 1;
-//				newy += average_xyhist[j].y << 1;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 3 has weight of * 3
-//				newx += (average_xyhist[j].x << 1) + average_xyhist[j].x;
-//				newy += (average_xyhist[j].y << 1) + average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 4 has weight of * 4
-//				newx += average_xyhist[j].x << 2;
-//				newy += average_xyhist[j].y << 2;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 5 has weight of * 5
-//				newx += (average_xyhist[j].x << 2) + average_xyhist[j].x;
-//				newy += (average_xyhist[j].y << 2) + average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 6 has weight of * 6
-//				newx += (average_xyhist[j].x << 2) + (average_xyhist[j].x << 1);
-//				newy += (average_xyhist[j].y << 2) + (average_xyhist[j].y << 1);
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 7 has weight of * 7
-//				newx += (average_xyhist[j].x << 3) - average_xyhist[j].x;
-//				newy += (average_xyhist[j].y << 3) - average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 8, middle sample,  has weight of * 8
-//				newx += (average_xyhist[j].x << 3);
-//				newy += (average_xyhist[j].y << 3);
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 9 has weight of * 7
-//				newx += (average_xyhist[j].x << 3) - average_xyhist[j].x;
-//				newy += (average_xyhist[j].y << 3) - average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 10 has weight of * 6
-//				newx += (average_xyhist[j].x << 2) + (average_xyhist[j].x << 1);
-//				newy += (average_xyhist[j].y << 2) + (average_xyhist[j].y << 1);
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 11 has weight of * 5
-//				newx += (average_xyhist[j].x << 2) + average_xyhist[j].x;
-//				newy += (average_xyhist[j].y << 2) + average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 12 has weight of * 4
-//				newx += average_xyhist[j].x << 2;
-//				newy += average_xyhist[j].y << 2;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//			
-//				// sample 13 has weight of * 3
-//				newx += (average_xyhist[j].x << 1) + average_xyhist[j].x;
-//				newy += (average_xyhist[j].y << 1) + average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 14 has weight of * 2
-//				newx += average_xyhist[j].x << 1;
-//				newy += average_xyhist[j].y << 1;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//
-//				// sample 15 has weight of * 1
-//				newx += average_xyhist[j].x;
-//				newy += average_xyhist[j].y;
-//
-//				j--;
-//				if (j < 0) {
-//					j = XYHISTLENGTH - 1;
-//				}		
-//				
-//				// divide results by 64 to provide average
-//				samp->x = newx >> 6;
-//				samp->y = newy >> 6;
-//			}
-//		}
-//	}
-//
-//  return ret;
-//}
-#define XYHISTLENGTH 5
+#define XYHISTLENGTH 15
 XYHIST average_xyhist[XYHISTLENGTH];
 
 static inline int average_read(TSDEV *ts, TS_SAMPLE *samp, int nr)
@@ -976,69 +777,70 @@ static inline int average_read(TSDEV *ts, TS_SAMPLE *samp, int nr)
 				// 15-sample weighted average, pyramid, provides great smoothing for precise
 				// operations like menus and drawing
 
-				// sample 1 has weight of * 15
-				newx = average_xyhist[j].x * 15;
-				newy = average_xyhist[j].y * 15;
+				// sample 1 has weight of * 1
+				newx = average_xyhist[j].x;
+				newy = average_xyhist[j].y;
 
 				j--;
 				if (j < 0) {
 					j = XYHISTLENGTH - 1;
 				}		
 				
-				// sample 2 has weight of * 14
-				newx += average_xyhist[j].x * 14;
-				newy += average_xyhist[j].y * 14;
+				// sample 2 has weight of * 2
+				newx += average_xyhist[j].x << 1;
+				newy += average_xyhist[j].y << 1;
 
 				j--;
 				if (j < 0) {
 					j = XYHISTLENGTH - 1;
 				}		
 
-				// sample 3 has weight of * 13
-				newx += average_xyhist[j].x * 13;
-				newy += average_xyhist[j].y * 13;
-				j--;
-				if (j < 0) {
-					j = XYHISTLENGTH - 1;
-				}		
-
-				// sample 4 has weight of * 12
-				newx += average_xyhist[j].x * 12;
-				newy += average_xyhist[j].y * 12;
+				// sample 3 has weight of * 3
+				newx += (average_xyhist[j].x << 1) + average_xyhist[j].x;
+				newy += (average_xyhist[j].y << 1) + average_xyhist[j].y;
 
 				j--;
 				if (j < 0) {
 					j = XYHISTLENGTH - 1;
 				}		
 
-				// sample 5 has weight of * 11 
-				newx += average_xyhist[j].x * 11;
-				newy += average_xyhist[j].y * 11;
+				// sample 4 has weight of * 4
+				newx += average_xyhist[j].x << 2;
+				newy += average_xyhist[j].y << 2;
 
 				j--;
 				if (j < 0) {
 					j = XYHISTLENGTH - 1;
 				}		
 
-				// sample 6 has weight of * 10
-				newx += average_xyhist[j].x * 10;
-				newy += average_xyhist[j].y * 10;
+				// sample 5 has weight of * 5
+				newx += (average_xyhist[j].x << 2) + average_xyhist[j].x;
+				newy += (average_xyhist[j].y << 2) + average_xyhist[j].y;
 
 				j--;
 				if (j < 0) {
 					j = XYHISTLENGTH - 1;
 				}		
 
-				// sample 7 has weight of * 9
-				newx += average_xyhist[j].x * 9;
-				newy += average_xyhist[j].y * 9;
+				// sample 6 has weight of * 6
+				newx += (average_xyhist[j].x << 2) + (average_xyhist[j].x << 1);
+				newy += (average_xyhist[j].y << 2) + (average_xyhist[j].y << 1);
 
 				j--;
 				if (j < 0) {
 					j = XYHISTLENGTH - 1;
 				}		
 
-				// sample 8, middle sample,  has weight of * 8 
+				// sample 7 has weight of * 7
+				newx += (average_xyhist[j].x << 3) - average_xyhist[j].x;
+				newy += (average_xyhist[j].y << 3) - average_xyhist[j].y;
+
+				j--;
+				if (j < 0) {
+					j = XYHISTLENGTH - 1;
+				}		
+
+				// sample 8, middle sample,  has weight of * 8
 				newx += (average_xyhist[j].x << 3);
 				newy += (average_xyhist[j].y << 3);
 
@@ -1110,14 +912,213 @@ static inline int average_read(TSDEV *ts, TS_SAMPLE *samp, int nr)
 					j = XYHISTLENGTH - 1;
 				}		
 				
-				samp->x = newx / 120;
-				samp->y = newy / 120;
+				// divide results by 64 to provide average
+				samp->x = newx >> 6;
+				samp->y = newy >> 6;
 			}
 		}
 	}
 
   return ret;
 }
+//DKS - non-pyramid form of the above, I cannot tell a real difference, will use pyramid for now.
+//#define XYHISTLENGTH 15
+//XYHIST average_xyhist[XYHISTLENGTH];
+//
+//static inline int average_read(TSDEV *ts, TS_SAMPLE *samp, int nr)
+//{
+//
+//	int ret = 0;
+//	int newx, newy;
+//
+//	int flush_history = 0; // variance module will tell us if we are getting fast movements
+//	static int flush_count = 0; // when we get enough fast movements, flush the history
+//	static int xyhist_full = 0; //DKS - when we have a full four samples, this is 1 
+//	static int xyhist_counter = 0; // DKS - how many entires in history?
+//	static int xyhist_index = 0;	//xyhist_index - 1 is index to most-recent sample in array
+//
+//	ret = variance_read(ts, samp, nr, &flush_history);
+//	flush_count += flush_history;
+//	struct ts_sample *s;
+//	s = samp + (ret - 1); // this module can handle more than one sample, but the gp2x
+//								// touchscreen driver only ever provides 1 sample each read so
+//								// it's not really necessary but not really inefficient either way
+//	int i;
+//
+//	for( i = ret; i > 0; i--, s--) {
+//		if ((s->pressure == 0) || (flush_count > 7)) {
+//			// when pen is lifted, or a fast movement is detected, flush stored history
+//			xyhist_full = 0;
+//			xyhist_counter = 0;
+//			xyhist_index = 0;
+//			flush_count = 0;
+//		} else {
+//			average_xyhist[xyhist_index].x = s->x;
+//			average_xyhist[xyhist_index].y = s->y;
+//			
+//			xyhist_counter++;
+//			if (xyhist_counter == XYHISTLENGTH) {
+//				xyhist_full = 1;
+//			}
+//
+//			xyhist_index++;
+//			if (xyhist_index == XYHISTLENGTH) {
+//				xyhist_index = 0; // point back at beginning since array is full
+//			}
+//
+//			if (xyhist_full) {
+//				//we have a full sample history, we can average this sample with the others
+//
+//				int j = xyhist_index - 1; // point j to most recent entry in history
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}
+//
+//				// 15-sample weighted average, pyramid, provides great smoothing for precise
+//				// operations like menus and drawing
+//
+//				// sample 1 has weight of * 15
+//				newx = average_xyhist[j].x * 15;
+//				newy = average_xyhist[j].y * 15;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//				
+//				// sample 2 has weight of * 14
+//				newx += average_xyhist[j].x * 14;
+//				newy += average_xyhist[j].y * 14;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 3 has weight of * 13
+//				newx += average_xyhist[j].x * 13;
+//				newy += average_xyhist[j].y * 13;
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 4 has weight of * 12
+//				newx += average_xyhist[j].x * 12;
+//				newy += average_xyhist[j].y * 12;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 5 has weight of * 11 
+//				newx += average_xyhist[j].x * 11;
+//				newy += average_xyhist[j].y * 11;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 6 has weight of * 10
+//				newx += average_xyhist[j].x * 10;
+//				newy += average_xyhist[j].y * 10;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 7 has weight of * 9
+//				newx += average_xyhist[j].x * 9;
+//				newy += average_xyhist[j].y * 9;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 8, middle sample,  has weight of * 8 
+//				newx += (average_xyhist[j].x << 3);
+//				newy += (average_xyhist[j].y << 3);
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 9 has weight of * 7
+//				newx += (average_xyhist[j].x << 3) - average_xyhist[j].x;
+//				newy += (average_xyhist[j].y << 3) - average_xyhist[j].y;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 10 has weight of * 6
+//				newx += (average_xyhist[j].x << 2) + (average_xyhist[j].x << 1);
+//				newy += (average_xyhist[j].y << 2) + (average_xyhist[j].y << 1);
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 11 has weight of * 5
+//				newx += (average_xyhist[j].x << 2) + average_xyhist[j].x;
+//				newy += (average_xyhist[j].y << 2) + average_xyhist[j].y;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 12 has weight of * 4
+//				newx += average_xyhist[j].x << 2;
+//				newy += average_xyhist[j].y << 2;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//			
+//				// sample 13 has weight of * 3
+//				newx += (average_xyhist[j].x << 1) + average_xyhist[j].x;
+//				newy += (average_xyhist[j].y << 1) + average_xyhist[j].y;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 14 has weight of * 2
+//				newx += average_xyhist[j].x << 1;
+//				newy += average_xyhist[j].y << 1;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//
+//				// sample 15 has weight of * 1
+//				newx += average_xyhist[j].x;
+//				newy += average_xyhist[j].y;
+//
+//				j--;
+//				if (j < 0) {
+//					j = XYHISTLENGTH - 1;
+//				}		
+//				
+//				samp->x = newx / 120;
+//				samp->y = newy / 120;
+//			}
+//		}
+//	}
+//
+//  return ret;
+//}
 
 /******************************
  * linear
