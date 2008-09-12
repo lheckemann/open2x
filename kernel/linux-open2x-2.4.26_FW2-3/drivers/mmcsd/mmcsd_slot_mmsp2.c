@@ -795,9 +795,6 @@ static struct mmcsd_slot slot = {
 
 static void add_task_handler(void *data)
 {
-	//senquack - added to fix compilation
-	char argv[3][12] = {"/bin/mount", "/mnt/sd", ""};
-	
 	struct mmcsd_slot *slot = (struct mmcsd_slot *)data;
 	int wp;
 	slot->card_in = card_in;
@@ -826,12 +823,12 @@ static void add_task_handler(void *data)
 	add_mmcsd_device(slot);
 
 	#ifdef CONFIG_OPEN2X_SD_AUTOMOUNT
+	char *argv[3];
 	printk("mount...1 \n");
 
-	//	DKS - had to change to get this to compile
-//	argv[0] = "/bin/mount";
-//	argv[1] = "/mnt/sd";
-//	argv[2] = 0;
+	argv[0] = "/bin/mount";
+	argv[1] = "/mnt/sd";
+	argv[2] = 0;
 	call_usermodehelper(argv[0], argv, 0);
 
 	printk("mount...2: \n");
@@ -851,7 +848,6 @@ static void add_task_handler(void *data)
 #endif
 
 }
-
 
 static void del_task_handler(void *data)
 {
