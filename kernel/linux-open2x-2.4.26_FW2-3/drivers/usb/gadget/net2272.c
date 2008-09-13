@@ -985,7 +985,7 @@ net2272_queue (struct usb_ep *_ep, struct usb_request *_req, int gfp_flags)
                                    ep->is_in ? PCI_DMA_FROMDEVICE : PCI_DMA_TODEVICE);
 #endif
 	
-#if 1
+#if 0
 	DEBUG (dev, "%s queue req %p, len %d buf %p dma %08x %s\n",
 			_ep->name, _req, _req->length, _req->buf,
 			_req->dma, _req->zero ? "zero" : "!zero");
