@@ -351,6 +351,7 @@ EXPORT_SYMBOL(GetGp2xInfo);
 EXPORT_SYMBOL(SetGp2xInfo);
 EXPORT_SYMBOL(mmsp_set_SDCLK);
 EXPORT_SYMBOL(mmsp_get_SDCLK);
+EXPORT_SYMBOL(mmsp_get_usbCONN);
 EXPORT_SYMBOL(mmsp_set_usbCONN);
 EXPORT_SYMBOL(mmsp_get_sdsize);
 EXPORT_SYMBOL(set_gpio_ctrl);
