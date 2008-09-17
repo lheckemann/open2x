@@ -310,7 +310,7 @@ int main( int argc, char *argv[] ) {
 			
 			if (image_loaded && image != NULL) {
 				set_rotation(auto_rotate && image->h > image->w ? 3 : 0);
-				set_scale(auto_fit ? (fit_pref == 1 ? fit_outside : fit_inside) : int_to_fixed(1));
+				set_scale(auto_fit ? (fit_pref == 1 ? fit_outside : fit_inside) : scale);
 			}
 			
 			image_update = false;
