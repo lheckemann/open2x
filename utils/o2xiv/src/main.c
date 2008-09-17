@@ -496,15 +496,7 @@ void redraw( void ) {
 	pan_rect.x = max(min(pan_rect.x, pan_rect.w - scaled_rect.w), 0);
 	pan_rect.y = max(min(pan_rect.y, pan_rect.h - scaled_rect.h), 0);
 	
-	// no scaling needed
-	if (scale == int_to_fixed(1) && (drawn_rect.w == 0 || pan_rect.x != drawn_rect.x || pan_rect.y != drawn_rect.y)) {
-		//  printf("pan (no scale)\tx %d\ty %d\tx %d\ty %d\n", pan_rect.x, pan_rect.y, pan_rect.x + min(pan_rect.w, scaled->w), pan_rect.y + min(pan_rect.h, scaled->h)); fflush(stdout);
-		
-		SDL_SetAlpha(image, 0, SDL_ALPHA_OPAQUE);
-		SDL_BlitSurface(image, &pan_rect, scaled, NULL);
-		
-	// scale entire screen
-	} else if (drawn_rect.w == 0) {
+	if (drawn_rect.w == 0) {
 		//  printf("pan (scale)\tx %d\ty %d\tx %d\ty %d\n", pan_rect.x, pan_rect.y, pan_rect.x + min(pan_rect.w, scaled->w), pan_rect.y + min(pan_rect.h, scaled->h)); fflush(stdout);
 		
 		if SDL_MUSTLOCK(image) SDL_LockSurface(image);
