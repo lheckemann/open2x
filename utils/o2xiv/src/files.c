@@ -60,18 +60,17 @@ void file_selector_input( void ) {
 			quit = true;
 			break;
 			
-		case SDLK_KP0:
+		case GP2X_KB_START:
 			toggle_menu();
 			
-		case SDLK_KP_PERIOD:
-		case SDLK_KP_MINUS:
-		case SDLK_KP_PLUS:
+		case GP2X_KB_SELECT:
+		case GP2X_KB_X:
 			toggle_file_selector();
 			need_redraw = true;
 			break;
 			
-		case SDLK_KP_DIVIDE:
-		case SDLK_KP_MULTIPLY:
+		case GP2X_KB_A:
+		case GP2X_KB_B:
 			// selected a directory or file?
 			if (temp_file_index < file_min) {
 				// ..?
@@ -94,6 +93,19 @@ void file_selector_input( void ) {
 				toggle_file_selector();
 			}
 			
+			need_redraw = true;
+			break;
+			
+		case GP2X_KB_Y:
+			temp_file_index = 0;
+			delay += 150;
+			need_redraw = true;
+			break;
+			
+		case GP2X_KB_L:
+		case GP2X_KB_R:
+			temp_file_index = wrap_file_index(temp_file_index + (last_key == GP2X_KB_L ? -10 : 10), false);
+			delay += 150;
 			need_redraw = true;
 			break;
 			

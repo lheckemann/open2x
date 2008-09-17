@@ -35,8 +35,8 @@
 #define GP2X_VK_CLICK           18
 #define GP2X_VK_FA              12
 #define GP2X_VK_FB              13
-#define GP2X_VK_FX              15
-#define GP2X_VK_FY              14
+#define GP2X_VK_FX              14
+#define GP2X_VK_FY              15
 #define GP2X_VK_FL              10
 #define GP2X_VK_FR              11
 #define GP2X_VK_START           8
@@ -46,6 +46,19 @@
 
 #endif
 #endif
+
+#define GP2X_KB_UP     SDLK_UP
+#define GP2X_KB_DOWN   SDLK_DOWN
+#define GP2X_KB_LEFT   SDLK_LEFT
+#define GP2X_KB_RIGHT  SDLK_RIGHT
+#define GP2X_KB_L      SDLK_INSERT
+#define GP2X_KB_R      SDLK_PAGEUP
+#define GP2X_KB_Y      SDLK_HOME
+#define GP2X_KB_X      SDLK_END
+#define GP2X_KB_A      SDLK_DELETE
+#define GP2X_KB_B      SDLK_PAGEDOWN
+#define GP2X_KB_SELECT SDLK_BACKSLASH
+#define GP2X_KB_START  SDLK_RETURN
 
 extern SDLKey last_key;
 extern Uint8 *key_down;

@@ -40,18 +40,18 @@ void menu_input( void ) {
 			quit = true;
 			break;
 			
-		case SDLK_KP_PERIOD:
+		case GP2X_KB_SELECT:
 			toggle_file_selector();
 			
-		case SDLK_KP0:
-		case SDLK_KP_MINUS:
-		case SDLK_KP_PLUS:
+		case GP2X_KB_START:
+		case GP2X_KB_Y:
+		case GP2X_KB_X:
 			toggle_menu();
 			need_redraw = true;
 			break;
 			
-		case SDLK_KP_DIVIDE:
-		case SDLK_KP_MULTIPLY:
+		case GP2X_KB_A:
+		case GP2X_KB_B:
 			switch (menu_select) {
 				case 2:
 					set_scale(int_to_fixed(1));

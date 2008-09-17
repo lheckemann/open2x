@@ -59,28 +59,28 @@ void poll_input( void ) {
 			case SDL_JOYBUTTONDOWN:
 				switch (ev.jbutton.button) {
 					case GP2X_VK_FY:
-						last_key = SDLK_KP_MINUS;
+						last_key = GP2X_KB_Y;
 						break;
 					case GP2X_VK_FX:
-						last_key = SDLK_KP_PLUS;
+						last_key = GP2X_KB_X;
 						break;
 					case GP2X_VK_FA:
-						last_key = SDLK_KP_DIVIDE;
+						last_key = GP2X_KB_A;
 						break;
 					case GP2X_VK_FB:
-						last_key = SDLK_KP_MULTIPLY;
+						last_key = GP2X_KB_B;
 						break;
 					case GP2X_VK_FL:
-						last_key = SDLK_KP7;
+						last_key = GP2X_KB_L;
 						break;
 					case GP2X_VK_FR:
-						last_key = SDLK_KP9;
-						break;
-					case GP2X_VK_START:
-						last_key = SDLK_KP0;
+						last_key = GP2X_KB_R;
 						break;
 					case GP2X_VK_SELECT:
-						last_key = SDLK_KP_PERIOD;
+						last_key = GP2X_KB_SELECT;
+						break;
+					case GP2X_VK_START:
+						last_key = GP2X_KB_START;
 						break;
 				}
 				break;
@@ -95,10 +95,10 @@ void poll_input( void ) {
 		}
 	}
 	
-	input[0] = key_down[SDLK_KP8];
-	input[1] = key_down[SDLK_KP6];
-	input[2] = key_down[SDLK_KP2];
-	input[3] = key_down[SDLK_KP4];
+	input[0] = key_down[GP2X_KB_UP];
+	input[1] = key_down[GP2X_KB_RIGHT];
+	input[2] = key_down[GP2X_KB_DOWN];
+	input[3] = key_down[GP2X_KB_LEFT];
 	input[4] = input[1] && input[3];
 	
 #ifdef TARGET_GP2X
@@ -116,7 +116,7 @@ void poll_input( void ) {
 	         || SDL_JoystickGetButton(joy, GP2X_VK_DOWN_LEFT);
 	input[4] |= SDL_JoystickGetButton(joy, GP2X_VK_CLICK);
 	
-	if (SDL_JoystickGetButton(joy, GP2X_VK_START) && SDL_JoystickGetButton(joy, GP2X_VK_SELECT))
+	if (SDL_JoystickGetButton(joy, GP2X_VK_SELECT) && SDL_JoystickGetButton(joy, GP2X_VK_START))
 		quit = true;
 #endif /* TARGET_GP2X */
 }

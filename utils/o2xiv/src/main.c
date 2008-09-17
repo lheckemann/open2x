@@ -162,35 +162,35 @@ int main( int argc, char *argv[] ) {
 					quit = true;
 					break;
 					
-				case SDLK_KP_PERIOD:
+				case GP2X_KB_SELECT:
 					toggle_file_selector();
 					need_redraw = true;
 					break;
 					
-				case SDLK_KP0:
+				case GP2X_KB_START:
 					toggle_menu();
 					need_redraw = true;
 					break;
 					
-				case SDLK_KP_MINUS:
-				case SDLK_KP_PLUS:
+				case GP2X_KB_Y:
+				case GP2X_KB_X:
 				{
-					fixed ratio = last_key == SDLK_KP_MINUS ? int_div_int_to_fixed(4, 5) : int_div_int_to_fixed(5, 4);
+					fixed ratio = last_key == GP2X_KB_Y ? int_div_int_to_fixed(5, 4) : int_div_int_to_fixed(4, 5);
 					set_scale(fixed_mul(scale, ratio));
 					need_redraw = true;
 					break;
 				}
 				
-				case SDLK_KP_DIVIDE:
-				case SDLK_KP_MULTIPLY:
-					set_rotation(rotation + (last_key == SDLK_KP_DIVIDE ? 3 : 1));
+				case GP2X_KB_A:
+				case GP2X_KB_B:
+					set_rotation(rotation + (last_key == GP2X_KB_A ? 3 : 1));
 					set_scale(auto_fit ? (fit_pref == 1 ? fit_outside : fit_inside) : scale);
 					need_redraw = true;
 					break;
 					
-				case SDLK_KP7:
-				case SDLK_KP9:
-					file_index = wrap_file_index(file_index + (last_key == SDLK_KP7 ? -1 : 1), true);
+				case GP2X_KB_L:
+				case GP2X_KB_R:
+					file_index = wrap_file_index(file_index + (last_key == GP2X_KB_L ? -1 : 1), true);
 					break;
 					
 				default:
