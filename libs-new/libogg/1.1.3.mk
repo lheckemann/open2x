@@ -12,4 +12,4 @@ o2x-libogg:
 	)
 	$(FLAGS) make -C $(LIBOGG_DIR)
 	$(FLAGS) make -C $(LIBOGG_DIR) install
-	#$(FLAGS) make -C $(LIBOGG_DIR) clean
+	$(FLAGS) make -C $(LIBOGG_DIR) clean

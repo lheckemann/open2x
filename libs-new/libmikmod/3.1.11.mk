@@ -13,4 +13,4 @@ o2x-libmikmod:
 	)
 	$(FLAGS) make -C $(LIBMIKMOD_DIR)
 	$(FLAGS) make -C $(LIBMIKMOD_DIR) install
-	#$(FLAGS) make -C $(LIBMIKMOD_DIR) clean
+	$(FLAGS) make -C $(LIBMIKMOD_DIR) clean

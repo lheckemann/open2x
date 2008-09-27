@@ -12,4 +12,4 @@ o2x-libpng: o2x-zlib
 	)
 	$(FLAGS) make -C $(LIBPNG_DIR)
 	$(FLAGS) make -C $(LIBPNG_DIR) install
-	#$(FLAGS) make -C $(LIBPNG_DIR) clean
+	$(FLAGS) make -C $(LIBPNG_DIR) clean

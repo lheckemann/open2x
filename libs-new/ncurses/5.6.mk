@@ -12,4 +12,4 @@ o2x-ncurses:
 	)
 	$(FLAGS) make -C $(NCURSES_DIR)
 	$(FLAGS) make -C $(NCURSES_DIR) install
-	#$(FLAGS) make -C $(NCURSES_DIR) clean
+	$(FLAGS) make -C $(NCURSES_DIR) clean

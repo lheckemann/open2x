@@ -1,0 +1,122 @@
+iconvert.lo iconvert.o: iconvert.c ../../../config.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/assert.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/features.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/cdefs.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gnu/stubs.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/errno.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/errno.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/errno.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/asm/errno.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/include/iconv.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stddef.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdlib.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/types.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/types.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wordsize.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/typesizes.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/time.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/endian.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/endian.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/select.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/select.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sigset.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/time.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/sysmacros.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/pthreadtypes.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sched.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/alloca.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/string.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string2.h \
+  iconvert.h ../../../include/share/alloc.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/limits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/syslimits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/limits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix1_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/local_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/limits.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix2_lim.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdint.h \
+  /opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wchar.h
+
+../../../config.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/assert.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/features.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/cdefs.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/gnu/stubs.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/errno.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/errno.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/errno.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/asm/errno.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/include/iconv.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/stddef.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdlib.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/types.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/types.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wordsize.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/typesizes.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/time.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/endian.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/endian.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/select.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/select.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sigset.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/time.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/sys/sysmacros.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/pthreadtypes.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/sched.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/alloca.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/string.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/string2.h:
+
+iconvert.h:
+
+../../../include/share/alloc.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/limits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/include/syslimits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/limits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix1_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/local_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/linux/limits.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/posix2_lim.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/stdint.h:
+
+/opt/open2x/gcc-4.1.1-glibc-2.3.6/bin/../lib/gcc/arm-open2x-linux/4.1.1/../../../../arm-open2x-linux/sys-include/bits/wchar.h:

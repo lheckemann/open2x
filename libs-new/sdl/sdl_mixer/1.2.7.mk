@@ -17,4 +17,4 @@ o2x-sdl_mixer: o2x-sdl o2x-libogg o2x-libmikmod o2x-libogg o2x-libid3tag o2x-tre
 	)
 	$(FLAGS) make -C $(SDL_MIXER_DIR)
 	$(FLAGS) make -C $(SDL_MIXER_DIR) install
-	#$(FLAGS) make -C $(SDL_MIXER_DIR) clean
+	$(FLAGS) make -C $(SDL_MIXER_DIR) clean

@@ -12,4 +12,4 @@ o2x-libxml2:
 	)
 	$(FLAGS) make -C $(LIBXML2_DIR)
 	$(FLAGS) make -C $(LIBXML2_DIR) install
-	#$(FLAGS) make -C $(LIBXML2_DIR) clean
+	$(FLAGS) make -C $(LIBXML2_DIR) clean

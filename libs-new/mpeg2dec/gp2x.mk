@@ -22,4 +22,4 @@ o2x-mpeg2dec: #o2x-sdl
 	)
 	$(FLAGS) make -C $(MPEG2DEC_DIR)
 	$(FLAGS) make -C $(MPEG2DEC_DIR) install
-	#$(FLAGS) make -C $(MPEG2DEC_DIR) clean
+	$(FLAGS) make -C $(MPEG2DEC_DIR) clean

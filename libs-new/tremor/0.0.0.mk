@@ -13,4 +13,4 @@ o2x-tremor:
 	)
 	$(FLAGS) make -C $(TREMOR_DIR)
 	$(FLAGS) make -C $(TREMOR_DIR) install
-	#$(FLAGS) make -C $(TREMOR_DIR) clean
+	$(FLAGS) make -C $(TREMOR_DIR) clean

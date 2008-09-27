@@ -12,4 +12,4 @@ o2x-libid3tag: o2x-zlib
 	)
 	$(FLAGS) make -C $(LIBID3TAG_DIR)
 	$(FLAGS) make -C $(LIBID3TAG_DIR) install
-	#$(FLAGS) make -C $(LIBID3TAG_DIR) clean
+	$(FLAGS) make -C $(LIBID3TAG_DIR) clean

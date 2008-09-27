@@ -13,4 +13,4 @@ o2x-libjpeg:
 	$(FLAGS) make -C $(LIBJPEG_DIR)
 	$(FLAGS) make -C $(LIBJPEG_DIR) install-lib
 	$(FLAGS) make -C $(LIBJPEG_DIR) install-headers
-	#$(FLAGS) make -C $(LIBJPEG_DIR) clean
+	$(FLAGS) make -C $(LIBJPEG_DIR) clean

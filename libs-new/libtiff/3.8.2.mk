@@ -12,4 +12,4 @@ o2x-libtiff:
 	)
 	$(FLAGS) make -C $(LIBTIFF_DIR)
 	$(FLAGS) make -C $(LIBTIFF_DIR) install
-	#$(FLAGS) make -C $(LIBTIFF_DIR) clean
+	$(FLAGS) make -C $(LIBTIFF_DIR) clean

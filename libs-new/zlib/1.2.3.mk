@@ -19,4 +19,4 @@ o2x-zlib:
 	)
 	$(FLAGS) make -C $(ZLIB_DIR)
 	$(FLAGS) make -C $(ZLIB_DIR) install
-	#$(FLAGS) make -C $(ZLIB_DIR) clean
+	$(FLAGS) make -C $(ZLIB_DIR) clean

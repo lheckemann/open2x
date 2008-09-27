@@ -21,4 +21,4 @@ o2x-sdl:
 	)
 	$(FLAGS) make -C $(SDL_DIR)
 	$(FLAGS) make -C $(SDL_DIR) install
-	#$(FLAGS) make -C $(SDL_DIR) clean
+	$(FLAGS) make -C $(SDL_DIR) clean

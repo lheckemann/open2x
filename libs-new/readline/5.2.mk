@@ -12,4 +12,4 @@ o2x-readline:
 	)
 	$(FLAGS) make -C $(READLINE_DIR)
 	$(FLAGS) make -C $(READLINE_DIR) install
-	#$(FLAGS) make -C $(READLINE_DIR) clean
+	$(FLAGS) make -C $(READLINE_DIR) clean

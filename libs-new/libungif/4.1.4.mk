@@ -12,4 +12,4 @@ o2x-libungif:
 	)
 	$(FLAGS) make -C $(LIBUNGIF_DIR)
 	$(FLAGS) make -C $(LIBUNGIF_DIR) install
-	#$(FLAGS) make -C $(LIBUNGIF_DIR) clean
+	$(FLAGS) make -C $(LIBUNGIF_DIR) clean

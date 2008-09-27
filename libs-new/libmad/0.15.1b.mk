@@ -13,4 +13,4 @@ o2x-libmad:
 	)
 	$(FLAGS) make -C $(LIBMAD_DIR)
 	$(FLAGS) make -C $(LIBMAD_DIR) install
-	#$(FLAGS) make -C $(LIBMAD_DIR) clean
+	$(FLAGS) make -C $(LIBMAD_DIR) clean

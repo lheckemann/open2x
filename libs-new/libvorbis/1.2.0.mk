@@ -13,4 +13,4 @@ o2x-libvorbis:
 	)
 	$(FLAGS) make -C $(LIBVORBIS_DIR)
 	$(FLAGS) make -C $(LIBVORBIS_DIR) install
-	#$(FLAGS) make -C $(LIBVORBIS_DIR) clean
+	$(FLAGS) make -C $(LIBVORBIS_DIR) clean

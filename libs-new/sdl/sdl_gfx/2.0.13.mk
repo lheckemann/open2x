@@ -14,4 +14,4 @@ o2x-sdl_gfx: o2x-sdl
 	)
 	$(FLAGS) make -C $(SDL_GFX_DIR)
 	$(FLAGS) make -C $(SDL_GFX_DIR) install
-	#$(FLAGS) make -C $(SDL_GFX_DIR) clean
+	$(FLAGS) make -C $(SDL_GFX_DIR) clean

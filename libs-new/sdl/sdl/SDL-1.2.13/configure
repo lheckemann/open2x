@@ -34396,7 +34396,7 @@ _ACEOF
         CheckX11
         CheckNANOX
         CheckFBCON
-			CheckGP2XVideo
+		CheckGP2XVideo
         CheckDirectFB
         CheckPS2GS
         CheckGGI

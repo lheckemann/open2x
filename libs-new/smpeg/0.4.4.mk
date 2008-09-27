@@ -16,4 +16,4 @@ o2x-smpeg: o2x-sdl
 	)
 	$(FLAGS) make -C $(SMPEG_DIR)
 	$(FLAGS) make -C $(SMPEG_DIR) install
-	#$(FLAGS) make -C $(SMPEG_DIR) clean
+	$(FLAGS) make -C $(SMPEG_DIR) clean

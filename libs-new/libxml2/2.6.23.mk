@@ -3,7 +3,7 @@ LIBXML2_DIR := libxml2/libxml2-2.6.23
 o2x-libxml2:
 	@-echo "Build libxml2"
 	(cd $(LIBXML2_DIR); rm -rf config.cache; \
-		#$(FLAGS) ./configure --prefix=$(PREFIX)\
+		$(FLAGS) ./configure --prefix=$(PREFIX)\
 				--target=$(TARGET)\
 				--host=$(HOST)\
 				--build=$(BUILD)\
@@ -12,4 +12,4 @@ o2x-libxml2:
 	)
 	$(FLAGS) make -C $(LIBXML2_DIR)
 	$(FLAGS) make -C $(LIBXML2_DIR) install
-	#$(FLAGS) make -C $(LIBXML2_DIR) clean
+	$(FLAGS) make -C $(LIBXML2_DIR) clean

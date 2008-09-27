@@ -14,4 +14,4 @@ o2x-imlib2:
 	)
 	$(FLAGS) make -C $(IMLIB2_DIR)
 	$(FLAGS) make -C $(IMLIB2_DIR) install
-	#$(FLAGS) make -C $(IMLIB2_DIR) clean
+	$(FLAGS) make -C $(IMLIB2_DIR) clean

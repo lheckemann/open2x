@@ -15,4 +15,4 @@ o2x-sdl_ttf: o2x-sdl o2x-freetype
 	)
 	$(FLAGS) make -C $(SDL_TTF_DIR)
 	$(FLAGS) make -C $(SDL_TTF_DIR) install
-	#$(FLAGS) make -C $(SDL_TTF_DIR) clean
+	$(FLAGS) make -C $(SDL_TTF_DIR) clean

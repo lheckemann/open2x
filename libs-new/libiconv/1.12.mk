@@ -12,4 +12,4 @@ o2x-libiconv:
 	)
 	$(FLAGS) make -C $(LIBICONV_DIR)
 	$(FLAGS) make -C $(LIBICONV_DIR) install
-	#$(FLAGS) make -C $(LIBICONV_DIR) clean
+	$(FLAGS) make -C $(LIBICONV_DIR) clean

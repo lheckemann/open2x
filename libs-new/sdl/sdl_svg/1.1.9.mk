@@ -13,4 +13,4 @@ o2x-sdl_svg: o2x-sdl o2x-libxml2
 	)
 	$(FLAGS) make -C $(SDL_SVG_DIR)
 	$(FLAGS) make -C $(SDL_SVG_DIR) install
-	#$(FLAGS) make -C $(SDL_SVG_DIR) clean
+	$(FLAGS) make -C $(SDL_SVG_DIR) clean

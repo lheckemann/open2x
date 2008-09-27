@@ -19,6 +19,8 @@
 
  ********************************************************************/
 
+/*********** Modified by Johannes Heimansberg 13 Nov 2006 ***********/
+
 #include <stdlib.h>
 #include <string.h>
 #include "ogg.h"

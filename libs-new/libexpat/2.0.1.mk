@@ -13,4 +13,4 @@ o2x-libexpat:
 	)
 	$(FLAGS) make -C $(LIBEXPAT_DIR)
 	$(FLAGS) make -C $(LIBEXPAT_DIR) install
-	#$(FLAGS) make -C $(LIBEXPAT_DIR) clean
+	$(FLAGS) make -C $(LIBEXPAT_DIR) clean

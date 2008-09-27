@@ -14,4 +14,4 @@ o2x-sdl_image: o2x-sdl o2x-imlib2 o2x-libjpeg o2x-libpng o2x-libtiff o2x-libungi
 	)
 	$(FLAGS) make -C $(SDL_IMAGE_DIR)
 	$(FLAGS) make -C $(SDL_IMAGE_DIR) install
-	#$(FLAGS) make -C $(SDL_IMAGE_DIR) clean
+	$(FLAGS) make -C $(SDL_IMAGE_DIR) clean

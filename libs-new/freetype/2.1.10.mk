@@ -12,4 +12,4 @@ o2x-freetype:
 	)
 	$(FLAGS) make -C $(FREETYPE_DIR)
 	$(FLAGS) make -C $(FREETYPE_DIR) install
-	#$(FLAGS) make -C $(FREETYPE_DIR) clean
+	$(FLAGS) make -C $(FREETYPE_DIR) clean
