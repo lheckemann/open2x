@@ -2,6 +2,7 @@ SDL_DIR := sdl/sdl/SDL-1.2.13
 
 o2x-sdl:
 	@-echo "Build SDL"
+	$(FLAGS) make -C $(SDL_DIR) distclean
 	(cd $(SDL_DIR); rm -rf config.cache; \
 		./autogen.sh; \
 		$(FLAGS) ./configure --prefix=$(PREFIX)\
@@ -16,6 +17,7 @@ o2x-sdl:
 				--enable-threads\
 				--disable-video-directfb\
 				--disable-video-x11\
+				--enable-cdrom\
 				--disable-arts\
 				--disable-esd\
 				--enable-video\
@@ -23,4 +25,4 @@ o2x-sdl:
 	)
 	$(FLAGS) make -C $(SDL_DIR)
 	$(FLAGS) make -C $(SDL_DIR) install
-	#$(FLAGS) make -C $(SDL_DIR) clean
+	$(FLAGS) make -C $(SDL_DIR) clean
