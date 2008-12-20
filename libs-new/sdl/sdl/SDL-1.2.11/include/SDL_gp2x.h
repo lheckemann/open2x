@@ -47,6 +47,11 @@ void *SDL_GP2X_PhysAddress(SDL_Surface *surface);
 // Query GP2X mouse type
 int SDL_GP2X_MouseType();
 
+// Get (semi-)raw touchpad position (not SDL position)
+//   0 <= x <= 319, 0 <= y <= 239
+//   Return value is pressure (any non zero value means pressed)
+int SDL_GP2X_Touchpad(int *x, int *y);
+
 #ifdef __cplusplus
 }
 #endif

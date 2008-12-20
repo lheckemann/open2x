@@ -28,6 +28,9 @@ static char rcsid =
 #ifndef _SDL_gp2xvideo_h
 #define _SDL_gp2xvideo_h
 
+#include <sys/types.h>
+#include <termios.h>
+
 #include "SDL_mouse.h"
 #include "../SDL_sysvideo.h"
 #include "SDL_mutex.h"
@@ -93,11 +96,50 @@ typedef struct SDL_WMcursor {
 ////
 // Private display data
 
+//DKS - disabled in favor of newer code from 1.2.9
+//typedef struct SDL_PrivateVideoData {
+//  int memory_fd, fbcon_fd, mouse_fd, keyboard_fd;
+//  int saved_keybd_mode;
+//  int mouse_type;
+//  //  struct termios saved_kbd_termios;
+//  int x_offset, y_offset, ptr_offset;
+//  int w, h, pitch;
+//  int vsync_polarity;
+//  int phys_width, phys_height, phys_pitch, phys_ilace;
+//  int scale_x, scale_y;
+//  int xscale, yscale;
+//  int invxscale, invyscale;
+//  SDL_mutex *hw_lock;
+//  unsigned short fastioclk, grpclk;
+//  unsigned short src_foreground, src_background;
+//  char *vmem;
+//  int buffer_showing;
+//  char *buffer_addr[2];
+//  unsigned short volatile *io;
+//  unsigned int volatile *fio;
+//  video_bucket video_mem;
+//  char *surface_mem;
+//  int memory_left;
+//  int memory_max;
+//  int allow_scratch_memory;
+//  SDL_WMcursor *visible_cursor;
+//  int cursor_px, cursor_py, cursor_vx, cursor_vy;
+//  SDL_Rect *SDL_modelist[SDL_NUMMODES+1];
+//  unsigned short stl_cntl, stl_mixmux, stl_alphal, stl_alphah;
+//  unsigned short stl_hsc, stl_vscl, stl_vsch, stl_hw;
+//  unsigned short stl_oadrl, stl_oadrh, stl_eadrl, stl_eadrh;
+//  unsigned short stl_regions[16]; // 1<=x<=4 of STLx_STX, _ENDX, _STY, _ENDY
+//  unsigned short mlc_ovlay_cntr;
+//} SDL_PrivateVideoData;
 typedef struct SDL_PrivateVideoData {
   int memory_fd, fbcon_fd, mouse_fd, keyboard_fd;
-  int saved_keybd_mode;
+  int saved_kbd_mode;
+  int current_vt;
+  int saved_vt;
   int mouse_type;
-  //  struct termios saved_kbd_termios;
+  struct tsdev *ts_dev;
+  struct termios saved_kbd_termios;
+  int touch_x, touch_y, touch_pressure;
   int x_offset, y_offset, ptr_offset;
   int w, h, pitch;
   int vsync_polarity;
@@ -191,5 +233,5 @@ static inline void GP2X_WaitVBlank(const SDL_PrivateVideoData *data)
 }
 
 
-//#define GP2X_DEBUG 1
+//#define GP2X_DEBUG 
 #endif // _SDL_gp2xvideo_h

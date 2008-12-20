@@ -35,5 +35,9 @@ extern void GP2X_CloseMouse(_THIS);
 extern void GP2X_InitOSKeymap(_THIS);
 extern void GP2X_PumpEvents(_THIS);
 
+//DKS - new stuff for USB keyboard
+extern int GP2X_OpenKeyboard(_THIS);
+extern void GP2X_CloseKeyboard(_THIS);
+
 /* end of SDL_gp2xevents_c.h ... */
 

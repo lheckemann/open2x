@@ -208,7 +208,7 @@ m4trace:configure.in:14: -1- m4_pattern_allow([^const$])
 m4trace:configure.in:14: -1- AH_OUTPUT([const], [/* Define to empty if `const\' does not conform to ANSI C. */
 #undef const])
 m4trace:configure.in:35: -1- _m4_warn([obsolete], [The macro `ac_cv_prog_gcc' is obsolete.
-You should run autoupdate.], [../../lib/autoconf/c.m4:510: ac_cv_prog_gcc is expanded from...
+You should run autoupdate.], [../../lib/autoconf/c.m4:538: ac_cv_prog_gcc is expanded from...
 configure.in:35: the top level])
 m4trace:configure.in:43: -1- AC_SUBST([OSMESA_CONFIG])
 m4trace:configure.in:43: -1- AC_SUBST_TRACE([OSMESA_CONFIG])
@@ -223,11 +223,11 @@ m4trace:configure.in:64: -1- AC_SUBST([SDL_CONFIG])
 m4trace:configure.in:64: -1- AC_SUBST_TRACE([SDL_CONFIG])
 m4trace:configure.in:64: -1- m4_pattern_allow([^SDL_CONFIG$])
 m4trace:configure.in:64: -1- _m4_warn([obsolete], [The macro `AC_TRY_RUN' is obsolete.
-You should run autoupdate.], [../../lib/autoconf/general.m4:2478: AC_TRY_RUN is expanded from...
+You should run autoupdate.], [../../lib/autoconf/general.m4:2591: AC_TRY_RUN is expanded from...
 aclocal.m4:11: AM_PATH_SDL is expanded from...
 configure.in:64: the top level])
 m4trace:configure.in:64: -1- _m4_warn([obsolete], [The macro `AC_TRY_LINK' is obsolete.
-You should run autoupdate.], [../../lib/autoconf/general.m4:2414: AC_TRY_LINK is expanded from...
+You should run autoupdate.], [../../lib/autoconf/general.m4:2526: AC_TRY_LINK is expanded from...
 aclocal.m4:11: AM_PATH_SDL is expanded from...
 configure.in:64: the top level])
 m4trace:configure.in:64: -1- AC_SUBST([SDL_CFLAGS])
@@ -237,7 +237,7 @@ m4trace:configure.in:64: -1- AC_SUBST([SDL_LIBS])
 m4trace:configure.in:64: -1- AC_SUBST_TRACE([SDL_LIBS])
 m4trace:configure.in:64: -1- m4_pattern_allow([^SDL_LIBS$])
 m4trace:configure.in:74: -1- _m4_warn([obsolete], [The macro `AC_TRY_COMPILE' is obsolete.
-You should run autoupdate.], [../../lib/autoconf/general.m4:2367: AC_TRY_COMPILE is expanded from...
+You should run autoupdate.], [../../lib/autoconf/general.m4:2469: AC_TRY_COMPILE is expanded from...
 configure.in:74: the top level])
 m4trace:configure.in:87: -1- AC_SUBST([GLLIB])
 m4trace:configure.in:87: -1- AC_SUBST_TRACE([GLLIB])
@@ -252,6 +252,7 @@ m4trace:configure.in:90: -1- AC_SUBST([LTLIBOBJS], [$ac_ltlibobjs])
 m4trace:configure.in:90: -1- AC_SUBST_TRACE([LTLIBOBJS])
 m4trace:configure.in:90: -1- m4_pattern_allow([^LTLIBOBJS$])
 m4trace:configure.in:90: -1- AC_SUBST_TRACE([top_builddir])
+m4trace:configure.in:90: -1- AC_SUBST_TRACE([top_build_prefix])
 m4trace:configure.in:90: -1- AC_SUBST_TRACE([srcdir])
 m4trace:configure.in:90: -1- AC_SUBST_TRACE([abs_srcdir])
 m4trace:configure.in:90: -1- AC_SUBST_TRACE([top_srcdir])
