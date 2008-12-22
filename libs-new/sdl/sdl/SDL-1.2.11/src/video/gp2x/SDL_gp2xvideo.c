@@ -184,6 +184,9 @@ static SDL_VideoDevice *GP2X_CreateDevice(int devindex)
   device->hidden->mouse_fd = -1;
   device->hidden->keyboard_fd = -1;
 
+  // senquack - new user-configurable option, see SDL_gp2xvideo.h for description
+  device->hidden->mouse_button_events_enabled = 1;		/* default is enabled */
+
   // Set the function pointers
   device->VideoInit = GP2X_VideoInit;
   device->ListModes = GP2X_ListModes;
@@ -1609,4 +1612,15 @@ int SDL_GP2X_Touchpad(int *x, int *y)
   if (x) *x = current_video->hidden->touch_x;
   if (y) *y = current_video->hidden->touch_y;
   return current_video->hidden->touch_pressure;
+}
+
+// Enable (1) or disable (0) the touchscreen stylus from causing mouse button events.  
+// In some games/apps it is desirable to have the stylus only used for positioning of
+// the cursor with clicking done by joystick buttons. Default is enabled.
+void SDL_GP2X_TouchpadMouseButtonEvents(int enabled)
+{
+	if (current_video->hidden->mouse_type == 2)
+	{
+		current_video->hidden->mouse_button_events_enabled = enabled ? 1:0;
+	}
 }

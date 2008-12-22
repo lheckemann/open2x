@@ -363,25 +363,29 @@ void GP2X_vgamousecallback(int button, int relative, int dx, int dy)
     posted += SDL_PrivateMouseMotion(0, relative, dx, dy);
   }
 
-  /* Swap button 1 and 3 */
-  button_1 = (button & 0x04) >> 2;
-  button_3 = (button & 0x01) << 2;
-  button &= ~0x05;
-  button |= (button_1|button_3);
+  //senquack - support for new option to disable mouse button events from touchscreen
+	if (current_video->hidden->mouse_button_events_enabled)
+	{
+	  /* Swap button 1 and 3 */
+	  button_1 = (button & 0x04) >> 2;
+	  button_3 = (button & 0x01) << 2;
+	  button &= ~0x05;
+	  button |= (button_1|button_3);
 
-  /* See what changed */
-  button_state = SDL_GetMouseState(NULL, NULL);
-  state_changed = button_state ^ button;
-  for (i=0; i<8; ++i ) {
-    if (state_changed & (1<<i)) {
-      if (button & (1<<i)) {
-	state = SDL_PRESSED;
-      } else {
-	state = SDL_RELEASED;
-      }
-      posted += SDL_PrivateMouseButton(state, i+1, 0, 0);
-    }
-  }
+	  /* See what changed */
+	  button_state = SDL_GetMouseState(NULL, NULL);
+	  state_changed = button_state ^ button;
+	  for (i=0; i<8; ++i ) {
+		 if (state_changed & (1<<i)) {
+			if (button & (1<<i)) {
+				state = SDL_PRESSED;
+			} else {
+				state = SDL_RELEASED;
+			}
+			posted += SDL_PrivateMouseButton(state, i+1, 0, 0);
+		 }
+	  }
+	}
 }
 
 //DKS - pulled from my modifications to SDL 1.2.9
