@@ -52,6 +52,11 @@ int SDL_GP2X_MouseType();
 //   Return value is pressure (any non zero value means pressed)
 int SDL_GP2X_Touchpad(int *x, int *y);
 
+// Enable (1) or disable (0) the touchscreen stylus from causing mouse button events.  
+// In some games/apps it is desirable to have the stylus only used for positioning of
+// the cursor with clicking done by joystick buttons. Default is enabled.
+void SDL_GP2X_TouchpadMouseButtonEvents(int enabled);
+
 #ifdef __cplusplus
 }
 #endif

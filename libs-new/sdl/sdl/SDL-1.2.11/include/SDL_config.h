@@ -128,7 +128,7 @@
 #define HAVE_ICONV 1
 #define HAVE_SIGACTION 1
 #define HAVE_SETJMP 1
-#define HAVE_NANOSLEEP 1
+/* #undef HAVE_NANOSLEEP */
 /* #undef HAVE_CLOCK_GETTIME */
 #define HAVE_DLVSYM 1
 
