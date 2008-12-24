@@ -28,16 +28,11 @@
 #include <SDL_gfxPrimitives.h>
 #include <signal.h>
 
-//for statfs
-#include <sys/vfs.h>
+#include <sys/statvfs.h>
 #include <errno.h>
 
 #include "gp2x.h"
-#ifdef TARGET_GP2X
-//#include <SDL_gp2x.h>
-#include <SDL_joystick.h>
 #include <sys/fcntl.h> //for battery
-#endif
 
 //for browsing the filesystem
 #include <sys/stat.h>
@@ -75,6 +70,7 @@
 
 #include <sys/mman.h>
 
+
 using namespace std;
 using namespace fastdelegate;
 
@@ -94,49 +90,50 @@ void GMenu2X::gp2x_init() {
 	gp2x_memregs=(unsigned short *)mmap(0, 0x10000, PROT_READ|PROT_WRITE, MAP_SHARED, gp2x_mem, 0xc0000000);
 	MEM_REG=&gp2x_memregs[0];
 
-	if (f200)
+	batteryHandle = open(f200 ? "/dev/mmsp2adc" : "/dev/batt", O_RDONLY);
+	if (f200) {
 		//if wm97xx fails to open, set f200 to false to prevent any further access to the touchscreen
 		f200 = ts.init();
+	}
 #endif
 }
 
 void GMenu2X::gp2x_deinit() {
 #ifdef TARGET_GP2X
-	gp2x_memregs[0x28DA>>1]=0x4AB;
-	gp2x_memregs[0x290C>>1]=640;
-	close(gp2x_mem);
+	if (gp2x_mem!=0) {
+		gp2x_memregs[0x28DA>>1]=0x4AB;
+		gp2x_memregs[0x290C>>1]=640;
+		close(gp2x_mem);
+	}
+	if (batteryHandle!=0) close(batteryHandle);
 	if (f200) ts.deinit();
 #endif
 }
 
 void GMenu2X::gp2x_tvout_on(bool pal) {
 #ifdef TARGET_GP2X
-	if (cx25874!=0) gp2x_tvout_off();
-	//if tv-out is enabled without cx25874 open, stop
-	//if (gp2x_memregs[0x2800>>1]&0x100) return;
-	cx25874 = open("/dev/cx25874",O_RDWR);
-	ioctl(cx25874, _IOW('v', 0x02, unsigned char), pal ? 4 : 3);
-	gp2x_memregs[0x2906>>1]=512;
-	gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
-	gp2x_memregs[0x28E8>>1]=239;
-
-#ifdef DEBUG
-	for (uint window=0; window<4; window++) {
-		int x1=gp2x_memregs[(0x28e2+window*8)>>1];
-		int x2=gp2x_memregs[(0x28e4+window*8)>>1];
-		int y1=gp2x_memregs[(0x28e6+window*8)>>1];
-		int y2=gp2x_memregs[(0x28e8+window*8)>>1];
-		printf ("Window %i: %i,%i,%i,%i\n",window,x1,x2,y1,y2);
+	if (gp2x_mem!=0) {
+		/*Ioctl_Dummy_t *msg;
+		int TVHandle = ioctl(SDL_videofd, FBMMSP2CTRL, msg);*/
+		if (cx25874!=0) gp2x_tvout_off();
+		//if tv-out is enabled without cx25874 open, stop
+		//if (gp2x_memregs[0x2800>>1]&0x100) return;
+		cx25874 = open("/dev/cx25874",O_RDWR);
+		ioctl(cx25874, _IOW('v', 0x02, unsigned char), pal ? 4 : 3);
+		gp2x_memregs[0x2906>>1]=512;
+		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+		gp2x_memregs[0x28E8>>1]=239;
 	}
-#endif
 #endif
 }
 
 void GMenu2X::gp2x_tvout_off() {
 #ifdef TARGET_GP2X
-	close(cx25874);
-	cx25874 = 0;
-	gp2x_memregs[0x2906>>1]=1024;
+	if (gp2x_mem!=0) {
+		close(cx25874);
+		cx25874 = 0;
+		gp2x_memregs[0x2906>>1]=1024;
+	}
 #endif
 }
 
@@ -183,17 +180,25 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 	saveSelection = true;
 	outputLogs = false;
 	maxClock = 300;
-	menuClock = 100;
-	globalVolume = 100;
+	menuClock = f200 ? 136 : 100;
+	//senquack - I don't understand why gmenu2x's default mixer level is 100, since
+	//the truth is the GP2X's default is 67 and the only reason I think noone complained
+	//was because gmenu2x never set the mixer value unless you changed it from the default
+	//100.  I could be wrong.. but a lot of people would  have complained if it really had
+	//been getting set to 100 like this implies:
+	globalVolume = fwType == "open2x" ? 67 : 100;
 	numRows = 4;
 	numCols = 5;
 	tvoutEncoding = "NTSC";
 	wallpaper = "";
 	skinWallpaper = "";
-	//G
-	gamma = 10;
-	startSectionIndex = 0;
-	startLinkIndex = 0;
+
+	//open2x
+	savedVolumeMode = 0;
+	volumeMode = VOLUME_MODE_NORMAL;
+	//senquack - bugfix here, this was incorrectly being set to VOLUME_MODE_NORMAL:
+	volumeScalerNormal = VOLUME_SCALER_NORMAL;
+	volumeScalerPhones = VOLUME_SCALER_PHONES;
 
 	o2x_usb_net_on_boot = false;
 	o2x_usb_net_ip = "";
@@ -204,15 +209,27 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 	o2x_usb_hid_on_boot = false;
 	o2x_usb_storage_on_boot = false;
 
+	//G
+	gamma = 10;
+	startSectionIndex = 0;
+	startLinkIndex = 0;
+
 	usbnet = samba = inet = web = false;
 	useSelectionPng = false;
 
 	//load config data
 	readConfig();
-	if(fwType == "open2x") {
+	if (fwType=="open2x") {
 		readConfigOpen2x();
-	}
-	readCommonIni();
+
+		//	VOLUME MODIFIER
+		switch(volumeMode) {
+			case VOLUME_MODE_MUTE:   setVolumeScaler(VOLUME_SCALER_MUTE); break;
+			case VOLUME_MODE_PHONES: setVolumeScaler(volumeScalerPhones);	break;
+			case VOLUME_MODE_NORMAL: setVolumeScaler(volumeScalerNormal); break;
+		}
+	} else
+		readCommonIni();
 
 	path = "";
 	getExePath();
@@ -220,17 +237,21 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 #ifdef TARGET_GP2X
 	gp2x_mem = 0;
 	cx25874 = 0;
+	batteryHandle = 0;
 
 	gp2x_init();
 
 	//Fix tv-out
-	if (gp2x_memregs[0x2800>>1]&0x100) {
-		gp2x_memregs[0x2906>>1]=512;
-		//gp2x_memregs[0x290C>>1]=640;
-		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+	if (gp2x_mem!=0) {
+		if (gp2x_memregs[0x2800>>1]&0x100) {
+			gp2x_memregs[0x2906>>1]=512;
+			//gp2x_memregs[0x290C>>1]=640;
+			gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+		}
+		gp2x_memregs[0x28E8>>1]=239;
 	}
-	gp2x_memregs[0x28E8>>1]=239;
 #endif
+
 	//Screen
 	if( SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK)<0 ) {
 		cout << "\033[0;34mGMENU2X:\033[0;31m Could not initialize SDL:\033[0m " << SDL_GetError() << endl;
@@ -238,12 +259,18 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 	}
 
 	s = new Surface();
-	SDL_JoystickOpen(0);
-	//s->raw = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE|SDL_DOUBLEBUF);
-	s->raw = SDL_SetVideoMode(320, 240, 16, SDL_SWSURFACE);
 #ifdef TARGET_GP2X
-	SDL_ShowCursor(0);
+	{
+		//I use a tmp variable to hide the cursor as soon as possible (and create the double buffer surface only after that)
+		//I'm forced to use SW surfaces since with HW there are issuse with changing the clock frequency
+		SDL_Surface *tmps = SDL_SetVideoMode(320, 240, 16, SDL_SWSURFACE);
+		SDL_ShowCursor(0);
+		s->enableVirtualDoubleBuffer(tmps);
+	}
+#else
+	s->raw = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE|SDL_DOUBLEBUF);
 #endif
+
 	bg = NULL;
 	font = NULL;
 	initMenu();
@@ -252,7 +279,7 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 
 	if (!fileExists(wallpaper)) {
 #ifdef DEBUG
-	cout << "Searching wallpaper" << endl;
+		cout << "Searching wallpaper" << endl;
 #endif
 		FileLister fl("skins/"+skin+"/wallpapers",false,true);
 		fl.setFilter(".png,.jpg,.jpeg,.bmp");
@@ -262,15 +289,12 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 		if (fl.files.size()>0)
 			wallpaper = fl.getPath()+fl.files[0];
 	}
+
 	initBG();
-
-	//Events
-#ifdef TARGET_GP2X
-	joy.init(0);
-#endif
+	joy.init(path+"input.conf");
 	setInputSpeed();
-
 	initServices();
+
 	//G
 	setGamma(gamma);
 	setVolume(globalVolume);
@@ -288,6 +312,7 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 	recalcLinkGrid = true;
 	main();
 	writeConfig();
+	if (fwType=="open2x") writeConfigOpen2x();
 
 	quit();
 	exit(0);
@@ -300,6 +325,8 @@ GMenu2X::~GMenu2X() {
 }
 
 void GMenu2X::quit() {
+	sc.clear();
+	s->free();
 	SDL_Quit();
 #ifdef TARGET_GP2X
 	if (gp2x_mem!=0) {
@@ -395,14 +422,14 @@ void GMenu2X::initMenu() {
 		//Add virtual links in the setting section
 		else if (menu->sections[i]=="settings") {
 			menu->addActionLink(i,"GMenu2X",MakeDelegate(this,&GMenu2X::options),tr["Configure GMenu2X's options"],"skin:icons/configure.png");
-			if(fwType == "open2x")menu->addActionLink(i,"Open2x",MakeDelegate(this,&GMenu2X::settingsOpen2x),tr["Configure Open2x system settings"],"skin:icons/o2xconfigure.png");
+			if (fwType=="open2x")
+				menu->addActionLink(i,"Open2x",MakeDelegate(this,&GMenu2X::settingsOpen2x),tr["Configure Open2x system settings"],"skin:icons/o2xconfigure.png");
 			menu->addActionLink(i,tr["Skin"],MakeDelegate(this,&GMenu2X::skinMenu),tr["Configure skin"],"skin:icons/skin.png");
 			menu->addActionLink(i,tr["Wallpaper"],MakeDelegate(this,&GMenu2X::changeWallpaper),tr["Change GMenu2X wallpaper"],"skin:icons/wallpaper.png");
 			menu->addActionLink(i,"TV",MakeDelegate(this,&GMenu2X::toggleTvOut),tr["Activate/deactivate tv-out"],"skin:icons/tv.png");
 			menu->addActionLink(i,"USB Sd",MakeDelegate(this,&GMenu2X::activateSdUsb),tr["Activate Usb on SD"],"skin:icons/usb.png");
-			if (fwType=="gph") {
+			if (fwType=="gph" && !f200)
 				menu->addActionLink(i,"USB Nand",MakeDelegate(this,&GMenu2X::activateNandUsb),tr["Activate Usb on Nand"],"skin:icons/usb.png");
-			}
 			if (fileExists(path+"log.txt"))
 				menu->addActionLink(i,tr["Log Viewer"],MakeDelegate(this,&GMenu2X::viewLog),tr["Displays last launched program's output"],"skin:icons/ebook.png");
 			menu->addActionLink(i,tr["About"],MakeDelegate(this,&GMenu2X::about),tr["Info about GMenu2X"],"skin:icons/about.png");
@@ -460,7 +487,7 @@ Jacopastorius\n\
 lorystorm90\n\
 and all the anonymous donors...\n\
 (If I missed to list you or if you want to be removed, contact me.)","\n");
-	TextDialog td(this, "GMenu2X", tr.translate("Version $1 (Build date: $2)","0.9",__DATE__,NULL), "icons/about.png", &text);
+	TextDialog td(this, "GMenu2X", tr.translate("Version $1 (Build date: $2)","0.10-test3",__DATE__,NULL), "icons/about.png", &text);
 	td.exec();
 }
 
@@ -480,9 +507,9 @@ void GMenu2X::viewLog() {
 			td.exec();
 
 			MessageBox mb(this, tr["Do you want to delete the log file?"], "icons/ebook.png");
-			mb.buttons[GP2X_BUTTON_B] = tr["Yes"];
-			mb.buttons[GP2X_BUTTON_X] = tr["No"];
-			if (mb.exec() == GP2X_BUTTON_B) {
+			mb.buttons[ACTION_B] = tr["Yes"];
+			mb.buttons[ACTION_X] = tr["No"];
+			if (mb.exec() == ACTION_B) {
 				ledOn();
 				unlink(logfile.c_str());
 				sync();
@@ -525,32 +552,6 @@ void GMenu2X::readConfig() {
 	}
 }
 
-void GMenu2X::readConfigOpen2x() {
-	// Read the networking config file
-	string conffile = "/etc/config/open2x.conf";
-	if (fileExists(conffile)) {
-		ifstream inf(conffile.c_str(), ios_base::in);
-		if (inf.is_open()) {
-			string line;
-			while (getline(inf, line, '\n')) {
-				string::size_type pos = line.find("=");
-				string name = trim(line.substr(0,pos));
-				string value = trim(line.substr(pos+1,line.length()));
-
-				if (name=="USB_NET_ON_BOOT") o2x_usb_net_on_boot = value == "y" ? true : false;
-				else if (name=="USB_NET_IP") o2x_usb_net_ip = value;
-				else if (name=="TELNET_ON_BOOT") o2x_telnet_on_boot = value == "y" ? true : false;
-				else if (name=="FTP_ON_BOOT") o2x_ftp_on_boot = value == "y" ? true : false;
-				else if (name=="GP2XJOY_ON_BOOT") o2x_gp2xjoy_on_boot = value == "y" ? true : false;
-				else if (name=="USB_HOST_ON_BOOT") o2x_usb_host_on_boot = value == "y" ? true : false;
-				else if (name=="USB_HID_ON_BOOT") o2x_usb_hid_on_boot = value == "y" ? true : false;
-				else if (name=="USB_STORAGE_ON_BOOT") o2x_usb_storage_on_boot = value == "y" ? true : false;
-			}
-			inf.close();
-		}
-	}
-}
-
 void GMenu2X::writeConfig() {
 	ledOn();
 	string conffile = path+"gmenu2x.conf";
@@ -582,24 +583,53 @@ void GMenu2X::writeConfig() {
 	ledOff();
 }
 
+
+void GMenu2X::readConfigOpen2x() {
+	string conffile = "/etc/config/open2x.conf";
+	if (fileExists(conffile)) {
+		ifstream inf(conffile.c_str(), ios_base::in);
+		if (inf.is_open()) {
+			string line;
+			while (getline(inf, line, '\n')) {
+				string::size_type pos = line.find("=");
+				string name = trim(line.substr(0,pos));
+				string value = trim(line.substr(pos+1,line.length()));
+
+				if (name=="USB_NET_ON_BOOT") o2x_usb_net_on_boot = value == "y" ? true : false;
+				else if (name=="USB_NET_IP") o2x_usb_net_ip = value;
+				else if (name=="TELNET_ON_BOOT") o2x_telnet_on_boot = value == "y" ? true : false;
+				else if (name=="FTP_ON_BOOT") o2x_ftp_on_boot = value == "y" ? true : false;
+				else if (name=="GP2XJOY_ON_BOOT") o2x_gp2xjoy_on_boot = value == "y" ? true : false;
+				else if (name=="USB_HOST_ON_BOOT") o2x_usb_host_on_boot = value == "y" ? true : false;
+				else if (name=="USB_HID_ON_BOOT") o2x_usb_hid_on_boot = value == "y" ? true : false;
+				else if (name=="USB_STORAGE_ON_BOOT") o2x_usb_storage_on_boot = value == "y" ? true : false;
+				else if (name=="VOLUME_MODE") volumeMode = savedVolumeMode = constrain( atoi(value.c_str()), 0, 2);
+				else if (name=="PHONES_VALUE") volumeScalerPhones = constrain( atoi(value.c_str()), 0, 100);
+				else if (name=="NORMAL_VALUE") volumeScalerNormal = constrain( atoi(value.c_str()), 0, 150);
+			}
+			inf.close();
+		}
+	}
+}
 void GMenu2X::writeConfigOpen2x() {
 	ledOn();
 	string conffile = "/etc/config/open2x.conf";
 	ofstream inf(conffile.c_str());
 	if (inf.is_open()) {
-		if (saveSelection) {
-			startSectionIndex = menu->selSectionIndex();
-			startLinkIndex = menu->selLinkIndex();
-		}
-
 		inf << "USB_NET_ON_BOOT=" << ( o2x_usb_net_on_boot ? "y" : "n" ) << endl;
 		inf << "USB_NET_IP=" << o2x_usb_net_ip << endl;
 		inf << "TELNET_ON_BOOT=" << ( o2x_telnet_on_boot ? "y" : "n" ) << endl;
 		inf << "FTP_ON_BOOT=" << ( o2x_ftp_on_boot ? "y" : "n" ) << endl;
 		inf << "GP2XJOY_ON_BOOT=" << ( o2x_gp2xjoy_on_boot ? "y" : "n" ) << endl;
-		inf << "USB_HOST_ON_BOOT=" << ( o2x_usb_host_on_boot ? "y" : "n" ) << endl;
+		//senquack - if user specified they want USB HID or USB storage on boot, they obviously
+		//				meant they also wanted USB host on boot, so be sure it's forced on too
+//		inf << "USB_HOST_ON_BOOT=" << ( o2x_usb_host_on_boot ? "y" : "n" ) << endl;
+		inf << "USB_HOST_ON_BOOT=" << ( (o2x_usb_host_on_boot || o2x_usb_hid_on_boot || o2x_usb_storage_on_boot) ? "y" : "n" ) << endl;
 		inf << "USB_HID_ON_BOOT=" << ( o2x_usb_hid_on_boot ? "y" : "n" ) << endl;
 		inf << "USB_STORAGE_ON_BOOT=" << ( o2x_usb_storage_on_boot ? "y" : "n" ) << endl;
+		inf << "VOLUME_MODE=" << volumeMode << endl;
+		inf << "PHONES_VALUE=" << volumeScalerPhones << endl;
+		inf << "NORMAL_VALUE=" << volumeScalerNormal << endl;
 		inf.close();
 		sync();
 	}
@@ -731,14 +761,14 @@ void GMenu2X::initServices() {
 
 void GMenu2X::ledOn() {
 #ifdef TARGET_GP2X
-	if (!f200) gp2x_memregs[0x106E >> 1] ^= 16;
+	if (gp2x_mem!=0 && !f200) gp2x_memregs[0x106E >> 1] ^= 16;
 	//SDL_SYS_JoystickGp2xSys(joy.joystick, BATT_LED_ON);
 #endif
 }
 
 void GMenu2X::ledOff() {
 #ifdef TARGET_GP2X
-	if (!f200) gp2x_memregs[0x106E >> 1] ^= 16;
+	if (gp2x_mem!=0 && !f200) gp2x_memregs[0x106E >> 1] ^= 16;
 	//SDL_SYS_JoystickGp2xSys(joy.joystick, BATT_LED_OFF);
 #endif
 }
@@ -747,12 +777,13 @@ int GMenu2X::main() {
 	uint linksPerPage = 0, linkH = 0, linkW = 0;
 
 	bool quit = false;
-	int x,y, offset = 0;
+	int x,y, offset = 0, helpBoxHeight = fwType=="open2x" ? 154 : 139;
 	uint i;
 	long tickBattery = -60000, tickNow;
 	string batteryIcon = "imgs/battery/0.png";
 	stringstream ss;
 	uint sectionsCoordX = 24;
+	SDL_Rect re = {0,0,0,0};
 
 #ifdef DEBUG
 	//framerate
@@ -761,8 +792,7 @@ int GMenu2X::main() {
 #endif
 
 	IconButton btnContextMenu(this,"skin:imgs/menu.png");
-	btnContextMenu.setPosition(301, 222);
-	btnContextMenu.setSize(16, 16);
+	btnContextMenu.setPosition(282, 222);
 	btnContextMenu.setAction(MakeDelegate(this, &GMenu2X::contextMenu));
 
 	while (!quit) {
@@ -826,6 +856,12 @@ int GMenu2X::main() {
 
 		drawScrollBar(numRows,menu->sectionLinks()->size()/numCols + ((menu->sectionLinks()->size()%numCols==0) ? 0 : 1),menu->firstDispRow(),43,159);
 
+		switch(volumeMode) {
+			case VOLUME_MODE_MUTE:   sc.skinRes("imgs/mute.png")->blit(s,279,222); break;
+			case VOLUME_MODE_PHONES: sc.skinRes("imgs/phones.png")->blit(s,279,222); break;
+			default: sc.skinRes("imgs/volume.png")->blit(s,279,222); break;
+		}
+
 		if (menu->selLink()!=NULL) {
 			s->write ( font, menu->selLink()->getDescription(), 160, 221, SFontHAlignCenter, SFontVAlignBottom );
 			if (menu->selLinkApp()!=NULL) {
@@ -839,32 +875,26 @@ int GMenu2X::main() {
 
 		if (f200) {
 			btnContextMenu.paint();
-		} else {
-			//check battery status every 60 seconds
-			if (tickNow-tickBattery >= 60000) {
-				tickBattery = tickNow;
-				unsigned short battlevel = getBatteryLevel();
-				if (battlevel>5) {
-					batteryIcon = "imgs/battery/ac.png";
-				} else {
-					ss.clear();
-					ss << battlevel;
-					ss >> batteryIcon;
-					batteryIcon = "imgs/battery/"+batteryIcon+".png";
-				}
-			}
-			sc.skinRes(batteryIcon)->blit( s, 301, 222 );
 		}
+		//check battery status every 60 seconds
+		if (tickNow-tickBattery >= 60000) {
+			tickBattery = tickNow;
+			unsigned short battlevel = getBatteryLevel();
+			if (battlevel>5) {
+				batteryIcon = "imgs/battery/ac.png";
+			} else {
+				ss.clear();
+				ss << battlevel;
+				ss >> batteryIcon;
+				batteryIcon = "imgs/battery/"+batteryIcon+".png";
+			}
+		}
+		sc.skinRes(batteryIcon)->blit( s, 301, 222 );
 
 		//On Screen Help
-#ifdef TARGET_GP2X
-		if (joy[GP2X_BUTTON_A])
-#else
-		if (event.type==SDL_KEYDOWN && event.key.keysym.sym==SDLK_h)
-#endif
-		{
+		if (joy[ACTION_A]) {
 			s->box(10,50,300,143, messageBoxColor);
-			s->rectangle( 12,52,296,139, messageBoxBorderColor );
+			s->rectangle( 12,52,296,helpBoxHeight, messageBoxBorderColor );
 			s->write( font, tr["CONTROLS"], 20, 60 );
 			s->write( font, tr["B, Stick press: Launch link / Confirm action"], 20, 80 );
 			s->write( font, tr["L, R: Change section"], 20, 95 );
@@ -873,6 +903,7 @@ int GMenu2X::main() {
 			s->write( font, tr["A+VOLUP, A+VOLDOWN: Change volume"], 20, 140 );
 			s->write( font, tr["SELECT: Show contextual menu"], 20, 155 );
 			s->write( font, tr["START: Show options menu"], 20, 170 );
+			if (fwType=="open2x") s->write( font, tr["X: Toggle speaker mode"], 20, 185 );
 		}
 
 #ifdef DEBUG
@@ -890,64 +921,90 @@ int GMenu2X::main() {
 		//touchscreen
 		if (f200) {
 			ts.poll();
-			if (!btnContextMenu.handleTS()) {
-				if (ts.pressed() && ts.y<=32)
-					for (i=menu->firstDispSection(); i<menu->sections.size() && i<menu->firstDispSection()+5; i++) {
-						sectionsCoordX = 24 + min( 5-menu->sections.size(), 5 ) * 30;
-						x = (i-menu->firstDispSection())*60+sectionsCoordX;
+			btnContextMenu.handleTS();
+			re.x = 0; re.y = 0; re.h = 32; re.w = 320;
+			if (ts.pressed() && ts.inRect(re)) {
+				re.w = 60;
+				for (i=menu->firstDispSection(); !ts.handled() && i<menu->sections.size() && i<menu->firstDispSection()+5; i++) {
+					sectionsCoordX = 10 + max(0, min( 5-menu->sections.size(), 5 )) * 30;
+					re.x = (i-menu->firstDispSection())*60+sectionsCoordX;
 
-						if (ts.x>=x && ts.x<x+32)
-							menu->setSectionIndex(i);
+					if (ts.inRect(re)) {
+						menu->setSectionIndex(i);
+						ts.setHandled();
 					}
+				}
+			}
 
-				for (i=menu->firstDispRow()*numCols; i<(menu->firstDispRow()*numCols)+linksPerPage && i<menu->sectionLinks()->size(); i++)
-					menu->sectionLinks()->at(i)->handleTS();
+			i=menu->firstDispRow()*numCols;
+			while ( i<(menu->firstDispRow()*numCols)+linksPerPage && i<menu->sectionLinks()->size()) {
+				if (menu->sectionLinks()->at(i)->isPressed())
+					menu->setLinkIndex(i);
+				if (menu->sectionLinks()->at(i)->handleTS())
+					i = menu->sectionLinks()->size();
+				i++;
 			}
 		}
 
-#ifdef TARGET_GP2X
+//#ifdef TARGET_GP2X
 		joy.update();
-		if ( (joy[GP2X_BUTTON_B] || joy[GP2X_BUTTON_CLICK]) && menu->selLink()!=NULL ) menu->selLink()->run();
-		else if ( joy[GP2X_BUTTON_START]  ) options();
-		else if ( joy[GP2X_BUTTON_SELECT] ) contextMenu();
+		if ( joy[ACTION_B] && menu->selLink()!=NULL ) menu->selLink()->run();
+		else if ( joy[ACTION_START]  ) options();
+		else if ( joy[ACTION_SELECT] ) contextMenu();
+		// VOLUME SCALE MODIFIER
+		else if ( joy[ACTION_X] ) {
+			volumeMode = constrain(volumeMode-1, -VOLUME_MODE_MUTE-1, VOLUME_MODE_NORMAL);
+			if(volumeMode < VOLUME_MODE_MUTE)
+				volumeMode = VOLUME_MODE_NORMAL;
+			switch(volumeMode) {
+				case VOLUME_MODE_MUTE:   setVolumeScaler(VOLUME_SCALER_MUTE); break;
+				case VOLUME_MODE_PHONES: setVolumeScaler(volumeScalerPhones); break;
+				case VOLUME_MODE_NORMAL: setVolumeScaler(volumeScalerNormal); break;
+			}
+			//senquack - this really should be set to the global volume, not read from the
+			//mixer and written back again, since the mixer's reported value is intertwined with
+			//the current scaling setting
+//			setVolume(getVolume());
+			setVolume(globalVolume);
+		}
 		// LINK NAVIGATION
-		else if ( joy[GP2X_BUTTON_LEFT ]  ) menu->linkLeft();
-		else if ( joy[GP2X_BUTTON_RIGHT]  ) menu->linkRight();
-		else if ( joy[GP2X_BUTTON_UP   ]  ) menu->linkUp();
-		else if ( joy[GP2X_BUTTON_DOWN ]  ) menu->linkDown();
+		else if ( joy[ACTION_LEFT ]  ) menu->linkLeft();
+		else if ( joy[ACTION_RIGHT]  ) menu->linkRight();
+		else if ( joy[ACTION_UP   ]  ) menu->linkUp();
+		else if ( joy[ACTION_DOWN ]  ) menu->linkDown();
 		// SELLINKAPP SELECTED
 		else if (menu->selLinkApp()!=NULL) {
-			if ( joy[GP2X_BUTTON_Y] ) menu->selLinkApp()->showManual();
-			else if ( joy.isDown(GP2X_BUTTON_A) ) {
+			if ( joy[ACTION_Y] ) menu->selLinkApp()->showManual();
+			else if ( joy.isActive(ACTION_A) ) {
 				// VOLUME
-				if ( joy[GP2X_BUTTON_VOLDOWN] && !joy.isDown(GP2X_BUTTON_VOLUP) )
+				if ( joy[ACTION_VOLDOWN] && !joy.isActive(ACTION_VOLUP) )
 					menu->selLinkApp()->setVolume( constrain(menu->selLinkApp()->volume()-1,0,100) );
-				if ( joy[GP2X_BUTTON_VOLUP] && !joy.isDown(GP2X_BUTTON_VOLDOWN) )
+				if ( joy[ACTION_VOLUP] && !joy.isActive(ACTION_VOLDOWN) )
 					menu->selLinkApp()->setVolume( constrain(menu->selLinkApp()->volume()+1,0,100) );;
-				if ( joy.isDown(GP2X_BUTTON_VOLUP) && joy.isDown(GP2X_BUTTON_VOLDOWN) ) menu->selLinkApp()->setVolume(-1);
+				if ( joy.isActive(ACTION_VOLUP) && joy.isActive(ACTION_VOLDOWN) ) menu->selLinkApp()->setVolume(-1);
 			} else {
 				// CLOCK
-				if ( joy[GP2X_BUTTON_VOLDOWN] && !joy.isDown(GP2X_BUTTON_VOLUP) )
+				if ( joy[ACTION_VOLDOWN] && !joy.isActive(ACTION_VOLUP) )
 					menu->selLinkApp()->setClock( constrain(menu->selLinkApp()->clock()-1,50,maxClock) );
-				if ( joy[GP2X_BUTTON_VOLUP] && !joy.isDown(GP2X_BUTTON_VOLDOWN) )
+				if ( joy[ACTION_VOLUP] && !joy.isActive(ACTION_VOLDOWN) )
 					menu->selLinkApp()->setClock( constrain(menu->selLinkApp()->clock()+1,50,maxClock) );
-				if ( joy.isDown(GP2X_BUTTON_VOLUP) && joy.isDown(GP2X_BUTTON_VOLDOWN) ) menu->selLinkApp()->setClock(200);
+				if ( joy.isActive(ACTION_VOLUP) && joy.isActive(ACTION_VOLDOWN) ) menu->selLinkApp()->setClock(200);
 			}
 		}
-		if ( joy.isDown(GP2X_BUTTON_A) ) {
-			if (joy.isDown(GP2X_BUTTON_L) && joy.isDown(GP2X_BUTTON_R))
+		if ( joy.isActive(ACTION_A) ) {
+			if (joy.isActive(ACTION_L) && joy.isActive(ACTION_R))
 				saveScreenshot();
 		} else {
 			// SECTIONS
-			if ( joy[GP2X_BUTTON_L     ] ) {
+			if ( joy[ACTION_L     ] ) {
 				menu->decSectionIndex();
 				offset = menu->sectionLinks()->size()>linksPerPage ? 0 : 4;
-			} else if ( joy[GP2X_BUTTON_R     ] ) {
+			} else if ( joy[ACTION_R     ] ) {
 				menu->incSectionIndex();
 				offset = menu->sectionLinks()->size()>linksPerPage ? 0 : 4;
 			}
 		}
-#else
+/*#else
 		while (SDL_PollEvent(&event)) {
 			if ( event.type == SDL_QUIT ) quit = true;
 			if ( event.type==SDL_KEYDOWN ) {
@@ -983,7 +1040,7 @@ int GMenu2X::main() {
 				if ( event.key.keysym.sym==SDLK_SPACE  ) contextMenu();
 			}
 		}
-#endif
+#endif*/
 	}
 
 	return -1;
@@ -992,11 +1049,32 @@ int GMenu2X::main() {
 void GMenu2X::explorer() {
 	FileDialog fd(this,tr["Select an application"],".gpu,.gpe,.sh");
 	if (fd.exec()) {
-		setClock(200);
-		quit();
+		if (saveSelection && (startSectionIndex!=menu->selSectionIndex() || startLinkIndex!=menu->selLinkIndex()))
+			writeConfig();
+		if (fwType == "open2x" && savedVolumeMode != volumeMode)
+			writeConfigOpen2x();
+
+		//senquack - not correct, we cannot put the wrapper behavior around every app
+		//launched with explorer, because then we'll usually end up with two active
+		//instances of gmenu2x since almost all programs re-launch the menu
+//		string command = cmdclean(fd.path()+"/"+fd.file) + "; sync & cd "+cmdclean(getExePath())+"; exec ./gmenu2x";
+		//senquack - putting old behavior back in
 		string command = cmdclean(fd.path()+"/"+fd.file);
+
 		chdir(fd.path().c_str());
-		execl(command.c_str(), command.c_str(), NULL);
+		fflush(NULL);
+		quit();
+		setClock(200);
+		execlp("/bin/sh","/bin/sh","-c",command.c_str(),NULL);
+
+        //senquack -adding this, this should not be missing code to relaunch gmenu2x,
+		//as SDL is shut down at this point and any further blits will segfault it.
+
+		//if execution continues then something went wrong and as we already called SDL_Quit we cannot continue
+		//try relaunching gmenu2x
+		fprintf(stderr, "Error executing selected application, re-launching gmenu2x\n");
+	   chdir(getExePath().c_str());
+		execlp("./gmenu2x", "./gmenu2x", NULL);
 	}
 }
 
@@ -1055,14 +1133,29 @@ void GMenu2X::settingsOpen2x() {
 	sd.addSetting(new MenuSettingBool(this,tr["USB host on boot"],tr["Allow USB host to be started at boot time"],&o2x_usb_host_on_boot));
 	sd.addSetting(new MenuSettingBool(this,tr["USB HID on boot"],tr["Allow USB HID to be started at boot time"],&o2x_usb_hid_on_boot));
 	sd.addSetting(new MenuSettingBool(this,tr["USB storage on boot"],tr["Allow USB storage to be started at boot time"],&o2x_usb_storage_on_boot));
+	//sd.addSetting(new MenuSettingInt(this,tr["Speaker Mode on boot"],tr["Set Speaker mode. 0 = Mute, 1 = Phones, 2 = Speaker"],&volumeMode,0,2));
+	//senquack - added a bit more description to these
+	sd.addSetting(new MenuSettingInt(this,tr["Speaker Scaler"],tr["Set the Speaker Mode scaling 0-150\% (default is 100\%)"],&volumeScalerNormal,0,150));
+	sd.addSetting(new MenuSettingInt(this,tr["Headphones Scaler"],tr["Set the Headphones Mode scaling 0-100\% (default is 65\%)"],&volumeScalerPhones,0,100));
 
-	if (sd.exec() && sd.edited()) {
+	if (sd.exec() && sd.edited())
+	{
 		writeConfigOpen2x();
+		//senquack - must make sure the scaler gets updated since the values might have changed
+		//	VOLUME MODIFIER
+		switch(volumeMode) {
+			case VOLUME_MODE_MUTE:   setVolumeScaler(VOLUME_SCALER_MUTE); break;
+			case VOLUME_MODE_PHONES: setVolumeScaler(volumeScalerPhones);	break;
+			case VOLUME_MODE_NORMAL: setVolumeScaler(volumeScalerNormal); break;
+		}
+		setVolume(globalVolume);
 	}
+
 }
 
 void GMenu2X::skinMenu() {
 	FileLister fl_sk("skins",true,false);
+	fl_sk.exclude.push_back("..");
 	fl_sk.browse();
 	string curSkin = skin;
 
@@ -1213,7 +1306,7 @@ void GMenu2X::activateSdUsb() {
 	} else {
 		system("scripts/usbon.sh sd");
 		MessageBox mb(this,tr["USB Enabled (SD)"],"icons/usb.png");
-		mb.buttons[GP2X_BUTTON_B] = tr["Turn off"];
+		mb.buttons[ACTION_B] = tr["Turn off"];
 		mb.exec();
 		system("scripts/usboff.sh sd");
 	}
@@ -1226,7 +1319,7 @@ void GMenu2X::activateNandUsb() {
 	} else {
 		system("scripts/usbon.sh nand");
 		MessageBox mb(this,tr["USB Enabled (Nand)"],"icons/usb.png");
-		mb.buttons[GP2X_BUTTON_B] = tr["Turn off"];
+		mb.buttons[ACTION_B] = tr["Turn off"];
 		mb.exec();
 		system("scripts/usboff.sh nand");
 	}
@@ -1239,7 +1332,7 @@ void GMenu2X::activateRootUsb() {
 	} else {
 		system("scripts/usbon.sh root");
 		MessageBox mb(this,tr["USB Enabled (Root)"],"icons/usb.png");
-		mb.buttons[GP2X_BUTTON_B] = tr["Turn off"];
+		mb.buttons[ACTION_B] = tr["Turn off"];
 		mb.exec();
 		system("scripts/usboff.sh root");
 	}
@@ -1310,7 +1403,7 @@ void GMenu2X::contextMenu() {
 		//touchscreen
 		if (f200) {
 			ts.poll();
-			if (ts.pressed()) {
+			if (ts.released()) {
 				if (!ts.inRect(box))
 					close = true;
 				else if (ts.x>=selbox.x && ts.x<=selbox.x+selbox.w)
@@ -1322,26 +1415,22 @@ void GMenu2X::contextMenu() {
 							i = voices.size();
 						}
 					}
+			} else if (ts.pressed() && ts.inRect(box)) {
+				for (i=0; i<voices.size(); i++) {
+					selbox.y = box.y+4+(h+2)*i;
+					if (ts.y>=selbox.y && ts.y<=selbox.y+selbox.h) {
+						sel = i;
+						i = voices.size();
+					}
+				}
 			}
 		}
 
-#ifdef TARGET_GP2X
 		joy.update();
-		if ( joy[GP2X_BUTTON_SELECT] ) close = true;
-		if ( joy[GP2X_BUTTON_UP    ] ) sel = max(0, sel-1);
-		if ( joy[GP2X_BUTTON_DOWN  ] ) sel = min(voices.size()-1, sel+1);
-		if ( joy[GP2X_BUTTON_B] || joy[GP2X_BUTTON_CLICK] ) { voices[sel].action(); close = true; }
-#else
-		while (SDL_PollEvent(&event)) {
-			if ( event.type == SDL_QUIT ) return;
-			if ( event.type==SDL_KEYDOWN ) {
-				if ( event.key.keysym.sym==SDLK_ESCAPE ) close = true;
-				if ( event.key.keysym.sym==SDLK_UP ) sel = max(0, sel-1);
-				if ( event.key.keysym.sym==SDLK_DOWN ) sel = min((int)voices.size()-1, sel+1);
-				if ( event.key.keysym.sym==SDLK_RETURN ) { voices[sel].action(); close = true; }
-			}
-		}
-#endif
+		if ( joy[ACTION_SELECT] ) close = true;
+		if ( joy[ACTION_UP    ] ) sel = max(0, sel-1);
+		if ( joy[ACTION_DOWN  ] ) sel = min((int)voices.size()-1, sel+1);
+		if ( joy[ACTION_B] ) { voices[sel].action(); close = true; }
 	}
 }
 
@@ -1409,19 +1498,22 @@ void GMenu2X::editLink() {
 	//G
 	int linkGamma = menu->selLinkApp()->gamma();
 
-	SettingsDialog sd(this,tr["Edit link"]);
-	sd.addSetting(new MenuSettingString(this,tr["Title"],tr["Link title"],&linkTitle));
-	sd.addSetting(new MenuSettingString(this,tr["Description"],tr["Link description"],&linkDescription));
+	string diagTitle = tr.translate("Edit link: $1",linkTitle.c_str(),NULL);
+	string diagIcon = menu->selLinkApp()->getIconPath();
+
+	SettingsDialog sd(this,diagTitle,diagIcon);
+	sd.addSetting(new MenuSettingString(this,tr["Title"],tr["Link title"],&linkTitle, diagTitle,diagIcon));
+	sd.addSetting(new MenuSettingString(this,tr["Description"],tr["Link description"],&linkDescription, diagTitle,diagIcon));
 	sd.addSetting(new MenuSettingMultiString(this,tr["Section"],tr["The section this link belongs to"],&newSection,&menu->sections));
 	sd.addSetting(new MenuSettingImage(this,tr["Icon"],tr.translate("Select an icon for the link: $1",linkTitle.c_str(),NULL),&linkIcon,".png,.bmp,.jpg,.jpeg"));
 	sd.addSetting(new MenuSettingFile(this,tr["Manual"],tr["Select a graphic/textual manual or a readme"],&linkManual,".man.png,.txt"));
 	sd.addSetting(new MenuSettingInt(this,tr["Clock (default: 200)"],tr["Cpu clock frequency to set when launching this link"],&linkClock,50,maxClock));
 	sd.addSetting(new MenuSettingBool(this,tr["Tweak RAM Timings"],tr["This usually speeds up the application at the cost of stability"],&linkUseRamTimings));
 	sd.addSetting(new MenuSettingInt(this,tr["Volume (default: -1)"],tr["Volume to set for this link"],&linkVolume,-1,100));
-	sd.addSetting(new MenuSettingString(this,tr["Parameters"],tr["Parameters to pass to the application"],&linkParams));
+	sd.addSetting(new MenuSettingString(this,tr["Parameters"],tr["Parameters to pass to the application"],&linkParams, diagTitle,diagIcon));
 	sd.addSetting(new MenuSettingDir(this,tr["Selector Directory"],tr["Directory to scan for the selector"],&linkSelDir));
 	sd.addSetting(new MenuSettingBool(this,tr["Selector Browser"],tr["Allow the selector to change directory"],&linkSelBrowser));
-	sd.addSetting(new MenuSettingString(this,tr["Selector Filter"],tr["Filter for the selector (Separate values with a comma)"],&linkSelFilter));
+	sd.addSetting(new MenuSettingString(this,tr["Selector Filter"],tr["Filter for the selector (Separate values with a comma)"],&linkSelFilter, diagTitle,diagIcon));
 	sd.addSetting(new MenuSettingDir(this,tr["Selector Screenshots"],tr["Directory of the screenshots for the selector"],&linkSelScreens));
 	sd.addSetting(new MenuSettingFile(this,tr["Selector Aliases"],tr["File containing a list of aliases for the selector"],&linkSelAliases));
 	//G
@@ -1480,9 +1572,9 @@ void GMenu2X::editLink() {
 void GMenu2X::deleteLink() {
 	if (menu->selLinkApp()!=NULL) {
 		MessageBox mb(this, tr.translate("Deleting $1",menu->selLink()->getTitle().c_str(),NULL)+"\n"+tr["Are you sure?"], menu->selLink()->getIconPath());
-		mb.buttons[GP2X_BUTTON_B] = tr["Yes"];
-		mb.buttons[GP2X_BUTTON_X] = tr["No"];
-		if (mb.exec() == GP2X_BUTTON_B) {
+		mb.buttons[ACTION_B] = tr["Yes"];
+		mb.buttons[ACTION_X] = tr["No"];
+		if (mb.exec() == ACTION_B) {
 			ledOn();
 			menu->deleteSelectedLink();
 			sync();
@@ -1517,11 +1609,17 @@ void GMenu2X::renameSection() {
 			string sectiondir = "sections/"+menu->selSection();
 			ledOn();
 			if (rename(sectiondir.c_str(), "tmpsection")==0 && rename("tmpsection", newsectiondir.c_str())==0) {
-				string oldicon = sectiondir+".png", newicon = newsectiondir+".png";
-				if (fileExists(oldicon) && !fileExists(newicon)) {
-					rename(oldicon.c_str(), "tmpsectionicon");
-					rename("tmpsectionicon", newicon.c_str());
-					sc.move(oldicon, newicon);
+				string oldpng = sectiondir+".png", newpng = newsectiondir+".png";
+				string oldicon = sc.getSkinFilePath(oldpng), newicon = sc.getSkinFilePath(newpng);
+				if (!oldicon.empty() && newicon.empty()) {
+					newicon = oldicon;
+          				newicon.replace(newicon.find(oldpng), oldpng.length(), newpng);
+
+					if (!fileExists(newicon)) {
+						rename(oldicon.c_str(), "tmpsectionicon");
+						rename("tmpsectionicon", newicon.c_str());
+						sc.move("skin:"+oldpng, "skin:"+newpng);
+					}
 				}
 				menu->sections[menu->selSectionIndex()] = id.input;
 				sync();
@@ -1533,9 +1631,9 @@ void GMenu2X::renameSection() {
 
 void GMenu2X::deleteSection() {
 	MessageBox mb(this,tr["You will lose all the links in this section."]+"\n"+tr["Are you sure?"]);
-	mb.buttons[GP2X_BUTTON_B] = tr["Yes"];
-	mb.buttons[GP2X_BUTTON_X] = tr["No"];
-	if (mb.exec() == GP2X_BUTTON_B) {
+	mb.buttons[ACTION_B] = tr["Yes"];
+	mb.buttons[ACTION_X] = tr["No"];
+	if (mb.exec() == ACTION_B) {
 		ledOn();
 		if (rmtree(path+"sections/"+menu->selSection())) {
 			menu->deleteSelectedSection();
@@ -1570,7 +1668,7 @@ void GMenu2X::scanner() {
 	scanPath("/mnt/sd",&files);
 
 	//Onyl gph firmware has nand
-	if (fwType=="gph") {
+	if (fwType=="gph" && !f200) {
 		scanbg.write(font,tr["Scanning NAND filesystem..."],5,lineY);
 		scanbg.blit(s,0,0);
 		s->flip();
@@ -1622,17 +1720,13 @@ void GMenu2X::scanner() {
 
 	bool close = false;
 	while (!close) {
-#ifdef TARGET_GP2X
 		joy.update();
-		if (joy[GP2X_BUTTON_START] || joy[GP2X_BUTTON_B] || joy[GP2X_BUTTON_X]) close = true;
-#else
-		while (SDL_PollEvent(&event))
-			if (event.key.keysym.sym==SDLK_ESCAPE || event.key.keysym.sym==SDLK_RETURN) close = true;
-#endif
+		if (joy[ACTION_START] || joy[ACTION_B] || joy[ACTION_X]) close = true;
 	}
 
 	sync();
 	ledOff();
+	recalcLinkGrid = true;
 }
 
 void GMenu2X::scanPath(string path, vector<string> *files) {
@@ -1663,31 +1757,39 @@ void GMenu2X::scanPath(string path, vector<string> *files) {
 
 unsigned short GMenu2X::getBatteryLevel() {
 #ifdef TARGET_GP2X
-	int devbatt = open ("/dev/batt", O_RDONLY);
-	if (devbatt<0) return 0;
+	if (batteryHandle<=0) return 0;
 
-	int battval = 0;
-	unsigned short cbv, min=900, max=0;
-	int v;
+	if (f200) {
+		MMSP2ADC val;
+		int rv = read(batteryHandle, &val, sizeof(MMSP2ADC));
 
-	for (int i = 0; i < BATTERY_READS; i ++) {
-		if (read (devbatt, &cbv, 2) == 2) {
-			battval += cbv;
-			if (cbv>max) max = cbv;
-			if (cbv<min) min = cbv;
+		if (val.batt==0) return 5;
+		if (val.batt==1) return 3;
+		if (val.batt==2) return 1;
+		if (val.batt==3) return 0;
+	} else {
+		int battval = 0;
+		unsigned short cbv, min=900, max=0;
+		int v;
+
+		for (int i = 0; i < BATTERY_READS; i ++) {
+			if ( read(batteryHandle, &cbv, 2) == 2) {
+				battval += cbv;
+				if (cbv>max) max = cbv;
+				if (cbv<min) min = cbv;
+			}
 		}
+
+		battval -= min+max;
+		battval /= BATTERY_READS-2;
+
+		if (battval>=850) return 6;
+		if (battval>780) return 5;
+		if (battval>740) return 4;
+		if (battval>700) return 3;
+		if (battval>690) return 2;
+		if (battval>680) return 1;
 	}
-	close(devbatt);
-
-	battval -= min+max;
-	battval /= BATTERY_READS-2;
-
-	if (battval>=850) return 6;
-	if (battval>780) return 5;
-	if (battval>740) return 4;
-	if (battval>700) return 3;
-	if (battval>690) return 2;
-	if (battval>680) return 1;
 	return 0;
 #else
 	return 6; //AC Power
@@ -1695,53 +1797,57 @@ unsigned short GMenu2X::getBatteryLevel() {
 }
 
 void GMenu2X::setInputSpeed() {
-#ifdef TARGET_GP2X
 	joy.setInterval(150);
-	joy.setInterval(30,  GP2X_BUTTON_VOLDOWN);
-	joy.setInterval(30,  GP2X_BUTTON_VOLUP  );
-	joy.setInterval(30,  GP2X_BUTTON_A      );
-	joy.setInterval(500, GP2X_BUTTON_START  );
-	joy.setInterval(500, GP2X_BUTTON_SELECT );
-	joy.setInterval(300, GP2X_BUTTON_X      );
-	joy.setInterval(1000,GP2X_BUTTON_B      );
-	joy.setInterval(1000,GP2X_BUTTON_CLICK  );
-	joy.setInterval(300, GP2X_BUTTON_L      );
-	joy.setInterval(300, GP2X_BUTTON_R      );
-#else
+	joy.setInterval(30,  ACTION_VOLDOWN);
+	joy.setInterval(30,  ACTION_VOLUP  );
+	joy.setInterval(30,  ACTION_A      );
+	joy.setInterval(500, ACTION_START  );
+	joy.setInterval(500, ACTION_SELECT );
+	joy.setInterval(300, ACTION_X      );
+	joy.setInterval(30,  ACTION_Y      );
+	joy.setInterval(1000,ACTION_B      );
+	//joy.setInterval(1000,ACTION_CLICK  );
+	joy.setInterval(300, ACTION_L      );
+	joy.setInterval(300, ACTION_R      );
 	SDL_EnableKeyRepeat(1,150);
-#endif
 }
 
 void GMenu2X::applyRamTimings() {
 #ifdef TARGET_GP2X
 	// 6 4 1 1 1 2 2
-	int tRC = 5, tRAS = 3, tWR = 0, tMRD = 0, tRFC = 0, tRP = 1, tRCD = 1;
-	gp2x_memregs[0x3802>>1] = ((tMRD & 0xF) << 12) | ((tRFC & 0xF) << 8) | ((tRP & 0xF) << 4) | (tRCD & 0xF);
-	gp2x_memregs[0x3804>>1] = ((tRC & 0xF) << 8) | ((tRAS & 0xF) << 4) | (tWR & 0xF);
+	if (gp2x_mem!=0) {
+		int tRC = 5, tRAS = 3, tWR = 0, tMRD = 0, tRFC = 0, tRP = 1, tRCD = 1;
+		gp2x_memregs[0x3802>>1] = ((tMRD & 0xF) << 12) | ((tRFC & 0xF) << 8) | ((tRP & 0xF) << 4) | (tRCD & 0xF);
+		gp2x_memregs[0x3804>>1] = ((tRC & 0xF) << 8) | ((tRAS & 0xF) << 4) | (tWR & 0xF);
+	}
 #endif
 }
 
 void GMenu2X::applyDefaultTimings() {
 #ifdef TARGET_GP2X
 	// 8 16 3 8 8 8 8
-	int tRC = 7, tRAS = 15, tWR = 2, tMRD = 7, tRFC = 7, tRP = 7, tRCD = 7;
-	gp2x_memregs[0x3802>>1] = ((tMRD & 0xF) << 12) | ((tRFC & 0xF) << 8) | ((tRP & 0xF) << 4) | (tRCD & 0xF);
-	gp2x_memregs[0x3804>>1] = ((tRC & 0xF) << 8) | ((tRAS & 0xF) << 4) | (tWR & 0xF);
+	if (gp2x_mem!=0) {
+		int tRC = 7, tRAS = 15, tWR = 2, tMRD = 7, tRFC = 7, tRP = 7, tRCD = 7;
+		gp2x_memregs[0x3802>>1] = ((tMRD & 0xF) << 12) | ((tRFC & 0xF) << 8) | ((tRP & 0xF) << 4) | (tRCD & 0xF);
+		gp2x_memregs[0x3804>>1] = ((tRC & 0xF) << 8) | ((tRAS & 0xF) << 4) | (tWR & 0xF);
+	}
 #endif
 }
 
 void GMenu2X::setClock(unsigned mhz) {
 	mhz = constrain(mhz,50,maxClock);
 #ifdef TARGET_GP2X
-	unsigned v;
-	unsigned mdiv,pdiv=3,scale=0;
-	mhz*=1000000;
-	mdiv=(mhz*pdiv)/GP2X_CLK_FREQ;
-	mdiv=((mdiv-8)<<8) & 0xff00;
-	pdiv=((pdiv-2)<<2) & 0xfc;
-	scale&=3;
-	v=mdiv | pdiv | scale;
-	MEM_REG[0x910>>1]=v;
+	if (gp2x_mem!=0) {
+		unsigned v;
+		unsigned mdiv,pdiv=3,scale=0;
+		mhz*=1000000;
+		mdiv=(mhz*pdiv)/GP2X_CLK_FREQ;
+		mdiv=((mdiv-8)<<8) & 0xff00;
+		pdiv=((pdiv-2)<<2) & 0xfc;
+		scale&=3;
+		v=mdiv | pdiv | scale;
+		MEM_REG[0x910>>1]=v;
+	}
 #endif
 }
 
@@ -1761,15 +1867,47 @@ void GMenu2X::setGamma(int gamma) {
 #endif
 }
 
+int GMenu2X::getVolume() {
+	int vol = -1;
+	unsigned long soundDev = open("/dev/mixer", O_RDONLY);
+	if (soundDev) {
+		ioctl(soundDev, SOUND_MIXER_READ_PCM, &vol);
+		close(soundDev);
+		if (vol != -1) {
+			//just return one channel , not both channels, they're hopefully the same anyways
+			return vol & 0xFF;
+		}
+	}
+	return vol;
+}
+
 void GMenu2X::setVolume(int vol) {
-#ifdef TARGET_GP2X
+	vol = constrain(vol,0,100);
 	unsigned long soundDev = open("/dev/mixer", O_RDWR);
 	if (soundDev) {
-		vol =(((vol*0x50)/100)<<8)|((vol*0x50)/100);
+		vol = (vol << 8) | vol;
 		ioctl(soundDev, SOUND_MIXER_WRITE_PCM, &vol);
 		close(soundDev);
 	}
-#endif
+}
+
+void GMenu2X::setVolumeScaler(int scale) {
+	scale = constrain(scale,0,MAX_VOLUME_SCALE_FACTOR);
+	unsigned long soundDev = open("/dev/mixer", O_WRONLY);
+	if (soundDev) {
+		ioctl(soundDev, SOUND_MIXER_PRIVATE2, &scale);
+		close(soundDev);
+	}
+}
+
+int GMenu2X::getVolumeScaler() {
+	int currentscalefactor = -1;
+	unsigned long soundDev = open("/dev/mixer", O_RDONLY);
+	if (soundDev) {
+		ioctl(soundDev, SOUND_MIXER_PRIVATE1, &currentscalefactor);
+		close(soundDev);
+	}
+	return currentscalefactor;
 }
 
 string GMenu2X::getExePath() {
@@ -1788,24 +1926,39 @@ string GMenu2X::getExePath() {
 string GMenu2X::getDiskFree() {
 	stringstream ss;
 	string df = "";
-	struct statfs b;
+	struct statvfs b;
 
-	int ret = statfs("/mnt/sd", &b);
+	int ret = statvfs("/mnt/sd", &b);
 	if (ret==0) {
-		ss << b.f_bfree*b.f_bsize/1048576 << "/" << b.f_blocks*b.f_bsize/1048576 << "MB";
+		//DKS - fixing a bug where wrong sizes are reported because of overflowed int
+		printf("b.f_bfree: %d\tb.f_bsize: %d\n", b.f_bfree, b.f_bsize);
+		printf("b.f_blocks: %d\tb.f_frsize:%d\n", b.f_blocks, b.f_frsize);
+//		unsigned long free = b.f_bfree*b.f_frsize/1048576;
+		double free = (double)b.f_bfree * (double)b.f_bsize / 1048576.0;
+//		unsigned long total = b.f_blocks*b.f_frsize/1048576;
+		double total = (double)b.f_blocks * (double)b.f_frsize / 1048576.0;
+//		ss << free << "/" << total << "MB";
+		ss << (unsigned long)free << "/" << (unsigned long)total << "MB";
 		ss >> df;
-	} else cout << "\033[0;34mGMENU2X:\033[0;31m statfs failed with error '" << strerror(errno) << "'\033[0m" << endl;
+	} else cout << "\033[0;34mGMENU2X:\033[0;31m statvfs failed with error '" << strerror(errno) << "'\033[0m" << endl;
 	return df;
 }
 
+int GMenu2X::drawButton(IconButton *btn, int x, int y) {
+	btn->setPosition(x, y-7);
+	btn->paint();
+	return x+btn->getRect().w+6;
+}
+
 int GMenu2X::drawButton(Surface *s, string btn, string text, int x, int y) {
+	SDL_Rect re = {x, y-7, 0, 16};
 	if (sc.skinRes("imgs/buttons/"+btn+".png") != NULL) {
 		sc["imgs/buttons/"+btn+".png"]->blit(s, x, y-7);
-		x += sc["imgs/buttons/"+btn+".png"]->raw->w+3;
-		s->write(font, text, x, y, SFontHAlignLeft, SFontVAlignMiddle);
-		return x+6+font->getTextWidth(text);
+		re.w = sc["imgs/buttons/"+btn+".png"]->raw->w+3;
+		s->write(font, text, x+re.w, y, SFontHAlignLeft, SFontVAlignMiddle);
+		re.w += font->getTextWidth(text);
 	}
-	return x+6;
+	return x+re.w+6;
 }
 
 int GMenu2X::drawButtonRight(Surface *s, string btn, string text, int x, int y) {

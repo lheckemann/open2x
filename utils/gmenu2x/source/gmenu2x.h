@@ -24,21 +24,32 @@
 #include <string>
 #include <iostream>
 #include "surfacecollection.h"
+#include "iconbutton.h"
 #include "translator.h"
 #include "FastDelegate.h"
 #include "utilities.h"
 #include "touchscreen.h"
+#include "inputmanager.h"
 
-#ifdef TARGET_GP2X
-#include "joystick.h"
-#endif
-
-#define BATTERY_READS 10
+const int MAX_VOLUME_SCALE_FACTOR = 200;
+// Default values - going to add settings adjustment, saving, loading and such
+const int VOLUME_SCALER_MUTE = 0;
+const int VOLUME_SCALER_PHONES = 55;
+const int VOLUME_SCALER_NORMAL = 100;
+const int VOLUME_MODE_MUTE = 0;
+const int VOLUME_MODE_PHONES = 1;
+const int VOLUME_MODE_NORMAL = 2;
+const int BATTERY_READS = 10;
 
 using std::string;
 using fastdelegate::FastDelegate0;
 
 typedef FastDelegate0<> MenuAction;
+
+typedef struct {
+	unsigned short batt;
+	unsigned short remocon;
+} MMSP2ADC;
 
 struct MenuOption {
 	string text;
@@ -63,6 +74,7 @@ private:
 	@return A number representing battery charge. 0 means fully discharged. 5 means fully charged. 6 represents a gp2x using AC power.
 	*/
 	unsigned short getBatteryLevel();
+	int batteryHandle;
 	void browsePath(string path, vector<string>* directories, vector<string>* files);
 	/*!
 	Starts the scanning of the nand and sd filesystems, searching for gpe and gpu files and creating the links in 2 dedicated sections.
@@ -124,11 +136,7 @@ public:
 	*/
 	string getExePath();
 
-#ifdef TARGET_GP2X
-	Joystick joy;
-#else
-	SDL_Event event;
-#endif
+	InputManager joy;
 	Touchscreen ts;
 
 	//Configuration settings
@@ -145,9 +153,15 @@ public:
 	//gp2x type
 	bool f200;
 
-	// Open2x settings
+	// Open2x settings ---------------------------------------------------------
 	bool o2x_usb_net_on_boot, o2x_ftp_on_boot, o2x_telnet_on_boot, o2x_gp2xjoy_on_boot, o2x_usb_host_on_boot, o2x_usb_hid_on_boot, o2x_usb_storage_on_boot;
 	string o2x_usb_net_ip;
+	int volumeMode, savedVolumeMode;		//	just use the const int scale values at top of source
+
+	//  Volume scaling values to store from config files
+	int volumeScalerPhones;
+	int volumeScalerNormal;
+	//--------------------------------------------------------------------------
 
 	SurfaceCollection sc;
 	Translator tr;
@@ -173,7 +187,11 @@ public:
 
 	void setClock(unsigned mhz);
 	void setGamma(int gamma);
+
 	void setVolume(int vol);
+	int getVolume();
+	void setVolumeScaler(int scaler);
+	int getVolumeScaler();
 
 	void setInputSpeed();
 
@@ -193,8 +211,9 @@ public:
 	void deleteSection();
 
 	void initBG();
-	int drawButton(Surface *s, string btn, string text, int x, int y=230);
-	int drawButtonRight(Surface *s, string btn, string text, int x, int y=230);
+	int drawButton(IconButton *btn, int x=5, int y=230);
+	int drawButton(Surface *s, string btn, string text, int x=5, int y=230);
+	int drawButtonRight(Surface *s, string btn, string text, int x=5, int y=230);
 	void drawScrollBar(uint pagesize, uint totalsize, uint pagepos, uint top, uint height);
 
 	void drawTitleIcon(string icon, bool skinRes=true, Surface *s=NULL);

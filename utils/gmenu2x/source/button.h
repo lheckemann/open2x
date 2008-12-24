@@ -22,32 +22,37 @@
 #define BUTTON_H_
 
 #include <string>
-#include "gmenu2x.h"
+#include <SDL.h>
 #include "FastDelegate.h"
 
 using std::string;
 using fastdelegate::FastDelegate0;
 
 typedef FastDelegate0<> ButtonAction;
+class GMenu2X;
 
 class Button {
 protected:
 	GMenu2X *gmenu2x;
 	ButtonAction action;
 	SDL_Rect rect;
-	bool pressed;
+	bool doubleClick;
+	int lastTick;
 
 public:
 	string path;
-	Button(GMenu2X *gmenu2x);
+	Button(GMenu2X *gmenu2x, bool doubleClick = false);
 	virtual ~Button() {};
 
+	SDL_Rect getRect();
 	void setSize(int w, int h);
 	void setPosition(int x, int y);
 
 	virtual void paint();
 	virtual bool paintHover();
 
+	bool isPressed();
+	bool isReleased();
 	bool handleTS();
 	void exec();
 	void voidAction() {};

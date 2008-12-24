@@ -21,7 +21,7 @@
 #define MENUSETTING_H
 
 #ifdef TARGET_GP2X
-#include "joystick.h"
+#include "inputmanager.h"
 #endif
 
 #include "gmenu2x.h"
@@ -42,6 +42,7 @@ public:
 	virtual ~MenuSetting() {};
 
 	virtual void draw(int y);
+	virtual void handleTS();
 	virtual void manageInput();
 	virtual void adjustInput();
 	virtual void drawSelected(int y);

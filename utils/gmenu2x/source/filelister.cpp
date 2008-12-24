@@ -73,13 +73,16 @@ void FileLister::browse() {
 
 		while ((dptr = readdir(dirp))) {
 			file = dptr->d_name;
-			if (file[0]=='.') continue;
+			if (file[0]=='.' && file!="..") continue;
 			filepath = path+file;
 			int statRet = stat(filepath.c_str(), &st);
 			if (statRet == -1) {
 				cout << "\033[0;34mGMENU2X:\033[0;31m stat failed on '" << filepath << "' with error '" << strerror(errno) << "'\033[0m" << endl;
 				continue;
 			}
+
+			if (find(exclude.begin(), exclude.end(), file) != exclude.end())
+				continue;
 
 			if (S_ISDIR(st.st_mode)) {
 				if (!showDirectories) continue;

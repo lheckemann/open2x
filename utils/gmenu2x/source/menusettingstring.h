@@ -27,15 +27,20 @@ using std::string;
 
 class MenuSettingString : public MenuSetting {
 private:
-	string originalValue;
+	string originalValue, diagTitle, diagIcon;
 	string *_value;
 	GMenu2X *gmenu2x;
+	IconButton *btnClear, *btnEdit;
+
+	void edit();
+	void clear();
 
 public:
-	MenuSettingString(GMenu2X *gmenu2x, string name, string description, string *value);
+	MenuSettingString(GMenu2X *gmenu2x, string name, string description, string *value, string diagTitle="", string diagIcon="");
 	virtual ~MenuSettingString() {};
 
 	virtual void draw(int y);
+	virtual void handleTS();
 	virtual void manageInput();
 	virtual void adjustInput();
 	virtual void drawSelected(int y);

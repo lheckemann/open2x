@@ -17,66 +17,71 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef INPUTMANAGER_H
+#define INPUTMANAGER_H
 
-#include <iostream>
-#include "joystick.h"
+#define ACTION_UP      0
+#define ACTION_DOWN    1
+#define ACTION_LEFT    2
+#define ACTION_RIGHT   3
+#define ACTION_A       4
+#define ACTION_B       5
+#define ACTION_X       6
+#define ACTION_Y       7
+#define ACTION_L       8
+#define ACTION_R       9
+#define ACTION_START   10
+#define ACTION_SELECT  11
+#define ACTION_VOLUP   12
+#define ACTION_VOLDOWN 13
 
-using namespace std;
+#include <SDL.h>
+#include <SDL_image.h>
+#include <vector>
+#include <string>
 
-Joystick::Joystick() {}
+using std::vector;
+using std::string;
 
-Joystick::Joystick(int joynum) {
-	init(joynum);
-}
+typedef struct {
+	int type;
+	uint num;
+	int value;
+	int treshold;
+} InputMap;
 
-Joystick::~Joystick() {
-	SDL_JoystickClose(joystick);
-}
+typedef vector<InputMap> MappingList;
 
-void Joystick::init( int joynum ) {
-	SDL_JoystickEventState(SDL_IGNORE);
-	joystick = SDL_JoystickOpen(joynum);
-	numButtons = SDL_JoystickNumButtons(joystick);
-	for (int x=0; x<numButtons; x++) {
-		buttons.push_back(false);
-		joyTick.push_back(0);
-		interval.push_back(0);
-	}
-}
+/**
+Manages all input peripherals
+@author Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
+*/
+class InputManager {
+private:
+	InputMap getInputMapping(int action);
+	vector<Uint32> actionTick;
+	vector<Uint32> interval;
 
-void Joystick::update() {
-	SDL_JoystickUpdate();
-	Uint32 tick = SDL_GetTicks();
-	for (int x=0; x<numButtons; x++) {
-		buttons[x] = false;
-		if (SDL_JoystickGetButton(joystick,x)) {
-			if (tick-joyTick[x]>interval[x]) {
-				buttons[x] = true;
-				joyTick[x] = tick;
-			}
-		} else {
-			joyTick[x] = 0;
-		}
-	}
-}
+public:
+	static const int MAPPING_TYPE_UNDEFINED = -1;
+	static const int MAPPING_TYPE_BUTTON = 0;
+	static const int MAPPING_TYPE_AXYS = 1;
+	static const int MAPPING_TYPE_KEYPRESS = 2;
 
-int Joystick::count() {
-	return numButtons;
-}
+	InputManager();
+	~InputManager();
+	void init(string conffile = "input.conf");
 
-void Joystick::setInterval(int ms, int button) {
-	if (button<0)
-		for (int x=0; x<numButtons; x++)
-			interval[x] = ms;
-	else
-		interval[button] = ms;
-}
+	vector <SDL_Joystick*> joysticks;
+	vector<bool> actions;
+	vector<MappingList> mappings;
 
-bool Joystick::operator [](int button) {
-	if (button<0 || button>=numButtons) return false;
-	return buttons[button];
-}
+	void update();
+	int count();
+	void setActionsCount(int count);
+	void setInterval(int ms, int action = -1);
+	bool operator[](int action);
+	bool isActive(int action);
+};
 
-bool Joystick::isDown(int button) {
-	return SDL_JoystickGetButton(joystick,button);
-}
+#endif

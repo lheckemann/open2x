@@ -17,35 +17,43 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef LISTVIEW_H_
+#define LISTVIEW_H_
 
-#ifndef SETTINGSDIALOG_H_
-#define SETTINGSDIALOG_H_
-
-#define SD_NO_ACTION 0
-#define SD_ACTION_CLOSE 1
-#define SD_ACTION_UP 2
-#define SD_ACTION_DOWN 3
-
-#include <string>
 #include "gmenu2x.h"
-#include "menusetting.h"
+#include "listviewitem.h"
 
-using std::string;
 using std::vector;
 
-class SettingsDialog {
+class ListView {
 private:
-	vector<MenuSetting *> voices;
-	string text, icon;
-	GMenu2X *gmenu2x;
+	int firstDisplayItem, selectedItem;
+	int itemsPerPage;
+
+protected:
+	vector<ListViewItem*> items;
+	SDL_Rect rect;
 
 public:
-	SettingsDialog(GMenu2X *gmenu2x, string text, string icon="skin:sections/settings.png");
-	~SettingsDialog();
+	ListView(GMenu2X *gmenu2x);
+	virtual ~ListView();
 
-	bool edited();
-	bool exec();
-	void addSetting(MenuSetting* set);
+	GMenu2X *gmenu2x;
+
+	ListViewItem *add(ListViewItem *item);
+	ListViewItem *add(string text);
+	void     del(ListViewItem *item);
+	void     del(int itemIndex);
+	void     clear();
+
+	void setPosition(int x, int y);
+	void setSize(int w, int h);
+	int getWidth();
+
+	virtual void paint();
+	virtual void handleInput();
+
+	ListViewItem *operator[](int);
 };
 
-#endif /*INPUTDIALOG_H_*/
+#endif

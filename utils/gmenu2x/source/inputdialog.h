@@ -21,6 +21,22 @@
 #ifndef INPUTDIALOG_H_
 #define INPUTDIALOG_H_
 
+#define KEY_WIDTH 20
+#define KEY_HEIGHT 20
+#define KB_TOP 90
+
+#define ID_NO_ACTION 0
+#define ID_ACTION_CLOSE 1
+#define ID_ACTION_UP 2
+#define ID_ACTION_DOWN 3
+#define ID_ACTION_LEFT 4
+#define ID_ACTION_RIGHT 5
+#define ID_ACTION_BACKSPACE 6
+#define ID_ACTION_SPACE 7
+#define ID_ACTION_GOUP 8
+#define ID_ACTION_SELECT 9
+#define ID_ACTION_KB_CHANGE 10
+
 #include <string>
 #include "gmenu2x.h"
 
@@ -32,15 +48,26 @@ typedef vector<string> stringlist;
 class InputDialog {
 private:
 	int selRow, selCol;
-	string text;
+	bool close, ok;
+	string title, text, icon;
 	GMenu2X *gmenu2x;
 	short curKeyboard;
 	vector<stringlist> keyboard;
+	stringlist *kb;
+	int kbLength, kbWidth, kbHeight, kbLeft;
+	SDL_Rect kbRect;
+	IconButton *btnBackspaceX, *btnBackspaceL, *btnSpace, *btnConfirm, *btnChangeKeys;
 
-	void drawVirtualKeyboard();
+	void backspace();
+	void space();
+	void confirm();
+	void changeKeys();
+
+	int drawVirtualKeyboard();
+	void setKeyboard(int);
 
 public:
-	InputDialog(GMenu2X *gmenu2x, string text, string startvalue="");
+	InputDialog(GMenu2X *gmenu2x, string text, string startvalue="", string title="", string icon="");
 
 	string input;
 	bool exec();

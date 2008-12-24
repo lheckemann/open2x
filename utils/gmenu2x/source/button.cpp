@@ -1,14 +1,18 @@
 #include "button.h"
+#include "gmenu2x.h"
 
 using namespace std;
 using namespace fastdelegate;
 
-Button::Button(GMenu2X * gmenu2x) {
+Button::Button(GMenu2X * gmenu2x, bool doubleClick) {
 	this->gmenu2x = gmenu2x;
+	this->doubleClick = doubleClick;
+	lastTick = 0;
 	action = MakeDelegate(this, &Button::voidAction);
-	setPosition(0,0);
-	setSize(0,0);
-	pressed = false;
+	rect.x = 0;
+	rect.y = 0;
+	rect.w = 0;
+	rect.h = 0;
 }
 
 void Button::paint() {
@@ -20,25 +24,36 @@ bool Button::paintHover() {
 	return false;
 }
 
+bool Button::isPressed() {
+	return gmenu2x->ts.pressed() && gmenu2x->ts.inRect(rect);
+}
+
+bool Button::isReleased() {
+	return gmenu2x->ts.released() && gmenu2x->ts.inRect(rect);
+}
+
 bool Button::handleTS() {
-	if (!gmenu2x->ts.pressed()) {
-		if (pressed) {
+	if (isReleased()) {
+		if (doubleClick) {
+			int tickNow = SDL_GetTicks();
+			if (tickNow - lastTick < 400)
+				exec();
+			lastTick = tickNow;
+		} else {
 			exec();
-			return true;
 		}
-		pressed = false;
-		return false;
-	} else if (gmenu2x->ts.inRect(rect)) {
-		pressed = true;
-		return false;
-	} else {
-		pressed = false;
-		return false;
+		return true;
 	}
+	return false;
 }
 
 void Button::exec() {
+	gmenu2x->ts.setHandled();
 	action();
+}
+
+SDL_Rect Button::getRect() {
+	return rect;
 }
 
 void Button::setSize(int w, int h) {

@@ -17,40 +17,32 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef JOYSTICK_H
-#define JOYSTICK_H
+#ifndef LISTVIEWITEM_H_
+#define LISTVIEWITEM_H_
 
-#include <SDL.h>
-#include <SDL_image.h>
-#include <vector>
+#include <string>
 
-using std::vector;
+using std::string;
 
-/**
-Manages the joystick
+class ListView;
 
-	@author Massimiliano Torromeo <massimiliano.torromeo@gmail.com>
-*/
-class Joystick {
-private:
-	int numButtons;
-	vector<Uint32> joyTick;
-	vector<Uint32> interval;
+class ListViewItem {
+protected:
+	ListView *parent;
+	SDL_Rect rect;
 
 public:
-	Joystick();
-	Joystick(int joynum);
-	~Joystick();
-	void init(int joynum);
+	ListViewItem(ListView *parent, string text);
+	virtual ~ListViewItem();
 
-	SDL_Joystick *joystick;
-	vector<bool> buttons;
+	string text;
 
-	void update();
-	int count();
-	void setInterval(int ms, int button = -1);
-	bool operator [](int button);
-	bool isDown(int button);
+	void setPosition(int x, int y);
+	int getHeight();
+
+	virtual void paint();
+	virtual void handleTS();
+	virtual void onClick();
 };
 
 #endif

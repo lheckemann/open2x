@@ -21,55 +21,125 @@
 #include <SDL.h>
 #include <SDL_gfxPrimitives.h>
 
-#ifdef TARGET_GP2X
-#include "gp2x.h"
-#endif
 #include "inputdialog.h"
 
 using namespace std;
+using namespace fastdelegate;
 
-InputDialog::InputDialog(GMenu2X *gmenu2x, string text, string startvalue) {
+InputDialog::InputDialog(GMenu2X *gmenu2x, string text, string startvalue, string title, string icon) {
 	this->gmenu2x = gmenu2x;
-	this->text = text;
+	if (title=="") {
+		this->title = text;
+		this->text = "";
+	} else {
+		this->title = title;
+		this->text = text;
+	}
+	this->icon = "";
+	if (icon!="" && gmenu2x->sc[icon] != NULL)
+		this->icon = icon;
+
 	input = startvalue;
 	selCol = 0;
 	selRow = 0;
-	curKeyboard = 0;
-	keyboard.resize(2);
+	keyboard.resize(7);
 
-	keyboard[0].push_back("abcdefghijklm _\"'`.,:;!?");
-	keyboard[0].push_back("nopqrstuvwxyz 0123456789");
-	keyboard[0].push_back("¡¿*+-/\\&<=>|()[]{}@#$%^~");
-	keyboard[0].push_back("àáèéìíòóùúýäëïöüÿâêîôûåã");
-	keyboard[0].push_back("õñæçабвгдеёжзийклмнопрст");
-	keyboard[0].push_back("уфхцчшщъыьэюяøðßÐÞþ");
-	keyboard[0].push_back("čďěľĺňôřŕšťůž");
+	keyboard[0].push_back("abcdefghijklm");
+	keyboard[0].push_back("nopqrstuvwxyz");
+//	senquack - to eliminate confusion on the setting of IP addresses, I will add a period in the first keyboard.
+//	keyboard[0].push_back("0123456789   ");
+	keyboard[0].push_back("0123456789.  ");
 
-	keyboard[1].push_back("ABCDEFGHIJKLM _\"'`.,:;!?");
-	keyboard[1].push_back("NOPQRSTUVWXYZ 0123456789");
-	keyboard[1].push_back("¡¿*+-/\\&<=>|()[]{}@#$%^~");
-	keyboard[1].push_back("ÀÁÈÉÌÍÒÓÙÚÝÄËÏÖÜŸÂÊÎÔÛÅÃ");
-	keyboard[1].push_back("ÕÑÆÇАБВГДЕЁЖЗИЙКЛМНОПРСТ");
-	keyboard[1].push_back("УФХЦЧШЩЪЫЬЭЮЯØðßÐÞþ");
-	keyboard[1].push_back("ČĎĚĽĹŇÔŘŔŠŤŮŽ");
+	keyboard[1].push_back("ABCDEFGHIJKLM");
+	keyboard[1].push_back("NOPQRSTUVWXYZ");
+	keyboard[1].push_back("_\"'`.,:;!?   ");
+
+
+	keyboard[2].push_back("¡¿*+-/\\&<=>|");
+	keyboard[2].push_back("()[]{}@#$%^~");
+	keyboard[2].push_back("_\"'`.,:;!?  ");
+
+
+	keyboard[3].push_back("àáèéìíòóùúýäõ");
+	keyboard[3].push_back("ëïöüÿâêîôûåãñ");
+	keyboard[3].push_back("čďěľĺňôřŕšťůž");
+	keyboard[3].push_back("ąćęłńśżź     ");
+
+	keyboard[4].push_back("ÀÁÈÉÌÍÒÓÙÚÝÄÕ");
+	keyboard[4].push_back("ËÏÖÜŸÂÊÎÔÛÅÃÑ");
+	keyboard[4].push_back("ČĎĚĽĹŇÔŘŔŠŤŮŽ");
+	keyboard[4].push_back("ĄĆĘŁŃŚŻŹ     ");
+
+
+	keyboard[5].push_back("æçабвгдеёжзий ");
+	keyboard[5].push_back("клмнопрстуфхцч");
+	keyboard[5].push_back("шщъыьэюяøðßÐÞþ");
+
+	keyboard[6].push_back("ÆÇАБВГДЕЁЖЗИЙ ");
+	keyboard[6].push_back("КЛМНОПРСТУФХЦЧ");
+	keyboard[6].push_back("ШЩЪЫЬЭЮЯØðßÐÞþ");
+
+	setKeyboard(0);
+
+	ButtonAction actBackspace = MakeDelegate(this, &InputDialog::backspace);
+
+	btnBackspaceX = new IconButton(gmenu2x, "skin:imgs/buttons/x.png");
+	btnBackspaceX->setAction(actBackspace);
+
+	btnBackspaceL = new IconButton(gmenu2x, "skin:imgs/buttons/l.png", gmenu2x->tr["Backspace"]);
+	btnBackspaceL->setAction(actBackspace);
+
+	btnSpace = new IconButton(gmenu2x, "skin:imgs/buttons/r.png", gmenu2x->tr["Space"]);
+	btnSpace->setAction(MakeDelegate(this, &InputDialog::space));
+
+	btnConfirm = new IconButton(gmenu2x, "skin:imgs/buttons/b.png", gmenu2x->tr["Confirm"]);
+	btnConfirm->setAction(MakeDelegate(this, &InputDialog::confirm));
+
+	btnChangeKeys = new IconButton(gmenu2x, "skin:imgs/buttons/y.png", gmenu2x->tr["Change keys"]);
+	btnChangeKeys->setAction(MakeDelegate(this, &InputDialog::changeKeys));
+}
+
+void InputDialog::setKeyboard(int kb) {
+	kb = constrain(kb,0,keyboard.size()-1);
+	curKeyboard = kb;
+	this->kb = &(keyboard[kb]);
+	kbLength = this->kb->at(0).length();
+	for (int x = 0, l = kbLength; x<l; x++)
+		if (gmenu2x->font->utf8Code(this->kb->at(0)[x])) {
+			kbLength--;
+			x++;
+		}
+
+	kbLeft = 160 - kbLength*KEY_WIDTH/2;
+	kbWidth = kbLength*KEY_WIDTH+3;
+	kbHeight = (this->kb->size()+1)*KEY_HEIGHT+3;
+
+	kbRect.x = kbLeft-3;
+	kbRect.y = KB_TOP-2;
+	kbRect.w = kbWidth;
+	kbRect.h = kbHeight;
 }
 
 bool InputDialog::exec() {
-	SDL_Rect box = {0, 50, 0, gmenu2x->font->getHeight()+4};
+	SDL_Rect box = {0, 60, 0, gmenu2x->font->getHeight()+4};
 
 	Uint32 caretTick = 0, curTick;
 	bool caretOn = true;
 
-	bool close = false, ok = true;
+	uint action;
+	close = false;
+	ok = true;
 	while (!close) {
 		gmenu2x->bg->blit(gmenu2x->s,0,0);
-		gmenu2x->writeTitle(text);
+		gmenu2x->writeTitle(title);
+		gmenu2x->writeSubTitle(text);
+		gmenu2x->drawTitleIcon(icon);
 
-		gmenu2x->drawButton(gmenu2x->s, "y", gmenu2x->tr["Shift"],
+		gmenu2x->drawButton(gmenu2x->s, "y", gmenu2x->tr["Change keys"],
 		gmenu2x->drawButton(gmenu2x->s, "b", gmenu2x->tr["Confirm"],
 		gmenu2x->drawButton(gmenu2x->s, "r", gmenu2x->tr["Space"],
-		gmenu2x->drawButton(gmenu2x->s, "l", gmenu2x->tr["Backspace"],
-		gmenu2x->drawButton(gmenu2x->s, "x", "", 5)-10))));
+		gmenu2x->drawButton(btnBackspaceL,
+		gmenu2x->drawButton(btnBackspaceX)-6))));
 
 		box.w = gmenu2x->font->getTextWidth(input)+18;
 		box.x = 160-box.w/2;
@@ -86,115 +156,109 @@ bool InputDialog::exec() {
 
 		if (caretOn) gmenu2x->s->box(box.x+box.w-12, box.y+3, 8, box.h-6, gmenu2x->selectionColor);
 
-		drawVirtualKeyboard();
-
+		if (gmenu2x->f200) gmenu2x->ts.poll();
+		action = drawVirtualKeyboard();
 		gmenu2x->s->flip();
 
-#ifdef TARGET_GP2X
 		gmenu2x->joy.update();
-		// LINK NAVIGATION
-		if ( gmenu2x->joy[GP2X_BUTTON_LEFT ] ) selCol--;
-		if ( gmenu2x->joy[GP2X_BUTTON_RIGHT] ) selCol++;
-		if ( gmenu2x->joy[GP2X_BUTTON_UP   ] ) selRow--;
-		if ( gmenu2x->joy[GP2X_BUTTON_DOWN ] ) {
-			selRow++;
-			if (selRow==(int)keyboard[curKeyboard].size()) selCol = selCol<8 ? 0 : 1;
-		}
-		if ( gmenu2x->joy[GP2X_BUTTON_X] || gmenu2x->joy[GP2X_BUTTON_L] ) {
-			//                                      check for utf8 characters
-			input = input.substr(0,input.length()-( gmenu2x->font->utf8Code(input[input.length()-2]) ? 2 : 1));
-		}
-		if ( gmenu2x->joy[GP2X_BUTTON_R    ] ) input += " ";
-		if ( gmenu2x->joy[GP2X_BUTTON_Y    ] ) {
-			if (curKeyboard==0)
-				curKeyboard = 1;
-			else
-				curKeyboard = 0;
-		}
-		if ( gmenu2x->joy[GP2X_BUTTON_B] || gmenu2x->joy[GP2X_BUTTON_CLICK] ) {
-			if (selRow==keyboard[curKeyboard].size()) {
-				if (selCol==0)
-					ok = false;
+		if ( gmenu2x->joy[ACTION_START] ) action = ID_ACTION_CLOSE;
+		if ( gmenu2x->joy[ACTION_UP   ] ) action = ID_ACTION_UP;
+		if ( gmenu2x->joy[ACTION_DOWN ] ) action = ID_ACTION_DOWN;
+		if ( gmenu2x->joy[ACTION_LEFT ] ) action = ID_ACTION_LEFT;
+		if ( gmenu2x->joy[ACTION_RIGHT] ) action = ID_ACTION_RIGHT;
+		if ( gmenu2x->joy[ACTION_B]     ) action = ID_ACTION_SELECT;
+		if ( gmenu2x->joy[ACTION_Y]     ) action = ID_ACTION_KB_CHANGE;
+		if ( gmenu2x->joy[ACTION_X] || gmenu2x->joy[ACTION_L] ) action = ID_ACTION_BACKSPACE;
+		if ( gmenu2x->joy[ACTION_R    ] ) action = ID_ACTION_SPACE;
+
+		switch (action) {
+			case ID_ACTION_CLOSE: {
+				ok = false;
 				close = true;
-			} else {
-				bool utf8;
-				for (uint x=0, xc=0; x<keyboard[curKeyboard][selRow].length(); x++) {
-					utf8 = gmenu2x->font->utf8Code(keyboard[curKeyboard][selRow][x]);
-					if (xc==selCol) input += keyboard[curKeyboard][selRow].substr(x, utf8 ? 2 : 1);
-					if (utf8) x++;
-					xc++;
-				}
-			}
+			} break;
+			case ID_ACTION_UP: {
+				selRow--;
+			} break;
+			case ID_ACTION_DOWN: {
+				selRow++;
+				if (selRow==(int)kb->size()) selCol = selCol<8 ? 0 : 1;
+			} break;
+			case ID_ACTION_LEFT: {
+				selCol--;
+			} break;
+			case ID_ACTION_RIGHT: {
+				selCol++;
+			} break;
+			case ID_ACTION_BACKSPACE: backspace(); break;
+			case ID_ACTION_SPACE: space(); break;
+			case ID_ACTION_KB_CHANGE: changeKeys(); break;
+			case ID_ACTION_SELECT: confirm(); break;
 		}
-		if ( gmenu2x->joy[GP2X_BUTTON_START] ) close = true;
-#else
-		while (SDL_PollEvent(&gmenu2x->event)) {
-			if ( gmenu2x->event.type==SDL_KEYDOWN ) {
-				if ( gmenu2x->event.key.keysym.sym==SDLK_ESCAPE ) { ok = false; close = true; }
-				// LINK NAVIGATION
-				if ( gmenu2x->event.key.keysym.sym==SDLK_LEFT      ) selCol--;
-				if ( gmenu2x->event.key.keysym.sym==SDLK_RIGHT     ) selCol++;
-				if ( gmenu2x->event.key.keysym.sym==SDLK_UP        ) selRow--;
-				if ( gmenu2x->event.key.keysym.sym==SDLK_DOWN      )  {
-					selRow++;
-					if (selRow==(int)keyboard[curKeyboard].size()) selCol = selCol<8 ? 0 : 1;
-				}
-				if ( gmenu2x->event.key.keysym.sym==SDLK_BACKSPACE ) {
-					//                                      check for utf8 characters
-					input = input.substr(0,input.length()-( gmenu2x->font->utf8Code(input[input.length()-2]) ? 2 : 1 ));
-				}
-				if ( gmenu2x->event.key.keysym.sym==SDLK_LSHIFT    ) {
-					if (curKeyboard==0)
-						curKeyboard = 1;
-					else
-						curKeyboard = 0;
-				}
-				if ( gmenu2x->event.key.keysym.sym==SDLK_RETURN    ) {
-					if (selRow==(int)keyboard[curKeyboard].size()) {
-						if (selCol==0)
-							ok = false;
-						close = true;
-					} else {
-						bool utf8;
-						int xc=0;
-						for (uint x=0; x<keyboard[curKeyboard][selRow].length(); x++) {
-							utf8 = gmenu2x->font->utf8Code(keyboard[curKeyboard][selRow][x]);
-							if (xc==selCol) input += keyboard[curKeyboard][selRow].substr(x, utf8 ? 2 : 1);
-							if (utf8) x++;
-							xc++;
-						}
-					}
-				}
-			}
-		}
-#endif
 	}
 
 	return ok;
 }
 
-void InputDialog::drawVirtualKeyboard() {
-	//keyboard border
-	gmenu2x->s->rectangle(157-keyboard[curKeyboard][0].length()*5, 73, keyboard[curKeyboard][0].length()*10+4, keyboard[curKeyboard].size()*15+18, gmenu2x->selectionColor);
-	uint left = 160-keyboard[curKeyboard][0].length()*5;
+void InputDialog::backspace() {
+	//                                      check for utf8 characters
+	input = input.substr(0,input.length()-( gmenu2x->font->utf8Code(input[input.length()-2]) ? 2 : 1 ));
+}
 
-	if (selCol<0) selCol = selRow==(int)keyboard[curKeyboard].size() ? 1 : keyboard[curKeyboard][0].length()-1;
-	if (selCol>=(int)keyboard[curKeyboard][0].length()) selCol = 0;
-	if (selRow<0) selRow = keyboard[curKeyboard].size()-1;
-	if (selRow>(int)keyboard[curKeyboard].size()) selRow = 0;
+void InputDialog::space() {
+	//                                      check for utf8 characters
+	input += " ";
+}
+
+void InputDialog::confirm() {
+	if (selRow==(int)kb->size()) {
+		if (selCol==0)
+			ok = false;
+		close = true;
+	} else {
+		bool utf8;
+		int xc=0;
+		for (uint x=0; x<kb->at(selRow).length(); x++) {
+			utf8 = gmenu2x->font->utf8Code(kb->at(selRow)[x]);
+			if (xc==selCol) input += kb->at(selRow).substr(x, utf8 ? 2 : 1);
+			if (utf8) x++;
+			xc++;
+		}
+	}
+}
+
+void InputDialog::changeKeys() {
+	if (curKeyboard==6)
+		setKeyboard(0);
+	else
+		setKeyboard(curKeyboard+1);
+
+	//DKS - the keyboards change way too fast, must add a delay here
+	SDL_Delay(150);
+}
+
+int InputDialog::drawVirtualKeyboard() {
+	int action = ID_NO_ACTION;
+
+	//keyboard border
+	gmenu2x->s->rectangle(kbRect, gmenu2x->selectionColor);
+
+	if (selCol<0) selCol = selRow==(int)kb->size() ? 1 : kbLength-1;
+	if (selCol>=(int)kbLength) selCol = 0;
+	if (selRow<0) selRow = kb->size()-1;
+	if (selRow>(int)kb->size()) selRow = 0;
 
 	//selection
-	if (selRow<(int)keyboard[curKeyboard].size())
-		gmenu2x->s->box(left+selCol*10-1, 75+selRow*15, 10, 13, gmenu2x->selectionColor);
+	if (selRow<(int)kb->size())
+		gmenu2x->s->box(kbLeft+selCol*KEY_WIDTH-1, KB_TOP+selRow*KEY_HEIGHT, KEY_WIDTH-1, KEY_HEIGHT-2, gmenu2x->selectionColor);
 	else {
 		if (selCol>1) selCol = 0;
 		if (selCol<0) selCol = 1;
-		gmenu2x->s->box(left+selCol*keyboard[curKeyboard][0].length()*5-1, 75+keyboard[curKeyboard].size()*15, keyboard[curKeyboard][0].length()*5, 14, gmenu2x->selectionColor);
+		gmenu2x->s->box(kbLeft+selCol*kbLength*KEY_WIDTH/2-1, KB_TOP+kb->size()*KEY_HEIGHT, kbLength*KEY_WIDTH/2-1, KEY_HEIGHT-1, gmenu2x->selectionColor);
 	}
 
 	//keys
-	for (uint l=0; l<keyboard[curKeyboard].size(); l++) {
-		string line = keyboard[curKeyboard][l];
+	for (uint l=0; l<kb->size(); l++) {
+		string line = kb->at(l);
 		for (uint x=0, xc=0; x<line.length(); x++) {
 			string charX;
 			//utf8 characters
@@ -203,12 +267,41 @@ void InputDialog::drawVirtualKeyboard() {
 				x++;
 			} else
 				charX = line[x];
-			gmenu2x->s->write(gmenu2x->font, charX, left+4+xc*10, 81+l*15, SFontHAlignCenter, SFontVAlignMiddle);
+
+			SDL_Rect re = {kbLeft+xc*KEY_WIDTH-1, KB_TOP+l*KEY_HEIGHT, KEY_WIDTH-1, KEY_HEIGHT-2};
+
+			//if ts on rect, change selection
+			if (gmenu2x->f200 && gmenu2x->ts.pressed() && gmenu2x->ts.inRect(re)) {
+				selCol = xc;
+				selRow = l;
+			}
+
+			gmenu2x->s->rectangle(re, gmenu2x->selectionColor);
+			gmenu2x->s->write(gmenu2x->font, charX, kbLeft+xc*KEY_WIDTH+KEY_WIDTH/2-1, KB_TOP+l*KEY_HEIGHT+KEY_HEIGHT/2, SFontHAlignCenter, SFontVAlignMiddle);
 			xc++;
 		}
 	}
 
 	//Ok/Cancel
-	gmenu2x->s->write(gmenu2x->font, gmenu2x->tr["Cancel"], (int)(160-keyboard[curKeyboard][0].length()*2.5), 81+keyboard[curKeyboard].size()*15, SFontHAlignCenter, SFontVAlignMiddle);
-	gmenu2x->s->write(gmenu2x->font, gmenu2x->tr["OK"], (int)(160+keyboard[curKeyboard][0].length()*2.5), 81+keyboard[curKeyboard].size()*15, SFontHAlignCenter, SFontVAlignMiddle);
+	SDL_Rect re = {kbLeft-1, KB_TOP+kb->size()*KEY_HEIGHT, kbLength*KEY_WIDTH/2-1, KEY_HEIGHT-1};
+	gmenu2x->s->rectangle(re, gmenu2x->selectionColor);
+	if (gmenu2x->f200 && gmenu2x->ts.pressed() && gmenu2x->ts.inRect(re)) {
+		selCol = 0;
+		selRow = kb->size();
+	}
+	gmenu2x->s->write(gmenu2x->font, gmenu2x->tr["Cancel"], (int)(160-kbLength*KEY_WIDTH/4), KB_TOP+kb->size()*KEY_HEIGHT+KEY_HEIGHT/2, SFontHAlignCenter, SFontVAlignMiddle);
+
+	re.x = kbLeft+kbLength*KEY_WIDTH/2-1;
+	gmenu2x->s->rectangle(re, gmenu2x->selectionColor);
+	if (gmenu2x->f200 && gmenu2x->ts.pressed() && gmenu2x->ts.inRect(re)) {
+		selCol = 1;
+		selRow = kb->size();
+	}
+	gmenu2x->s->write(gmenu2x->font, gmenu2x->tr["OK"], (int)(160+kbLength*KEY_WIDTH/4), KB_TOP+kb->size()*KEY_HEIGHT+KEY_HEIGHT/2, SFontHAlignCenter, SFontVAlignMiddle);
+
+	//if ts released
+	if (gmenu2x->f200 && gmenu2x->ts.wasPressed && !gmenu2x->ts.pressed() && gmenu2x->ts.inRect(kbRect))
+		action = ID_ACTION_SELECT;
+
+	return action;
 }

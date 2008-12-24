@@ -28,10 +28,6 @@
 #include "selector.h"
 #include "textmanualdialog.h"
 
-#ifdef TARGET_GP2X
-#include "gp2x.h"
-#endif
-
 using namespace std;
 
 LinkApp::LinkApp(GMenu2X *gmenu2x, const char* linkfile)
@@ -308,18 +304,10 @@ void LinkApp::showManual() {
 				repaint = false;
 			}
 
-#ifdef TARGET_GP2X
 			gmenu2x->joy.update();
-			if ( gmenu2x->joy[GP2X_BUTTON_Y] || gmenu2x->joy[GP2X_BUTTON_X] || gmenu2x->joy[GP2X_BUTTON_START] ) close = true;
-			if ( gmenu2x->joy[GP2X_BUTTON_LEFT] && page>0 ) { page--; repaint=true; }
-			if ( gmenu2x->joy[GP2X_BUTTON_RIGHT] && page<pagecount-1 ) { page++; repaint=true; }
-#else
-			while (SDL_PollEvent(&gmenu2x->event)) {
-				if ( gmenu2x->event.key.keysym.sym==SDLK_ESCAPE ) close = true;
-				if ( gmenu2x->event.key.keysym.sym==SDLK_LEFT && page>0 ) { page--; repaint=true; }
-				if ( gmenu2x->event.key.keysym.sym==SDLK_RIGHT && page<pagecount-1 ) { page++; repaint=true; }
-			}
-#endif
+			if ( gmenu2x->joy[ACTION_Y] || gmenu2x->joy[ACTION_X] || gmenu2x->joy[ACTION_START] ) close = true;
+			if ( gmenu2x->joy[ACTION_LEFT] && page>0 ) { page--; repaint=true; }
+			if ( gmenu2x->joy[ACTION_RIGHT] && page<pagecount-1 ) { page++; repaint=true; }
 		}
 		return;
 	}
@@ -412,8 +400,6 @@ void LinkApp::launch(string selectedFile, string selectedDir) {
 		}
 	}
 
-	if (clock()!=gmenu2x->menuClock)
-		gmenu2x->setClock(clock());
 	if (useRamTimings)
 		gmenu2x->applyRamTimings();
 	if (volume()>=0)
@@ -446,12 +432,14 @@ void LinkApp::launch(string selectedFile, string selectedDir) {
 	} else {
 		if (gmenu2x->saveSelection && (gmenu2x->startSectionIndex!=gmenu2x->menu->selSectionIndex() || gmenu2x->startLinkIndex!=gmenu2x->menu->selLinkIndex()))
 			gmenu2x->writeConfig();
+		if (gmenu2x->fwType == "open2x" && gmenu2x->savedVolumeMode != gmenu2x->volumeMode)
+			gmenu2x->writeConfigOpen2x();
 		if (selectedFile=="")
 			gmenu2x->writeTmp();
 		gmenu2x->quit();
-		//G
+		if (clock()!=gmenu2x->menuClock)
+			gmenu2x->setClock(clock());
 		if (gamma()!=0 && gamma()!=gmenu2x->gamma)
-		//G
 			gmenu2x->setGamma(gamma());
 		execlp("/bin/sh","/bin/sh","-c",command.c_str(),NULL);
 		//if execution continues then something went wrong and as we already called SDL_Quit we cannot continue

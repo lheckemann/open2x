@@ -37,27 +37,34 @@ typedef struct {
 class Touchscreen {
 private:
 	int wm97xx;
-	bool calibrated;
+	bool calibrated, _handled;
 	TS_EVENT event;
 	int calibX, calibY;
 
 	void calibrate(/*TS_EVENT event*/);
 
 public:
-	int x,y;
+	int x,y, startX,startY;
 	bool wasPressed;
 
 	Touchscreen();
 	~Touchscreen();
 
 	bool init();
+	bool initialized();
 	void deinit();
 
 	bool poll();
 	bool pressed();
+	bool released();
+
+	bool handled();
+	void setHandled();
 
 	bool inRect(SDL_Rect r);
 	bool inRect(int x, int y, int w, int h);
+	bool startedInRect(SDL_Rect r);
+	bool startedInRect(int x, int y, int w, int h);
 };
 
 #endif

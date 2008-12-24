@@ -29,8 +29,11 @@ Touchscreen::Touchscreen() {
 	wm97xx = 0;
 	calibrated = false;
 	wasPressed = false;
+	_handled = false;
 	x = 0;
 	y = 0;
+	startX = 0;
+	startY = 0;
 }
 
 Touchscreen::~Touchscreen() {
@@ -40,6 +43,12 @@ Touchscreen::~Touchscreen() {
 bool Touchscreen::init() {
 #ifdef TARGET_GP2X
 	wm97xx = open("/dev/touchscreen/wm97xx", O_RDONLY|O_NOCTTY);
+#endif
+	return initialized();
+}
+
+bool Touchscreen::initialized() {
+#ifdef TARGET_GP2X
 	return wm97xx>0;
 #else
 	return true;
@@ -49,6 +58,7 @@ bool Touchscreen::init() {
 void Touchscreen::deinit() {
 #ifdef TARGET_GP2X
 	close(wm97xx);
+	wm97xx = 0;
 #endif
 }
 
@@ -81,18 +91,47 @@ bool Touchscreen::poll() {
 		event.pressure = 0;
 	}
 #endif
+	_handled = false;
+
+	if (!wasPressed && pressed()) {
+		startX = x;
+		startY = y;
+	}
+
 	return pressed();
 }
 
+bool Touchscreen::handled() {
+	return _handled;
+}
+
+void Touchscreen::setHandled() {
+	wasPressed = false;
+	_handled = true;
+}
+
 bool Touchscreen::pressed() {
-	return event.pressure>0;
+	return !_handled && event.pressure>0;
+}
+
+bool Touchscreen::released() {
+	return !pressed() && wasPressed;
 }
 
 bool Touchscreen::inRect(SDL_Rect r) {
-	return (y>=r.y) && (y<=r.y+r.h) && (x>=r.x) && (x<=r.x+r.w);
+	return !_handled && (y>=r.y) && (y<=r.y+r.h) && (x>=r.x) && (x<=r.x+r.w);
 }
 
 bool Touchscreen::inRect(int x, int y, int w, int h) {
 	SDL_Rect rect = {x,y,w,h};
 	return inRect(rect);
+}
+
+bool Touchscreen::startedInRect(SDL_Rect r) {
+	return !_handled && (startY>=r.y) && (startY<=r.y+r.h) && (startX>=r.x) && (startX<=r.x+r.w);
+}
+
+bool Touchscreen::startedInRect(int x, int y, int w, int h) {
+	SDL_Rect rect = {x,y,w,h};
+	return startedInRect(rect);
 }
