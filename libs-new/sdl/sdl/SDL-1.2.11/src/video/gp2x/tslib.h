@@ -38,7 +38,9 @@ extern "C" {
   #define TSAPI TSIMPORT
 #endif // TSLIB_INTERNAL
 
-struct tsdev;
+typedef struct tsdev {
+  int fd;
+} TSDEV;
 
 struct ts_sample {
 	int		x;

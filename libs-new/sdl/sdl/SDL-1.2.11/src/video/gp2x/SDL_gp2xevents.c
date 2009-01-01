@@ -66,6 +66,15 @@ static char rcsid =
 //DKS - added for USB keyboard support
 #define tty_fd		this->hidden->keyboard_fd
 
+//DKS - this remains zero until a sample containing a non-zero pressure value has been
+//			read from the touchscreen.  It is a work-around for a bug.  The bug is that
+//			about 10% of the time the touchscreen device is opened, it returns nothing but
+//			zero values until closed and reopened.  Once it starts returning true values, it
+//			never needs to be closed and reopened.  Code uses this flag to see if it should
+//			try to close and reopen the touchscreen device several times a second or so until
+//			it does get good values.
+unsigned int gotten_nonzero_sample = 0;
+
 /***********
  *** Mouse stuff
  **********/
@@ -406,6 +415,14 @@ static void handle_tslib(_THIS)
     this->hidden->touch_y = sample.y;
     this->hidden->touch_pressure = sample.pressure;
 
+	 //DKS - once we have gotten a valid sample from the touchscreen, this flag tells 
+	 // 	handle_mouse to stop trying to reopen the mouse device every second or so
+	 // 	so as a workaround fora non-responsive device file.	
+	 if ( sample.pressure > 0 )
+	 {
+		gotten_nonzero_sample = 1;
+	 }
+
     sample.x = ((sample.x * this->hidden->invxscale) >> 16) +
                this->hidden->x_offset;
     sample.y = ((sample.y * this->hidden->invyscale) >> 16) +
@@ -589,6 +606,8 @@ static void handle_mouse(_THIS)
   //DKS for determining if we should read the touchscreen or wait some more
 	static struct timeval lastread = { 0, 0 };
 	static struct timeval now = { 0, 0 };
+	unsigned int sample_interval;
+	static unsigned int touchscreen_reopen_ctr = 0;
 
   /* Figure out the mouse packet size */
   switch (mouse_drv) {
@@ -616,15 +635,42 @@ static void handle_mouse(_THIS)
 #define TSLIB_INTERVAL 5000 	// every 5 ms, which allows us to capture all events but
 	 									// not waste cycles 
 		gettimeofday(&now, NULL);
-		if (((now.tv_sec * 1000000 + now.tv_usec) -
-			(lastread.tv_sec * 1000000 + lastread.tv_usec)) > TSLIB_INTERVAL) {
+		sample_interval = (now.tv_sec * 1000000 + now.tv_usec) -
+									(lastread.tv_sec * 1000000 + lastread.tv_usec);
+
+
+		if ( !gotten_nonzero_sample && touchscreen_reopen_ctr >= 100)
+		{
+			// We are running on a GP2X with touchscreen, but we have not gotten 
+			// a sample with non-zero pressure yet.  This workaround will continue
+			// to try to close and reopen the touchscreen device every second or so
+			// until we get a non-zero sample.  Once we do, don't worry about it as
+			// the unit should be OK after that.  Once a second or so should not cause
+			// too much overhead for games not using the touchscreen.
+
+#ifdef DEBUG_MOUSE
+			fprintf(stderr, "SDL_GP2X: Not gotten good F200 touchscreen sample yet.\n\t\tReopening device just in case.\n");
+#endif
+			ts_close(this->hidden->ts_dev);
+			this->hidden->ts_dev = ts_open("/dev/touchscreen/wm97xx", 1);
+			this->hidden->mouse_fd = this->hidden->ts_dev->fd;
+			touchscreen_reopen_ctr = 0;
+		}
+
+		if (sample_interval > TSLIB_INTERVAL)
+		{
 			// 5ms has passed, read a touchscreen sample
 			handle_tslib(this);
 			gettimeofday(&lastread, NULL);
+			if (!gotten_nonzero_sample)
+			{
+				touchscreen_reopen_ctr++;			
+			}
 		} else {
 			dx = 0;
 			dy = 0;
 		}
+
 //    handle_tslib(this);
     return; /* nothing left to do */
   case NUM_MOUSE_DRVS:
