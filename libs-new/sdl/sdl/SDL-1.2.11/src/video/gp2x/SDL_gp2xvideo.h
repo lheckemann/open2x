@@ -137,10 +137,13 @@ typedef struct SDL_PrivateVideoData {
   int current_vt;
   int saved_vt;
   int mouse_type;
-  //senquack - new option
+  //senquack - new options
   int mouse_button_events_enabled;	/* User-configurable option.  default = 1: post mouse
 													button events when stylus goes up or down.  
 													0:  don't post button events 								*/
+  int mouse_motion_events_enabled;	/* User-configurable option.  default = 1: post mouse
+													motion events when stylus is down
+													0:  don't post motion events 								*/
   struct tsdev *ts_dev;
   struct termios saved_kbd_termios;
   int touch_x, touch_y, touch_pressure;

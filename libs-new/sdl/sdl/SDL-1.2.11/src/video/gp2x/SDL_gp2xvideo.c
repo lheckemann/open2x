@@ -186,6 +186,8 @@ static SDL_VideoDevice *GP2X_CreateDevice(int devindex)
 
   // senquack - new user-configurable option, see SDL_gp2xvideo.h for description
   device->hidden->mouse_button_events_enabled = 1;		/* default is enabled */
+  // senquack - new user-configurable option, see SDL_gp2xvideo.h for description
+  device->hidden->mouse_motion_events_enabled = 1;		/* default is enabled */
 
   // Set the function pointers
   device->VideoInit = GP2X_VideoInit;
@@ -1622,5 +1624,17 @@ void SDL_GP2X_TouchpadMouseButtonEvents(int enabled)
 	if (current_video->hidden->mouse_type == 2)
 	{
 		current_video->hidden->mouse_button_events_enabled = enabled ? 1:0;
+	}
+}
+
+// Enable (1) or disable (0) the touchscreen stylus from causing mouse motion events or
+// registering changes in cursor state.  Sometimes a developer may wish to easily
+// disable the touchscreen and not have to modify large sections of code in a porting
+// project. Default is enabled.
+void SDL_GP2X_TouchpadMouseMotionEvents(int enabled)
+{
+	if (current_video->hidden->mouse_type == 2)
+	{
+		current_video->hidden->mouse_motion_events_enabled = enabled ? 1:0;
 	}
 }

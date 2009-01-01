@@ -57,6 +57,12 @@ int SDL_GP2X_Touchpad(int *x, int *y);
 // the cursor with clicking done by joystick buttons. Default is enabled.
 void SDL_GP2X_TouchpadMouseButtonEvents(int enabled);
 
+// Enable (1) or disable (0) the touchscreen stylus from causing mouse motion events or
+// registering changes in cursor state.  Sometimes a developer may wish to easily
+// disable the touchscreen and not have to modify large sections of code in a porting
+// project. Default is enabled.
+void SDL_GP2X_TouchpadMouseMotionEvents(int enabled);
+
 #ifdef __cplusplus
 }
 #endif

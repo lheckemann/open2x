@@ -368,7 +368,8 @@ void GP2X_vgamousecallback(int button, int relative, int dx, int dy)
   int i;
   Uint8 state;
 
-  if ( dx || dy ) {
+  //senquack - support for new option to disable mouse motion events from touchscreen
+  if (( dx || dy ) && current_video->hidden->mouse_motion_events_enabled) {
     posted += SDL_PrivateMouseMotion(0, relative, dx, dy);
   }
 
