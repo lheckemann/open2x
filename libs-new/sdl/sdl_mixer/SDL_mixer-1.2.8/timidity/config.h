@@ -111,7 +111,8 @@ typedef double FLOAT_T;
 /* On some machines (especially PCs without math coprocessors),
    looking up sine values in a table will be significantly faster than
    computing them on the fly. Uncomment this to use lookups. */
-/* #define LOOKUP_SINE */
+//senquack - enabling table lookups for GP2X
+#define LOOKUP_SINE
 
 /* Shawn McHorse's resampling optimizations. These may not in fact be
    faster on your particular machine and compiler. You'll have to run
@@ -170,13 +171,18 @@ typedef char int8;
 /* You could specify a complete path, e.g. "/etc/timidity.cfg", and
    then specify the library directory in the configuration file. */
 #define CONFIG_FILE	"timidity.cfg"
-#define CONFIG_FILE_ETC "/etc/timidity.cfg"
-#define CONFIG_FILE_ETC_TIMIDITY "/etc/timidity/timidity.cfg"
+//senquack - changed this per Pickle's suggestion
+//#define CONFIG_FILE_ETC "/etc/timidity.cfg"
+#define CONFIG_FILE_ETC "/mnt/sd/timidity.cfg"
+//#define CONFIG_FILE_ETC_TIMIDITY "/etc/timidity/timidity.cfg"
+#define CONFIG_FILE_ETC_TIMIDITY "/mnt/sd/timidity/timidity.cfg"
 
 #if defined(__WIN32__) || defined(__OS2__)
 #define DEFAULT_PATH	"\\TIMIDITY"
 #else
-#define DEFAULT_PATH	"/usr/local/lib/timidity"
+//senquack - changed this per Pickle's suggestion
+//#define DEFAULT_PATH	"/usr/local/lib/timidity"
+#define DEFAULT_PATH	"/mnt/sd/timidity"
 #endif
 
 /* These affect general volume */
