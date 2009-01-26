@@ -47,17 +47,27 @@ static struct private_yuvhwfuncs gp2x_yuvfuncs =
 
 struct private_yuvhwdata
 {
-	Uint8 *YUVBuf[2];	// we will have two buffers, a front and back (double buffered)
-	unsigned int GP2XAddr[2];	// the yuv buffer address from the gp2x's perspective
+	Uint8 *YUVBuf[2][3];	// we will have two buffers, a front and back (double buffered)
+	unsigned int GP2XAddr[2][3];	// the yuv buffer address from the gp2x's perspective
 	unsigned int uBackBuf;	// which buffer is currently the back buffer (0 or 1)
 	unsigned int uBufSize;	// how big the YUVBuf buffers are (in bytes)
+	unsigned int uYsize;	// how big the Y plane is (in bytes) (not used for YUY2)
+	unsigned int uUsize;	// how big the U plane is (in bytes) (not used for YUY2)
 	SDL_Rect rctLast;	// the last rectangle we used for displaying (so we know when to rescale/change coordinates)
 	Uint16 u16PixelWidth;	// value stored for MLC_VLA_TP_PXW register
 
 	/* These are just so we don't have to allocate them separately */
 	Uint16 pitches[3];
 	Uint8 *planes[3];
+	
+	Uint32 format;
 };
+
+#define FDC_CNTL (0x1838 >> 1)
+#define FDC_FRAME_SIZE (0x183A >> 1)
+#define FDC_LUMA_OFFSET (0x183C >> 1)
+#define FDC_CB_OFFSET (0x183E >> 1)
+#define FDC_CR_OFFSET (0x1840 >> 1)
 
 // These are the registers (currently) modified by this code;
 // They are in this array so we can restore them to their previous state after the overlay is destroyed.
@@ -80,7 +90,12 @@ const unsigned int g_pTouchedRegs[] =
 	0x28A4 >> 1,
 	0x28A6 >> 1,
 	0x28C0 >> 1,
-	0x28C2 >> 1
+	0x28C2 >> 1,
+	FDC_CNTL,
+	FDC_FRAME_SIZE,
+	FDC_LUMA_OFFSET,
+	FDC_CB_OFFSET,
+	FDC_CR_OFFSET
 };
 
 const unsigned int TOUCHEDREGS_COUNT = sizeof(g_pTouchedRegs) / sizeof(unsigned int);
@@ -120,7 +135,10 @@ static int GP2X_SetupYUV(_THIS, int width, int height, Uint32 format, struct pri
 	SDL_PrivateVideoData *data = this->hidden;
 	unsigned short volatile *p16GP2XRegs = data->io;
 
-	hwdata->uBufSize = width * height * 2;	// YUY2 is (2 * width) bytes per line
+	if(format == SDL_YUY2_OVERLAY)
+		hwdata->uBufSize = width * height * 2;	// YUY2 is (2 * width) bytes per line
+	else if(format == SDL_YV12_OVERLAY || format == SDL_IYUV_OVERLAY)
+		hwdata->uBufSize = width * height * 3 / 2;	// u v 2x2 subsampled -> width * 1.5 bytes per line
 
 	// initialize to values that will never be used so that we force a rescale the first time GP2X_DisplayYUVOverlay is called
 	hwdata->rctLast.h = hwdata->rctLast.w = 0;
@@ -128,28 +146,55 @@ static int GP2X_SetupYUV(_THIS, int width, int height, Uint32 format, struct pri
 
 	hwdata->uBackBuf = 0;	// arbitrary starting point (can be 0 or 1)
 
-	// We're using GP2X_UPPER_MEM_START because that's where vmem is mapped in SDL_gp2xvideo.c
-	hwdata->GP2XAddr[0] = GP2X_UPPER_MEM_START;	// this is where vmem is mapped from the gp2x's pov
-	hwdata->GP2XAddr[1] = GP2X_UPPER_MEM_START + hwdata->uBufSize;
+	if(format == SDL_YUY2_OVERLAY)
+	{
+		// We're using GP2X_UPPER_MEM_START because that's where vmem is mapped in SDL_gp2xvideo.c
+		hwdata->GP2XAddr[0][0] = GP2X_UPPER_MEM_START;	// this is where vmem is mapped from the gp2x's pov
+		hwdata->GP2XAddr[1][0] = GP2X_UPPER_MEM_START + hwdata->uBufSize;
 
-	//map memory for our cursor + 4 YUV regions (double buffered each one)
-	hwdata->YUVBuf[0] = (Uint8 *) data->vmem;
-	hwdata->YUVBuf[1] = ((Uint8 *) data->vmem) + hwdata->uBufSize;
+		//map memory for our cursor + 4 YUV regions (double buffered each one)
+		hwdata->YUVBuf[0][0] = (Uint8 *) data->vmem;
+		hwdata->YUVBuf[1][0] = ((Uint8 *) data->vmem) + hwdata->uBufSize;
+	}
+	else if(format == SDL_YV12_OVERLAY || format == SDL_IYUV_OVERLAY)
+	{
+		// PhyAddr = (ScreenOffset << 24) | (YOffset << 20) | (XOffset * 0x2000)
+
+		// GP2X_UPPER_MEM_START == 0x0200 << 24
+		hwdata->GP2XAddr[0][0] = 0x0240;	// this is from the gp2x's pov
+		hwdata->GP2XAddr[0][1] = 0x0244;
+		hwdata->GP2XAddr[0][2] = 0x0246;
+		hwdata->GP2XAddr[1][0] = 0x0260;
+		hwdata->GP2XAddr[1][1] = 0x0264;
+		hwdata->GP2XAddr[1][2] = 0x0266;
+
+		//map memory for our cursor + 4 YUV regions (double buffered each one)
+		hwdata->YUVBuf[0][0] = (Uint8 *) data->vmem + (0x4 << 20);
+		hwdata->YUVBuf[0][1] = (Uint8 *) data->vmem + (0x4 << 20) + 0x4 * 0x2000;
+		hwdata->YUVBuf[0][2] = (Uint8 *) data->vmem + (0x4 << 20) + 0x6 * 0x2000;
+		hwdata->YUVBuf[1][0] = (Uint8 *) data->vmem + (0x6 << 20);
+		hwdata->YUVBuf[1][1] = (Uint8 *) data->vmem + (0x6 << 20) + 0x4 * 0x2000;
+		hwdata->YUVBuf[1][2] = (Uint8 *) data->vmem + (0x6 << 20) + 0x6 * 0x2000;
+	}
+
+	hwdata->format = format;
 
 	// tests have shown that this value should be the width of the overlay, not the width of the display (ie not always 320)
 	hwdata->u16PixelWidth = width;
 
+	if(format != SDL_YUY2_OVERLAY)
+		p16GP2XRegs[FDC_CNTL] = 1<<11 + // Write mode: mem -> scaler/display
+		 ((format == SDL_YV12_OVERLAY || format == SDL_IYUV_OVERLAY) ? 1 : 0) << 1;
+
 	// Set MLC_VLA_TP_PXW
 	p16GP2XRegs[0x2892>>1] = hwdata->u16PixelWidth;
 
-	// MLC_YUV_CNTL: set YUV source to external memory for regions A and B, turn off "stepping"
-	p16GP2XRegs[0x2884>>1]=0;
+	// MLC_YUV_CNTL: set YUV source to external memory for regions A and B, turn off "stepping" when YUY2
+	// otherwise get it from the fdc
+	p16GP2XRegs[0x2884>>1] = format == SDL_YUY2_OVERLAY ? 0 : 1;
 
-	// disable all RGB Windows, and YUV region B
-	p16GP2XRegs[MLC_OVLAY_CNTR] &= ~(DISP_STL5EN|DISP_STL4EN|DISP_STL3EN|DISP_STL2EN|DISP_STL1EN|DISP_VLBON);
-
-	// enable YUV region A
-	p16GP2XRegs[MLC_OVLAY_CNTR] |= DISP_VLAON;
+	// disable all RGB Windows, and YUV region A & B
+	p16GP2XRegs[MLC_OVLAY_CNTR] &= ~(DISP_STL5EN|DISP_STL4EN|DISP_STL3EN|DISP_STL2EN|DISP_STL1EN|DISP_VLAON|DISP_VLBON);
 
 	// disable bottom regions for A & B, and turn off all mirroring
 	p16GP2XRegs[0x2882>>1] &= 0xFC00;
@@ -167,11 +212,19 @@ SDL_Overlay *GP2X_CreateYUVOverlay(_THIS, int width, int height, Uint32 format, 
 	SDL_Overlay *overlay = NULL;
 	struct private_yuvhwdata *hwdata;
 
-	// we ONLY support YUY2 because that is the native gp2x YUV format
-	if (format != SDL_YUY2_OVERLAY)
-	{
-		printf("SDL_GP2X: Unsupported YUV format for hardware acceleration. Falling back to software.\n");
-		return NULL;
+	switch(format){
+		// we support YUY2 because that is the native gp2x YUV format
+		case SDL_YUY2_OVERLAY:
+		// other planar formats need the extra frame dimension converter
+		case SDL_YV12_OVERLAY:
+		case SDL_IYUV_OVERLAY:	// == I420 ?
+			break;
+
+		default:
+			// SDL_UYVY_OVERLAY: // 2x2 subsampled packed
+			// SDL_YVYU_OVERLAY: // 2x2 subsampled packed
+			printf("SDL_GP2X: Unsupported YUV format for hardware acceleration. Falling back to software.\n");
+			return NULL;
 	}
 
 	/* Create the overlay structure */
@@ -225,16 +278,30 @@ SDL_Overlay *GP2X_CreateYUVOverlay(_THIS, int width, int height, Uint32 format, 
 	/* Set up the plane pointers */
 	overlay->pitches = hwdata->pitches;
 	overlay->pixels = hwdata->planes;
-	overlay->planes = 1;	// since we only support YUY2, there is always only 1 plane
 
-	// the pitch will always be the overlay width * 2, because we only support YUY2
-	overlay->pitches[0] = overlay->w * 2;
+	if(format == SDL_YUY2_OVERLAY)
+	{
+		overlay->planes = 1;
+
+		// the pitch will be the overlay width * 2
+		overlay->pitches[0] = overlay->w * 2;
+	}
+	else if(format == SDL_YV12_OVERLAY || format == SDL_IYUV_OVERLAY)
+	{
+		overlay->planes = 3;
+
+		overlay->pitches[0] = overlay->w * 1;
+		overlay->pitches[1] = overlay->w / 4;
+		overlay->pitches[2] = overlay->w / 4;
+	}
 
 	// start on the correct back buffer
-	overlay->pixels[0] = hwdata->YUVBuf[hwdata->uBackBuf];
+	overlay->pixels[0] = hwdata->YUVBuf[hwdata->uBackBuf][0];
+	overlay->pixels[1] = hwdata->YUVBuf[hwdata->uBackBuf][1];
+	overlay->pixels[1] = hwdata->YUVBuf[hwdata->uBackBuf][2];
 
 	/* We're all done.. */
-	printf("SDL_GP2X: Created YUY2 overlay\n");
+	printf("SDL_GP2X: Created YUV overlay\n");
 	return(overlay);
 }
 
@@ -250,7 +317,7 @@ void GP2X_UnlockYUVOverlay(_THIS, SDL_Overlay *overlay)
 int GP2X_DisplayYUVOverlay(_THIS, SDL_Overlay *overlay, SDL_Rect *dstrect)
 {
 	struct private_yuvhwdata *hwdata = overlay->hwdata;
-	unsigned int uAddress = (unsigned int) hwdata->GP2XAddr[hwdata->uBackBuf];
+	unsigned int *uAddress = (unsigned int*) hwdata->GP2XAddr[hwdata->uBackBuf];
 	SDL_PrivateVideoData *data = this->hidden;
 	unsigned short volatile *p16GP2XRegs = data->io;
 
@@ -290,6 +357,12 @@ int GP2X_DisplayYUVOverlay(_THIS, SDL_Overlay *overlay, SDL_Rect *dstrect)
 		if (s16Right > 319)	s16Right = 319;
 		if (s16Bottom > 239) s16Bottom = 239;
 
+		if(hwdata->format != SDL_YUY2_OVERLAY){
+			// Set frame size for FDC
+			p16GP2XRegs[FDC_FRAME_SIZE] = (overlay->w / 16 - 1) + // width / 16 - 1
+											(overlay->h / 16 - 1) << 8; // height / 16 - 1
+		}
+
 		// now that we've done all the calculations we can before changing registers, wait for vblank
 		GP2X_WaitVBlank(data);
 
@@ -324,22 +397,33 @@ int GP2X_DisplayYUVOverlay(_THIS, SDL_Overlay *overlay, SDL_Rect *dstrect)
 
 	// NOW FLIP THE ACTUAL BUFFER
 
-	// NOTE : I am flipping the odd and even fields here because that's how rlyeh did it, but I am not sure
-	//  whether both of these need to be flipped.
+	if(hwdata->format == SDL_YUY2_OVERLAY){
+		// NOTE : I am flipping the odd and even fields here because that's how rlyeh did it, but I am not sure
+		//  whether both of these need to be flipped.
 
-	// region A, odd fields
-	p16GP2XRegs[0x28A0>>1] = (uAddress & 0xFFFF);
-	p16GP2XRegs[0x28A2>>1] = (uAddress >> 16);
+		// region A, odd fields
+		p16GP2XRegs[0x28A0>>1] = (uAddress[0] & 0xFFFF);
+		p16GP2XRegs[0x28A2>>1] = (uAddress[0] >> 16);
 
-	// region A, even fields
-	p16GP2XRegs[0x28A4>>1] = (uAddress & 0xFFFF);
-	p16GP2XRegs[0x28A6>>1] = (uAddress >> 16);
+		// region A, even fields
+		p16GP2XRegs[0x28A4>>1] = (uAddress[0] & 0xFFFF);
+		p16GP2XRegs[0x28A6>>1] = (uAddress[0] >> 16);
+
+	}else{
+		p16GP2XRegs[FDC_LUMA_OFFSET] = uAddress[0];
+		p16GP2XRegs[FDC_CB_OFFSET] = uAddress[1];
+		p16GP2XRegs[FDC_CR_OFFSET] = uAddress[2];
+
+		p16GP2XRegs[FDC_CNTL] |= 1; // START FDC
+	}
 
 	// change back buffer to the other buffer (can be 0 or 1, so XOR works nicely)
 	hwdata->uBackBuf ^= 1;
 
 	// update the pixel pointer to new back buffer
-	overlay->pixels[0] = hwdata->YUVBuf[hwdata->uBackBuf];
+	overlay->pixels[0] = hwdata->YUVBuf[hwdata->uBackBuf][0];
+	overlay->pixels[1] = hwdata->YUVBuf[hwdata->uBackBuf][1];
+	overlay->pixels[2] = hwdata->YUVBuf[hwdata->uBackBuf][2];
 
 	return(0);
 }
