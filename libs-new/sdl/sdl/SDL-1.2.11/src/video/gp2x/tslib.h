@@ -46,7 +46,6 @@ struct ts_sample {
 	int		x;
 	int		y;
 	unsigned int	pressure;
-	struct timeval	tv;
 };
 
 /*

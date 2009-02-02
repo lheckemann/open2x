@@ -96,7 +96,7 @@ typedef struct ucb1x00_ts_event {
   unsigned short pad;
 } UCB1X00_TS_EVENT;
 
-//DKS - Originially, I had made this read multiple samples but it turns out the driver
+//senquack - Originially, I had made this read multiple samples but it turns out the driver
 //for the touchscreen is set up to give only one sample per read, so had to go back
 //to this optimized version.  It should be noted that the device file only ever provides
 //8 bytes of data, basically 3shorts: x,y,and pressure, and the old code tried to read
@@ -182,7 +182,7 @@ void variance_init()
   variance_dev.delta = 30 * 30;
 }
 
-//DKS - added parameter, flush_history, that gets assigned to 1 if a fast movement is
+//senquack - added parameter, flush_history, that gets assigned to 1 if a fast movement is
 //			detected.. this is so the averaging algorithm will flush its history if 
 //			enough of them are detected
 static inline int variance_read(TSDEV *ts, TS_SAMPLE *samp, int nr, int *flush_history)
@@ -234,7 +234,7 @@ static inline int variance_read(TSDEV *ts, TS_SAMPLE *samp, int nr, int *flush_h
 					variance_dev.flags = (variance_dev.flags & ~VAR_NOISEVALID) |
 						VAR_SUBMITNOISE;
 
-					//DKS - flush sample history in averaging module
+					//senquack - flush sample history in averaging module
 					*flush_history = 1;
 				} else
 					variance_dev.flags |= VAR_NOISEVALID;
@@ -266,7 +266,7 @@ typedef struct {
 #define XYHISTLENGTH 15
 XYHIST average_xyhist[XYHISTLENGTH];
 
-//DKS - De-jitterer that can handle high noise level of the GP2X:
+//senquack - New de-jitterer that can handle high noise level of the GP2X:
 static inline int average_read(TSDEV *ts, TS_SAMPLE *samp, int nr)
 {
 
@@ -275,8 +275,8 @@ static inline int average_read(TSDEV *ts, TS_SAMPLE *samp, int nr)
 
 	int flush_history = 0; // variance module will tell us if we are getting fast movements
 	static int flush_count = 0; // when we get enough fast movements, flush the history
-	static int xyhist_full = 0; //DKS - when we have a full four samples, this is 1 
-	static int xyhist_counter = 0; // DKS - how many entires in history?
+	static int xyhist_full = 0; //senquack - when we have a full four samples, this is 1 
+	static int xyhist_counter = 0; // senquack - how many entires in history?
 	static int xyhist_index = 0;	//xyhist_index - 1 is index to most-recent sample in array
 
 	ret = variance_read(ts, samp, nr, &flush_history);
