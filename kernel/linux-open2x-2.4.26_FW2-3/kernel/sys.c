@@ -20,6 +20,9 @@
 #include <asm/uaccess.h>
 #include <asm/io.h>
 
+//senquack - for stick-click emulation:
+#include <asm/arch/mmsp20.h>
+
 #ifndef SET_UNALIGN_CTL
 # define SET_UNALIGN_CTL(a,b)	(-EINVAL)
 #endif
@@ -51,6 +54,13 @@
 //	modifying kernel data structures.  I also am providing a userspace utility to easily
 //	issue these ioctl calls from scripts and such.
 int g_volume_scale = 100; // sue me, it works
+
+//senquack - added stick-click emulation for F200s and F100s with DPAD mod:
+int g_stick_click_mode = OPEN2X_STICK_CLICK_DISABLED;
+
+//senquack - array used my mmsp2-key.c to remap GP2X buttons reported by /dev/GPIO 
+int g_button_mapping[19] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+int g_button_remapping = 0;		// When this is 0, remapping is off, 1 is on
 
 /*
  * this is where the system-wide overflow UID and GID are defined, for

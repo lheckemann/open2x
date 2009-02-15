@@ -19,6 +19,17 @@
 
 //#include <asm/hardware.h> // mmsp2 register map in kernel src
 
+//senquack - added new defines for stick-click emulation (mostly used in sched.c)
+#define OPEN2X_STICK_CLICK_DISABLED		0	// stick-click emulation disabled (default)
+#define OPEN2X_STICK_CLICK_DPAD			1	// stick-click emulated by pressing UP+DOWN+LEFT+RIGHT
+#define OPEN2X_STICK_CLICK_VOLUPDOWN	2	// stick click emulated by pressing VOLUP+VOLDOWN	
+//senquack - global that defines if we are emulating stick-click or not and if so
+//					what button combo is used to trigger it:
+extern int g_stick_click_mode; // defined in kernel/sys.c, sue me, it works.. 
+extern int g_button_mapping[19];	// array of gp2x button mappings used in mmsp2-key.c (in kernel/sys.c)
+extern int g_button_remapping;		// When this is 0, remapping is off, 1 is on	(in kernel/sys.c)
+
+
 #define MMSP20_UART_CHANNELS    4
 
 /* MMSP20 only supports 512 Byte HW ECC */

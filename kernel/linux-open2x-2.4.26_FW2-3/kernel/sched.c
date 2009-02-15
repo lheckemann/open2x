@@ -33,6 +33,20 @@
 #include <asm/uaccess.h>
 #include <asm/mmu_context.h>
 
+//senquack - for stick-click emulation:
+#define GP2X_VOLUME_UP		GPIO_D7
+#define GP2X_VOLUME_DOWN  GPIO_D6
+#define GP2X_UP				GPIO_M0
+#define GP2X_DOWN				GPIO_M4
+#define GP2X_LEFT				GPIO_M2
+#define GP2X_RIGHT			GPIO_M6
+#define GP2X_STICK_BUTTON	GPIO_D11
+#include <asm/arch/proto_gpio.h>
+#include <asm/hardware.h>
+#include <asm/arch/mmsp20.h>
+#include <asm/arch/hardware.h>
+#include <asm/arch/mmsp20_type.h>
+
 extern void timer_bh(void);
 extern void tqueue_bh(void);
 extern void immediate_bh(void);
@@ -546,6 +560,54 @@ asmlinkage void schedule_tail(struct task_struct *prev)
  */
 asmlinkage void schedule(void)
 {
+	//senquack - GPIO is setup in mmsp2-key.c for now, seems to work OK.
+	//senquack - stick click emulation for F200 GP2Xes
+//  set_gpio_ctrl(GP2X_STICK_BUTTON,GPIOMD_OUT,GPIOPU_EN);
+//
+//	static int initialized_gpio = 0;
+//	static int old_stick_click_mode = -1;
+	
+//	if (!initialized_gpio)
+
+//	// have we just started the kernel? if so, initialize GPIO to default mode
+//	if (old_stick_click_mode == -1)
+//	{
+//	  set_gpio_ctrl(GP2X_STICK_BUTTON,GPIOMD_OUT,0);
+//	  old_stick_click_mode = g_stick_click_mode;
+//	}
+
+	if (g_stick_click_mode == OPEN2X_STICK_CLICK_DPAD)
+	{
+		unsigned char active_pins;
+		active_pins = read_gpio_bit(GP2X_UP);
+		active_pins |= read_gpio_bit(GP2X_DOWN) << 1;
+		active_pins |= read_gpio_bit(GP2X_LEFT) << 2;
+		active_pins |= read_gpio_bit(GP2X_RIGHT) << 3;
+
+		if ((active_pins & 0xF) == 0)
+		{
+//			printk("up+down+left+right, emulating stick-click\n");
+			write_gpio_bit(GP2X_STICK_BUTTON, 0);
+		}
+		else
+		{
+	//	  printk("nope\n");
+		  write_gpio_bit(GP2X_STICK_BUTTON, 1);
+		}
+	}
+	else if (g_stick_click_mode == OPEN2X_STICK_CLICK_VOLUPDOWN)
+	{
+		if ( !read_gpio_bit(GP2X_VOLUME_UP) && !read_gpio_bit(GP2X_VOLUME_DOWN) )
+		{
+//			printk("volup+voldown, emulating stick-click\n");
+			write_gpio_bit(GP2X_STICK_BUTTON, 0);
+		}
+		else
+		{
+		  write_gpio_bit(GP2X_STICK_BUTTON, 1);
+		}
+	}
+
 	struct schedule_data * sched_data;
 	struct task_struct *prev, *next, *p;
 	struct list_head *tmp;
