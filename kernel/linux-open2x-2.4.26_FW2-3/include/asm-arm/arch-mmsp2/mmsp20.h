@@ -28,6 +28,12 @@
 extern int g_stick_click_mode; // defined in kernel/sys.c, sue me, it works.. 
 extern int g_button_mapping[19];	// array of gp2x button mappings used in mmsp2-key.c (in kernel/sys.c)
 extern int g_button_remapping;		// When this is 0, remapping is off, 1 is on	(in kernel/sys.c)
+//senquack - new boolean allows replacement of mmuhack.o:
+//				When this is 1, pages mapped through mmap are configured as both cached and
+//				bufferable (which is what mmuhack allows).  When it is 0, pages are only
+//				reported as bufferable (which is still an improvement over the default when
+//				a program doesn't use mmuhack).  0 is the default.
+extern int g_cache_high_memory;
 
 
 #define MMSP20_UART_CHANNELS    4

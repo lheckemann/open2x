@@ -43,6 +43,7 @@
 #endif
 
 
+#ifdef CONFIG_MACH_GP2X
 //senquack - Changed July 30, 2008.. Added scaling factor, g_volume_scale, this is a global
 //	variable in kernel/sys.c (don't tell linus).  I would place it here, but even when
 //	this is compiled into the kernel, not as a module, globals here get wiped out.
@@ -61,6 +62,14 @@ int g_stick_click_mode = OPEN2X_STICK_CLICK_DISABLED;
 //senquack - array used my mmsp2-key.c to remap GP2X buttons reported by /dev/GPIO 
 int g_button_mapping[19] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
 int g_button_remapping = 0;		// When this is 0, remapping is off, 1 is on
+
+//senquack - new boolean allows replacement of mmuhack.o:
+//				When this is 1, pages mapped through mmap are configured as both cached and
+//				bufferable (which is what mmuhack allows).  When it is 0, pages are only
+//				reported as bufferable (which is still an improvement over the default when
+//				a program doesn't use mmuhack).  0 is the default.
+int g_cache_high_memory = 0;
+#endif	/* CONFIG_MACH_GP2X */
 
 /*
  * this is where the system-wide overflow UID and GID are defined, for

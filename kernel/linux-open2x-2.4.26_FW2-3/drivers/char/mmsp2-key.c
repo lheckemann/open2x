@@ -106,6 +106,8 @@
 #define GP2X_REMAP_BUTTON_17	67
 #define GP2X_REMAP_BUTTON_18	68
 #define GP2X_DISABLE_REMAPPING	69
+//senquack - new option to allow caching of mmap'd upper memory (what mmuhack does)
+#define GP2X_SET_UPPER_MEMORY_CACHING	80
 
 
 /* UCLK = 95.xxxMHz. It's default value. */
@@ -443,6 +445,22 @@ int MMSP2key_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, uns
 			for (i = 0; i < 19; i++)
 			{
 				g_button_mapping[i] = i;
+			}
+			break;
+		case GP2X_SET_UPPER_MEMORY_CACHING:
+			// g_cache_high_memory is buried in kernel/sys.c:
+			// (cannot store globals here, they get trashed)
+			if (get_user(int_param, (int *)arg))
+				return -EFAULT;
+			if (int_param == 0)
+			{
+				printk("kernel: upper memory caching for future mmaps disabled\n");
+				g_cache_high_memory = int_param;
+			}
+			else if (int_param == 1)
+			{
+				printk("kernel: upper memory caching for future mmaps enabled\n");
+				g_cache_high_memory = int_param;
 			}
 			break;
 		default:

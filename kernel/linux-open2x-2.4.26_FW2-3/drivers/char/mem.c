@@ -27,6 +27,10 @@
 #include <asm/io.h>
 #include <asm/pgalloc.h>
 
+#ifdef CONFIG_MACH_GP2X
+#include <asm/arch/mmsp20.h>		// for g_cache_high_memory global - senquack
+#endif
+
 #ifdef CONFIG_FB
 extern void fbmem_init(void);
 #endif
@@ -196,8 +200,28 @@ static int mmap_mem(struct file * file, struct vm_area_struct * vma)
 	 * through a file pointer that was marked O_SYNC will be
 	 * done non-cached.
 	 */
+//senquack - on GP2X, upper memory (0x0200000-0x03FFFFFF) should be bufferable by default,
+//			and optionally also cacheable
+#ifdef CONFIG_MACH_GP2X
+	if (!g_cache_high_memory)
+	{
+		//this macro is copied here for reference from include/arm/proc/pgtable.h
+//#define pgprot_noncached(prot)	__pgprot(pgprot_val(prot) & ~(L_PTE_CACHEABLE | L_PTE_BUFFERABLE))
+		if ((offset >= 0x04000000) || (file->f_flags & O_SYNC))		/* above high memory? */
+			vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+		else if (offset >= 0x02000000)	/* inside high memory? */
+			vma->vm_page_prot = __pgprot(pgprot_val(vma->vm_page_prot) & ~(L_PTE_CACHEABLE));
+	}
+	else
+	{
+		if ((offset >= 0x04000000) || (file->f_flags & O_SYNC))
+			vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+	}
+
+#else
 	if (noncached_address(offset) || (file->f_flags & O_SYNC))
 		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+#endif
 
 	/* Don't try to swap out physical pages.. */
 	vma->vm_flags |= VM_RESERVED;
