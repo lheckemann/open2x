@@ -118,7 +118,7 @@ mkdir "gp2xkernel-open2x-`date '+%Y-%m-%d'`/modules/lib/modules/2.4.26-open2x" >
 
 echo "#!/bin/bash" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
 echo "echo Installing Modules..." >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
-echo "cp -R -f ./modules/lib/modules/2.4.26-open2x /lib/modules/2.4.26-open2x" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
+echo "cp -R -f ./modules/lib/modules/2.4.26-open2x /lib/modules/" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
 echo "# Sync the SD card to check that everything is written." >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
 echo "sync" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
 echo "# Return to the GPH menu screen" >> "gp2xkernel-open2x-`date '+%Y-%m-%d'`/inst_modules.gpe"
