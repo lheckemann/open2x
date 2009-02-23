@@ -1,0 +1,7 @@
+title=Images
+description=O2XIV
+icon=skin:icons/image.png
+exec=/opt/o2xiv/o2xiv.gpu
+clock=200
+useramtimings=true
+wrapper=true

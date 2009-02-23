@@ -1,0 +1,7 @@
+title=LCD Timings
+description=Adjust LCD timings
+icon=skin:icons/lcdsettings.png
+exec=/opt/lcdtimings/lcdtimings_gui
+params=-f /etc/config/open2x_lcdsettings.conf
+clock=200
+wrapper=true

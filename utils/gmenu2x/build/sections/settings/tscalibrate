@@ -1,0 +1,6 @@
+title=Touchscreen
+description=Calibrate touchscreen
+icon=skin:icons/calibrate.png
+exec=/opt/ts_calibrator/ts_calibrator
+clock=200
+wrapper=true

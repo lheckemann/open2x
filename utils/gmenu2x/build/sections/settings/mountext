@@ -1,0 +1,7 @@
+title=Mount EXT
+description=Mount USB mass storage devices
+icon=skin:icons/explorer.png
+exec=/etc/init.d/Omountext
+params=start
+clock=200
+wrapper=true

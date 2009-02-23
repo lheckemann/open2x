@@ -1,0 +1,7 @@
+title=Video
+description=Mp2x
+icon=skin:icons/mplayer.png
+exec=/opt/mplayer/mp2x
+params= 
+clock=200
+wrapper=false
