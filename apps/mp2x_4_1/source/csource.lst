@@ -1,0 +1,20 @@
+FILES	= \
+codec-cfg.c \
+m_config.c \
+m_option.c \
+m_struct.c \
+mplayer.c \
+mp_msg.c \
+mixer.c \
+mmsp2_940_if.c \
+vpts_q.c \
+gv.c \
+find_sub.c \
+subreader.c	\
+subdisp.c \
+glock.c		\
+DirDisplay.c	\
+DirList.c		\
+filelistview.c	\
+FontDisplay.c	\
+drawcontrol.c
