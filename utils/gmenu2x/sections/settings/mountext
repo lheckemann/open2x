@@ -1,6 +1,0 @@
-title=Mount EXT
-icon=skin:icons/explorer.png
-exec=/etc/init.d/Omountext
-params=start
-clock=200
-wrapper=true
