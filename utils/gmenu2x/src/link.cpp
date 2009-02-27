@@ -46,7 +46,9 @@ bool Link::paintHover() {
 	if (gmenu2x->useSelectionPng)
 		gmenu2x->sc["imgs/selection.png"]->blit(gmenu2x->s,rect,SFontHAlignCenter,SFontVAlignMiddle);
 	else
-		gmenu2x->s->box(rect.x, rect.y, rect.w, rect.h, gmenu2x->skinConfColors["selectionBg"]);
+		//		senquack - fixing size and offset of selection rectangle (was slightly too small)
+//		gmenu2x->s->box(rect.x, rect.y, rect.w, rect.h, gmenu2x->skinConfColors["selectionBg"]);
+		gmenu2x->s->box(rect.x, rect.y - 1, rect.w, rect.h + 1, gmenu2x->skinConfColors["selectionBg"]);
 	return true;
 }
 
