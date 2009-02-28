@@ -396,9 +396,6 @@ void GMenu2X::initBG() {
 //	Surface sd_removed("imgs/sd_removed.png", confStr["skin"]);
 	Surface cpu("imgs/cpu.png", confStr["skin"]);
 	Surface volume("imgs/volume.png", confStr["skin"]);
-	//senquack - added optional display of uptime to help gauge battery life:
-//	Surface uptime("imgs/clock.png", confStr["skin"]);
-
 	
 	//senquack - added support for removable SDs and appropriate visual indication
 	if (fwType != "open2x") 
@@ -443,23 +440,26 @@ void GMenu2X::initBG() {
 
 	int serviceX = resX - (f200 ? 19 : 38);
 
-	if (confInt["showServices"])
+	if (fwType != "open2x")
 	{
-		if (usbnet) {
-			if (web) {
-				Surface webserver("imgs/webserver.png", confStr["skin"]);
-				webserver.blit( sc["bgmain"], serviceX, bottomBarIconY );
-				serviceX -= 19;
-			}
-			if (samba) {
-				Surface sambaS("imgs/samba.png", confStr["skin"]);
-				sambaS.blit( sc["bgmain"], serviceX, bottomBarIconY );
-				serviceX -= 19;
-			}
-			if (inet) {
-				Surface inetS("imgs/inet.png", confStr["skin"]);
-				inetS.blit( sc["bgmain"], serviceX, bottomBarIconY );
-				serviceX -= 19;
+		if (confInt["showServices"])
+		{
+			if (usbnet) {
+				if (web) {
+					Surface webserver("imgs/webserver.png", confStr["skin"]);
+					webserver.blit( sc["bgmain"], serviceX, bottomBarIconY );
+					serviceX -= 19;
+				}
+				if (samba) {
+					Surface sambaS("imgs/samba.png", confStr["skin"]);
+					sambaS.blit( sc["bgmain"], serviceX, bottomBarIconY );
+					serviceX -= 19;
+				}
+				if (inet) {
+					Surface inetS("imgs/inet.png", confStr["skin"]);
+					inetS.blit( sc["bgmain"], serviceX, bottomBarIconY );
+					serviceX -= 19;
+				}
 			}
 		}
 	}
@@ -892,9 +892,7 @@ int GMenu2X::main() {
 
 	bool quit = false;
 
-	//senquack - original line:
 	int x,y, offset = menu->sectionLinks()->size()>linksPerPage ? 2 : 6, helpBoxHeight = fwType=="open2x" ? 154 : 139;
-
 
 	uint i;
 	long tickBattery = -60000, tickNow;
@@ -905,9 +903,6 @@ int GMenu2X::main() {
 	// senquack - keep track of if we need to reload the links/background because
 	// 				SD has just been removed/inserted
 	bool needToReloadLinks = false;
-//	bool SDinserted = mountPointUsed("/mnt/sd");
-//	bool SDinserted = (getDiskFree() != "");
-
 	bool SDinserted = (fwType == "open2x") ? isSDInserted() : true;
 	string df = getDiskFree();
 	
@@ -931,8 +926,6 @@ int GMenu2X::main() {
 		{
 		//senquack - need to track if an SD has just been removed or inserted.  If so, we need
 		//					to reload the links and background sprite
-	//		if (mountPointUsed("/mnt/sd"))
-	//		if (getDiskFree() != "")
 			if (isSDInserted())
 			{
 				if (!SDinserted)
@@ -1035,7 +1028,6 @@ int GMenu2X::main() {
 //			// New grayed-out "sd removed" icon
 //			sc.skinRes("imgs/sd_removed.png")->blit( sc["bgmain"], 3, bottomBarIconY );
 //		}
-//		if (isSDInserted())		// SD is mounted
 		if (SDinserted)		// SD is mounted
 		{
 //			string df = getDiskFree();
@@ -1062,14 +1054,10 @@ int GMenu2X::main() {
 					if (fscanf(uptime_file, "%f %f", &uptime_secs, &idle_secs) != EOF)
 					{
 						uptimeX = manualX + 19 + 5;
-//							uptime.blit( sc["bgmain"], uptimeX, bottomBarIconY );
 						sc.skinRes("imgs/uptime.png")->blit(s,uptimeX,bottomBarIconY);
 						char buf[30];
 						sprintf(buf, "%1$d:%2$.2d", ((int)uptime_secs / 3600), 
 								(((int)uptime_secs % 3600) / 60));
-//							string uptime_str(buf);
-//							sc["bgmain"]->write( font, (string)buf, manualX + 19, bottomBarTextY, 
-//									SFontHAlignLeft, SFontVAlignMiddle);
 						s->write( font, (string)buf, uptimeX + 19, bottomBarTextY, 
 								SFontHAlignLeft, SFontVAlignMiddle);
 					}
@@ -1759,8 +1747,6 @@ void GMenu2X::editLink() {
 	{
 		//		senquack - allow editing of applications links since people might
 		//						want to change clockspeeds, etc.
-//		if ((strcasecmp((menu->selSection()).c_str(), "applications") == 0) ||
-//			(strcasecmp((menu->selSection()).c_str(), "settings") == 0) )
 		if	(strcasecmp((menu->selSection()).c_str(), "settings") == 0)
 		{
 			MessageBox mb(this,tr["Editing links in this section is not allowed."]);
@@ -2368,43 +2354,6 @@ int GMenu2X::getVolumeScaler() {
 }
 
 //senquack - new stick click emulation
-//void GMenu2X::setStickClickEmulation(int mode) {
-//	int gpioDev = open("/dev/GPIO", O_WRONLY);
-//	if (gpioDev == -1)
-//		return;	
-//		
-//	int tmp;
-//	switch (mode)
-//	{
-//		case OPEN2X_STICK_CLICK_DISABLED:
-//		// yes, I know the command should be the second parameter but GPH is utterly retarded
-//		// and made the ioctl be interpreted wrong in their kernel, so the parameter is actually
-//		// the command.  seriously brain-dead.
-//			cout << "gmenu2x: stick click emulation disabled" << endl;
-//			tmp = GP2X_STICK_CLICK_EMULATION_DISABLED;
-////			ioctl(gpioDev, 0, &tmp);
-//			ioctl(gpioDev, GP2X_STICK_CLICK_EMULATION_DISABLED, &tmp);
-//			break;
-//		case OPEN2X_STICK_CLICK_DPAD:
-//			// emulate stick-click when UP+DOWN+LEFT+RIGHT is pressed
-//			cout << "gmenu2x: stick click emulation DPAD" << endl;
-//			tmp = GP2X_STICK_CLICK_EMULATION_DPAD;
-////			ioctl(gpioDev, 0, &tmp);
-//			ioctl(gpioDev, GP2X_STICK_CLICK_EMULATION_DPAD, &tmp);
-//			break;
-//		case OPEN2X_STICK_CLICK_VOLUPDOWN:
-//			// emulate stick-click when VOL UP+DOWN is pressed
-//			cout << "gmenu2x: stick click emulation VOLUP+DOWN" << endl;
-//			tmp = GP2X_STICK_CLICK_EMULATION_VOLUPDOWN;
-////			ioctl(gpioDev, 0, &tmp);
-//			ioctl(gpioDev, GP2X_STICK_CLICK_EMULATION_VOLUPDOWN, &tmp);
-//			break;
-//		default:
-//			break;
-//	}
-//
-//	close(gpioDev);
-//}
 void GMenu2X::setStickClickEmulation(int mode) {
 	int gpioDev = open("/dev/GPIO", O_WRONLY);
 	if (gpioDev == -1)
