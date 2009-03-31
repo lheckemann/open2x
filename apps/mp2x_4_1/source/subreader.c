@@ -1670,7 +1670,9 @@ static iconv_t  icdsc = (iconv_t) (-1);
 void
 subcp_open(FILE * enca_fd)
 {
-	char *tocp = "UTF-8";
+	//	senquack
+//	char *tocp = "UTF-8";
+	char *tocp = "UHC//IGNORE";
 
 	if (sub_cp)
 	{

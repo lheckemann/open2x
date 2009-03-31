@@ -138,22 +138,24 @@ void ExitApp()
 	
 	SDL_Quit();
 
-	chdir("/usr/gp2x/");		// 파일이 있는 디렉토리로 이동
-	execlp("./gp2xmenu", "./gp2xmenu", NULL, 0);		// 파일 실행
+	//senquack - we'll handle this in our own script
+//	chdir("/usr/gp2x/");		// 파일이 있는 디렉토리로 이동
+//	execlp("./gp2xmenu", "./gp2xmenu", NULL, 0);		// 파일 실행
 }
 
 int main(int argc, char *argv[])
 {
-	{
-		char libpath[1024];
-		struct stat statbuf;
-
-		getcwd(libpath, 1000);
-		strcat(libpath, "/libiconv_plug.so");
-		if(!lstat(libpath, &statbuf) && S_ISREG(statbuf.st_mode))
-			setenv("LD_PRELOAD", libpath, 0);
-	}
-
+		//senquack - GPH is so amateur!  This doesn't work after the
+		//executable is already loaded, it is pointless.
+//	{
+//		char libpath[1024];
+//		struct stat statbuf;
+//
+//		getcwd(libpath, 1000);
+//		strcat(libpath, "/libiconv_plug.so");
+//		if(!lstat(libpath, &statbuf) && S_ISREG(statbuf.st_mode))
+//			setenv("LD_PRELOAD", libpath, 0);
+//
     init_SDL_engine();
 	if(SetMode(argc, argv) != 0)
 	{

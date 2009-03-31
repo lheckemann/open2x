@@ -224,7 +224,11 @@ int switch_fb0_to_fb1(void)
 
     gfx_draw_sized_rect(psd, 0, 0, psd->planew, psd->planeh, RGB2PIXEL(0xCC,0xCC,0xCC));
 
-	if((disp_mode == DISPLAY_TV) && (g_bTVMode == 0) && (memfd > 0)) // NTSC TV Mode...
+	 //senquack - It seems that in PAL mode, it never touches the scaling registers.  Let's
+	 //	set them to the same values when in either PAL or NTSC mode to try to fix cut-off
+	 //	bottom portion of screen PAL users are complaining about:
+//	if((disp_mode == DISPLAY_TV) && (g_bTVMode == 0) && (memfd > 0)) // NTSC TV Mode...
+	if((disp_mode == DISPLAY_TV) && (memfd > 0)) // NTSC TV Mode...
 	{
 		unsigned short *regs;
 		regs = (unsigned short*)mmap(0, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, memfd, 0xC0000000);

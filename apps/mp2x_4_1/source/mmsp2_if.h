@@ -109,7 +109,9 @@ inline int get_readq(float *pts, float *nft);
 #define TV_NTSC_ENC_WIDTH 	670		
 #define TV_NTSC_ENC_HEIGHT 	(232*2)
 #define TV_PAL_ENC_WIDTH 	670		
+//senquack - experiment, changing this to 232*2 didn't help subtitle cutoff
 #define TV_PAL_ENC_HEIGHT 	(280*2)
+//#define TV_PAL_ENC_HEIGHT 	(232*2)
 
 #    ifndef mmioFOURCC
 #        define mmioFOURCC( ch0, ch1, ch2, ch3 )                \
