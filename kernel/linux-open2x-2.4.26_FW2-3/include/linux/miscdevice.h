@@ -30,6 +30,8 @@
 #define OV9640_MINOR		230
 #define CX25874_MINOR		231		// CX25874
 #define SAA7113H_MINOR		232		// SAA7113H
+// In Open2X, there are two cx25874 devices to allow complete control for TV tweaking daemon.
+#define CX25874_OPEN2X_MINOR		233		// CX25874
 
 #ifdef CONFIG_MMSP_GPX_BATT
 #define BATT_MINOR			250

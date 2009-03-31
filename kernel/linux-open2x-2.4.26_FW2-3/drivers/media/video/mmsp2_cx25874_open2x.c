@@ -1,5 +1,12 @@
+// NOTE FROM SENQUACK:
+// Under Open2X, there are now two separate cx25874 devices present.  They both 
+// function the exact same, except that the open2x version does not reset the chip
+// when first being opened.  Having a separate driver allows the TV tweaking daemon to
+// always be allowed to talk to the chip, even if other programs have the device
+// file open for writing. This just uses minor number 233.
+
 /*
- *  linux/drivers/media/video/mmsp2_cx25874.c
+ *  linux/drivers/media/video/mmsp2_cx25874_open2x.c
  *
  *  Copyright (C) 2004,2005 DIGNSYS Inc. (www.dignsys.com)
  *  Kane Ahn < hbahn@dignsys.com >
@@ -268,49 +275,65 @@ static void CX25874(unsigned char mode)
 	}
 }
 
-static int cx25874_open(struct inode *inode, struct file *file)
+//senquack
+//static int cx25874_open(struct inode *inode, struct file *file)
+//{
+//	write_gpio_bit(GPIO_B2, 0);                             // HW IO enable
+//	mdelay(1);
+//
+//#ifdef CONFIG_MACH_GP2XF200
+//	/* board version check */
+//	if(!read_gpio_bit(GPIO_I12) ) lcd_shutdown();
+//#endif
+//
+//	write_gpio_bit(GPIO_B3, 0);                             // CX25874 Reset
+//	mdelay(1);
+//	write_gpio_bit(GPIO_B3, 1);
+//	mdelay(1);
+//
+//	if(cx25874_count==0)
+//	{
+//		unsigned char data;
+//
+//		I2C_rbyte(CX25874_ID,0x00,&data);                 	// Read Vender ID
+//		if(data==0xC3)
+//			printk("CX25874 ID = %2x \n",data);
+//		else
+//			printk("CX25874 ID check error = %2x \n",data);
+//
+//		I2C_wbyte(CX25874_ID,0xba,0x80);                  	// Software Reset
+//		mdelay(10);
+//
+//		cx25874_count = 1;
+//		return 0;
+//	}else
+//		return -EBUSY;
+//}
+static int cx25874_open2x_open(struct inode *inode, struct file *file)
 {
-	write_gpio_bit(GPIO_B2, 0);                             // HW IO enable
-	mdelay(1);
-
-#ifdef CONFIG_MACH_GP2XF200
-	/* board version check */
-	if(!read_gpio_bit(GPIO_I12) ) lcd_shutdown();
-#endif
-
-	write_gpio_bit(GPIO_B3, 0);                             // CX25874 Reset
-	mdelay(1);
-	write_gpio_bit(GPIO_B3, 1);
-	mdelay(1);
-
+//	if(cx25874_count==0)
+//	{
+//		cx25874_count = 1;
+//		return 0;
+//	}else
+//		return -EBUSY;
 	if(cx25874_count==0)
 	{
-		unsigned char data;
-
-		I2C_rbyte(CX25874_ID,0x00,&data);                 	// Read Vender ID
-		if(data==0xC3)
-			printk("CX25874 ID = %2x \n",data);
-		else
-			printk("CX25874 ID check error = %2x \n",data);
-
-		I2C_wbyte(CX25874_ID,0xba,0x80);                  	// Software Reset
-		mdelay(10);
-
 		cx25874_count = 1;
-		return 0;
-	}else
-		return -EBUSY;
-}
+	}
 
-static int cx25874_release(struct inode *inode, struct file *file)
-{
-	/* Tv off :lcd mode(ioctl) */
-	cx25874_count = 0;
-	printk("TV_OUT release \n");
 	return 0;
 }
 
-static int cx25874_ioctl(struct inode *inode, struct file *file,
+static int cx25874_open2x_release(struct inode *inode, struct file *file)
+{
+	/* Tv off :lcd mode(ioctl) */
+	cx25874_count = 0;
+//	printk("OPEN2X TV_OUT release \n");
+	return 0;
+}
+
+static int cx25874_open2x_ioctl(struct inode *inode, struct file *file,
 					 unsigned int cmd, unsigned long arg)
 {
 	tDispClkInfo ClkInfo;
@@ -529,15 +552,20 @@ typedef struct _lcd_seting {
 #define LCDOFF_REG_NUMBER		2
 #define DEVICEID_LGPHILIPS		0x70
 
-unsigned int REG_NO[]= {0x01, 0x2, 0x03, 0x04, 0x05, 0x06, 0x0A, 0x0B, 0x0D, 0x0E, 0x0F, 0x16, 0x17, 0x1E,
-									0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x3A, 0x3B };
-
-unsigned int valueREG[] = {0x6300, 0x200, 0x117, 0x4c7, 0xf7C0, 0xe806, 0x4008, 0x0, 0x30, 0x2800, 0x0,
-								0x9F80, 0xA0F, 0xBD,0x300, 0x107, 0x0, 0x0, 0x707, 0x4, 0x302, 0x202, 0xA0D, 0x806 };
-
-
-unsigned int LCDOFF_REGNO[]= {0x05, 0x01 };
-unsigned int lcdoff_value[]= { 0, 0, };
+//senquack - defined in normal version of driver, no need to have dupes here
+//unsigned int REG_NO[]= {0x01, 0x2, 0x03, 0x04, 0x05, 0x06, 0x0A, 0x0B, 0x0D, 0x0E, 0x0F, 0x16, 0x17, 0x1E,
+//									0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x3A, 0x3B };
+//
+//unsigned int valueREG[] = {0x6300, 0x200, 0x117, 0x4c7, 0xf7C0, 0xe806, 0x4008, 0x0, 0x30, 0x2800, 0x0,
+//								0x9F80, 0xA0F, 0xBD,0x300, 0x107, 0x0, 0x0, 0x707, 0x4, 0x302, 0x202, 0xA0D, 0x806 };
+//
+//
+//unsigned int LCDOFF_REGNO[]= {0x05, 0x01 };
+//unsigned int lcdoff_value[]= { 0, 0, };
+extern unsigned int REG_NO[24];
+extern unsigned int valueREG[24];
+extern unsigned int LCDOFF_REGNO[2];
+extern unsigned int lcdoff_value[2];
 
 
 
@@ -550,7 +578,9 @@ unsigned int lcdoff_value[]= { 0, 0, };
 #define SDA_LOW			write_gpio_bit(GPIO_M7, 0)
 #define SDA_HIGH		write_gpio_bit(GPIO_M7, 1)
 
-static void lcdSetWrite(unsigned char id, lcd_seting *p)
+//senquack - already defined in original version of driver, we'll use it
+//extern void lcdSetWrite(unsigned char id, lcd_seting *p);
+void lcdSetWrite(unsigned char id, lcd_seting *p)
 {
 	int i;
 
@@ -622,7 +652,9 @@ static void lcdSetWrite(unsigned char id, lcd_seting *p)
 	udelay(50);
 }
 
-static void lcdTurnOn(void)
+//senquack - already defined in original version of driver, we'll use it
+//extern void lcdTurnOn(void);
+void lcdTurnOn(void)
 {
 	unsigned int i;
 	unsigned char deviceID;
@@ -647,7 +679,9 @@ static void lcdTurnOn(void)
 	}
 }
 
-static void lcd_shutdown(void)
+//senquack - already defined in original version of driver, we'll use it
+//extern void lcd_shutdown(void);
+void lcd_shutdown(void)
 {
 	unsigned int i;
 	unsigned char deviceID;
@@ -667,143 +701,267 @@ static void lcd_shutdown(void)
 /* ********************************************************************************* */
 
 
-static struct file_operations cx25874_fops = {
+static struct file_operations cx25874_open2x_fops = {
 	owner:          THIS_MODULE,
-	ioctl:          cx25874_ioctl,
-	open:           cx25874_open,
-	release:        cx25874_release,
+	ioctl:          cx25874_open2x_ioctl,
+	open:           cx25874_open2x_open,
+	release:        cx25874_open2x_release,
 };
 
-static struct miscdevice cx25874_miscdev = {
-	CX25874_MINOR, "cx25874", &cx25874_fops
+static struct miscdevice cx25874_open2x_miscdev = {
+	CX25874_OPEN2X_MINOR, "cx25874_open2x", &cx25874_open2x_fops
 };
 
-static int __init cx25874_init(void)
+//senquack
+//static int __init cx25874_init(void)
+//{
+//	unsigned char data;
+//#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
+//	tDispClkInfo ClkInfo;
+//#endif
+//
+//	if(!i2c_set)
+//	{
+//		set_gpio_ctrl(GPIO_SCL, GPIOMD_IN, GPIOPU_EN);
+//		set_gpio_ctrl(GPIO_SDA, GPIOMD_IN, GPIOPU_EN);
+//	}
+//
+//	set_gpio_ctrl(GPIO_H5, GPIOMD_ALT1, GPIOPU_NOSET);      	//External Clock Setting for Video Encoder
+//	set_gpio_ctrl(GPIO_B2, GPIOMD_OUT, GPIOPU_EN);
+//	write_gpio_bit(GPIO_B2, 0);                             	// io sleep off...
+//
+//#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
+//	/**************    Boot on TV  *************************/
+//	write_gpio_bit(GPIO_B2, 0);                             	// Wake up...
+//	/* CX25874 Reset */
+//	set_gpio_ctrl(GPIO_B3, GPIOMD_OUT, GPIOPU_EN);
+//	write_gpio_bit(GPIO_B3, 0);
+//	mdelay(1);
+//	write_gpio_bit(GPIO_B3, 1);
+//	mdelay(1);
+//
+//	/* u-boot setting gpio setting */
+//#ifndef CONFIG_MACH_GP2XF200
+//	write_gpio_bit(GPIO_H1,0);                              	//LCD VGH oFF
+//	write_gpio_bit(GPIO_H2,0);                              	//LCD Back oFF
+//#else
+//	write_gpio_bit(GPIO_F3,0);                              	//Sound to TV (AMP OFF)
+//	write_gpio_bit(GPIO_H1,0);                              	//LCD AVDD oFF
+//	write_gpio_bit(GPIO_L11,0);                             	//LCD Back oFF
+//#endif
+//
+//	if(cx25874_count==0)
+//	{
+//		unsigned char data;
+//		I2C_rbyte(CX25874_ID,0x00,&data);               		// Read Vender ID
+//		if(data==0xC3)
+//			printk("CX25874 ID = %2x \n",data);
+//		else
+//			printk("CX25874 ID check error = %2x \n",data);
+//
+//		I2C_wbyte(CX25874_ID,0xba,0x80);               			// Software Reset
+//		mdelay(10);
+//
+//		cx25874_count = 1;
+//	}
+//	else
+//		return -EBUSY;
+//
+//
+//#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
+//	CX25874(DISPLAY_TV_NTSC);
+//#else
+//	CX25874(DISPLAY_TV_PAL);
+//#endif
+//		/* Display Controller setup */
+//	DPC_Stop();
+//
+//	ClkInfo.DISPCLK_SOURCE  = 0;
+//	ClkInfo.DISPCLK_DIVIDER= 1;
+//	ClkInfo.DISPCLK_POL = 0;
+//
+//	PMR_SetDispClk(&ClkInfo);
+//
+//#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
+//	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CFALSE,CFALSE, 0, 0, DPC_USE_EXTCLK);
+//	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 240, 32, 66, 40, CTRUE, 1, 1, 21, CTRUE);
+//	hShift=40,vShift=21;
+//	vsh=240;
+//#else   /* PAL */
+//	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CTRUE,CFALSE, 0, 0, DPC_USE_EXTCLK);
+//	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 288, 32, 72, 40, CTRUE, 2, 1, 22, CTRUE);
+//	hShift=40,vShift=22;
+//	vsh=288;
+//#endif
+//
+//	DPC_UTIL_DATA_INV(CFALSE);
+//	write_gpio_bit(GPIO_H2,0);              		//LCD Backlignt off
+//	MLC_isTVCheck(CTRUE);
+//
+//#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
+//	SetTvMode(TV_MODE_NTSC);
+//	tvFlag=TV_MODE_NTSC;
+//#else
+//	SetTvMode(TV_MODE_PAL);
+//	tvFlag=TV_MODE_PAL;
+//#endif
+//	DPC_Run();
+//
+//#else   /*****************************  LCD MODE ****************************************** */
+//
+//	I2C_rbyte(CX25874_ID,0x00,&data);                      	//Read Vender ID
+//	if(data==0xC3){
+//#ifdef CONFIG_MACH_GP2X_DEBUG
+//		printk("CX25874 ID = %2x \n",data);
+//#endif
+//	}
+//	else printk("CX25874 ID check error = %2x \n",data);
+//
+//	I2C_wbyte(CX25874_ID,0x30,0x10);  			//sleep en
+//	mdelay(10);
+//	I2C_wbyte(CX25874_ID,0x30,0x80);  			//sleep en
+//	mdelay(10);
+//	I2C_wbyte(CX25874_ID,0x30,0x90);  			//sleep en
+//	mdelay(10);
+//
+//	write_gpio_bit(GPIO_B2, 1);           		// hw io sleep en.
+//
+//
+//#endif /* CONFIG_MACH_GP2X_SVIDEO_NTSC || CONFIG_MACH_GP2X_SVIDEO_PAL */
+//
+//	misc_register(&cx25874_miscdev);
+//	return 0;
+//}
+static int __init cx25874_open2x_init(void)
 {
-	unsigned char data;
-#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
-	tDispClkInfo ClkInfo;
-#endif
-
-	if(!i2c_set)
-	{
-		set_gpio_ctrl(GPIO_SCL, GPIOMD_IN, GPIOPU_EN);
-		set_gpio_ctrl(GPIO_SDA, GPIOMD_IN, GPIOPU_EN);
-	}
-
-	set_gpio_ctrl(GPIO_H5, GPIOMD_ALT1, GPIOPU_NOSET);      	//External Clock Setting for Video Encoder
-	set_gpio_ctrl(GPIO_B2, GPIOMD_OUT, GPIOPU_EN);
-	write_gpio_bit(GPIO_B2, 0);                             	// io sleep off...
-
-#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
-	/**************    Boot on TV  *************************/
-	write_gpio_bit(GPIO_B2, 0);                             	// Wake up...
-	/* CX25874 Reset */
-	set_gpio_ctrl(GPIO_B3, GPIOMD_OUT, GPIOPU_EN);
-	write_gpio_bit(GPIO_B3, 0);
-	mdelay(1);
-	write_gpio_bit(GPIO_B3, 1);
-	mdelay(1);
-
-	/* u-boot setting gpio setting */
-#ifndef CONFIG_MACH_GP2XF200
-	write_gpio_bit(GPIO_H1,0);                              	//LCD VGH oFF
-	write_gpio_bit(GPIO_H2,0);                              	//LCD Back oFF
-#else
-	write_gpio_bit(GPIO_F3,0);                              	//Sound to TV (AMP OFF)
-	write_gpio_bit(GPIO_H1,0);                              	//LCD AVDD oFF
-	write_gpio_bit(GPIO_L11,0);                             	//LCD Back oFF
-#endif
-
+	//senquack - just get the tv flag that's already been set by the main cx25874 driver
+	tvFlag = GetTVCheck();
+	
+//	unsigned char data;
+//#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
+//	tDispClkInfo ClkInfo;
+//#endif
+//
+//	if(!i2c_set)
+//	{
+//		set_gpio_ctrl(GPIO_SCL, GPIOMD_IN, GPIOPU_EN);
+//		set_gpio_ctrl(GPIO_SDA, GPIOMD_IN, GPIOPU_EN);
+//	}
+//
+//	set_gpio_ctrl(GPIO_H5, GPIOMD_ALT1, GPIOPU_NOSET);      	//External Clock Setting for Video Encoder
+//	set_gpio_ctrl(GPIO_B2, GPIOMD_OUT, GPIOPU_EN);
+//	write_gpio_bit(GPIO_B2, 0);                             	// io sleep off...
+//
+//#if defined(CONFIG_MACH_GP2X_SVIDEO_NTSC) || defined(CONFIG_MACH_GP2X_SVIDEO_PAL)
+//	/**************    Boot on TV  *************************/
+//	write_gpio_bit(GPIO_B2, 0);                             	// Wake up...
+//	/* CX25874 Reset */
+//	set_gpio_ctrl(GPIO_B3, GPIOMD_OUT, GPIOPU_EN);
+//	write_gpio_bit(GPIO_B3, 0);
+//	mdelay(1);
+//	write_gpio_bit(GPIO_B3, 1);
+//	mdelay(1);
+//
+//	/* u-boot setting gpio setting */
+//#ifndef CONFIG_MACH_GP2XF200
+//	write_gpio_bit(GPIO_H1,0);                              	//LCD VGH oFF
+//	write_gpio_bit(GPIO_H2,0);                              	//LCD Back oFF
+//#else
+//	write_gpio_bit(GPIO_F3,0);                              	//Sound to TV (AMP OFF)
+//	write_gpio_bit(GPIO_H1,0);                              	//LCD AVDD oFF
+//	write_gpio_bit(GPIO_L11,0);                             	//LCD Back oFF
+//#endif
+//
 	if(cx25874_count==0)
 	{
-		unsigned char data;
-		I2C_rbyte(CX25874_ID,0x00,&data);               		// Read Vender ID
-		if(data==0xC3)
-			printk("CX25874 ID = %2x \n",data);
-		else
-			printk("CX25874 ID check error = %2x \n",data);
-
-		I2C_wbyte(CX25874_ID,0xba,0x80);               			// Software Reset
-		mdelay(10);
-
+//		unsigned char data;
+//		I2C_rbyte(CX25874_ID,0x00,&data);               		// Read Vender ID
+//		if(data==0xC3)
+//			printk("CX25874 ID = %2x \n",data);
+//		else
+//			printk("CX25874 ID check error = %2x \n",data);
+//
+//		I2C_wbyte(CX25874_ID,0xba,0x80);               			// Software Reset
+//		mdelay(10);
+//
 		cx25874_count = 1;
 	}
-	else
-		return -EBUSY;
+//	else
+//		return -EBUSY;
 
 
-#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
-	CX25874(DISPLAY_TV_NTSC);
-#else
-	CX25874(DISPLAY_TV_PAL);
-#endif
-		/* Display Controller setup */
-	DPC_Stop();
-
-	ClkInfo.DISPCLK_SOURCE  = 0;
-	ClkInfo.DISPCLK_DIVIDER= 1;
-	ClkInfo.DISPCLK_POL = 0;
-
-	PMR_SetDispClk(&ClkInfo);
-
-#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
-	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CFALSE,CFALSE, 0, 0, DPC_USE_EXTCLK);
-	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 240, 32, 66, 40, CTRUE, 1, 1, 21, CTRUE);
-	hShift=40,vShift=21;
-	vsh=240;
-#else   /* PAL */
-	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CTRUE,CFALSE, 0, 0, DPC_USE_EXTCLK);
-	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 288, 32, 72, 40, CTRUE, 2, 1, 22, CTRUE);
-	hShift=40,vShift=22;
-	vsh=288;
-#endif
-
-	DPC_UTIL_DATA_INV(CFALSE);
-	write_gpio_bit(GPIO_H2,0);              		//LCD Backlignt off
-	MLC_isTVCheck(CTRUE);
-
-#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
-	SetTvMode(TV_MODE_NTSC);
-	tvFlag=TV_MODE_NTSC;
-#else
-	SetTvMode(TV_MODE_PAL);
-	tvFlag=TV_MODE_PAL;
-#endif
-	DPC_Run();
-
-#else   /*****************************  LCD MODE ****************************************** */
-
-	I2C_rbyte(CX25874_ID,0x00,&data);                      	//Read Vender ID
-	if(data==0xC3){
-#ifdef CONFIG_MACH_GP2X_DEBUG
-		printk("CX25874 ID = %2x \n",data);
-#endif
-	}
-	else printk("CX25874 ID check error = %2x \n",data);
-
-	I2C_wbyte(CX25874_ID,0x30,0x10);  			//sleep en
-	mdelay(10);
-	I2C_wbyte(CX25874_ID,0x30,0x80);  			//sleep en
-	mdelay(10);
-	I2C_wbyte(CX25874_ID,0x30,0x90);  			//sleep en
-	mdelay(10);
-
-	write_gpio_bit(GPIO_B2, 1);           		// hw io sleep en.
-
-
-#endif /* CONFIG_MACH_GP2X_SVIDEO_NTSC || CONFIG_MACH_GP2X_SVIDEO_PAL */
-
-	misc_register(&cx25874_miscdev);
+//#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
+//	CX25874(DISPLAY_TV_NTSC);
+//#else
+//	CX25874(DISPLAY_TV_PAL);
+//#endif
+//		/* Display Controller setup */
+//	DPC_Stop();
+//
+//	ClkInfo.DISPCLK_SOURCE  = 0;
+//	ClkInfo.DISPCLK_DIVIDER= 1;
+//	ClkInfo.DISPCLK_POL = 0;
+//
+//	PMR_SetDispClk(&ClkInfo);
+//
+//#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
+//	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CFALSE,CFALSE, 0, 0, DPC_USE_EXTCLK);
+//	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 240, 32, 66, 40, CTRUE, 1, 1, 21, CTRUE);
+//	hShift=40,vShift=21;
+//	vsh=240;
+//#else   /* PAL */
+//	DPC_InitHardware(DPC_YCBCR_CCIR656, CTRUE, CTRUE,CFALSE, 0, 0, DPC_USE_EXTCLK);
+//	DPC_UTIL_HVSYNC (DPC_YCBCR_CCIR656, 720, 288, 32, 72, 40, CTRUE, 2, 1, 22, CTRUE);
+//	hShift=40,vShift=22;
+//	vsh=288;
+//#endif
+//
+//	DPC_UTIL_DATA_INV(CFALSE);
+//	write_gpio_bit(GPIO_H2,0);              		//LCD Backlignt off
+//	MLC_isTVCheck(CTRUE);
+//
+//#ifdef CONFIG_MACH_GP2X_SVIDEO_NTSC
+//	SetTvMode(TV_MODE_NTSC);
+//	tvFlag=TV_MODE_NTSC;
+//#else
+//	SetTvMode(TV_MODE_PAL);
+//	tvFlag=TV_MODE_PAL;
+//#endif
+//	DPC_Run();
+//
+//#else   /*****************************  LCD MODE ****************************************** */
+//
+//	I2C_rbyte(CX25874_ID,0x00,&data);                      	//Read Vender ID
+//	if(data==0xC3){
+//#ifdef CONFIG_MACH_GP2X_DEBUG
+//		printk("CX25874 ID = %2x \n",data);
+//#endif
+//	}
+//	else printk("CX25874 ID check error = %2x \n",data);
+//
+//	I2C_wbyte(CX25874_ID,0x30,0x10);  			//sleep en
+//	mdelay(10);
+//	I2C_wbyte(CX25874_ID,0x30,0x80);  			//sleep en
+//	mdelay(10);
+//	I2C_wbyte(CX25874_ID,0x30,0x90);  			//sleep en
+//	mdelay(10);
+//
+//	write_gpio_bit(GPIO_B2, 1);           		// hw io sleep en.
+//
+//
+//#endif /* CONFIG_MACH_GP2X_SVIDEO_NTSC || CONFIG_MACH_GP2X_SVIDEO_PAL */
+//
+//	misc_register(&cx25874_miscdev);
+	misc_register(&cx25874_open2x_miscdev);
 	return 0;
 }
 
-static void __exit cx25874_exit(void)
+static void __exit cx25874_open2x_exit(void)
 {
-	misc_deregister(&cx25874_miscdev);
+	misc_deregister(&cx25874_open2x_miscdev);
 }
 
-module_init(cx25874_init);
-module_exit(cx25874_exit);
+module_init(cx25874_open2x_init);
+module_exit(cx25874_open2x_exit);
 
 MODULE_AUTHOR("DIGNSYS Inc.(www.dignsys.com)");

@@ -145,6 +145,9 @@ DRIVERS-y :=
 DRIVERS-m :=
 DRIVERS-  :=
 
+# senquack - for mmuhack
+DRIVERS-$(CONFIG_GP2X_MMUHACK) += drivers/gp2x/mmuhack.o
+
 DRIVERS-$(CONFIG_ACPI_BOOT) += drivers/acpi/acpi.o
 DRIVERS-$(CONFIG_PARPORT) += drivers/parport/driver.o
 DRIVERS-$(CONFIG_I2C) += drivers/i2c/i2c.o

@@ -206,9 +206,15 @@ dep_bool '  GP2X-F200 board by GameParkHoldings.' CONFIG_MACH_GP2XF200 $CONFIG_A
 dep_bool '  GP2X DEBUG ENABLE.' CONFIG_MACH_GP2X_DEBUG $CONFIG_ARCH_MMSP2
 dep_bool '  GP2X SVIDEO BOOTING(NTSC).' CONFIG_MACH_GP2X_SVIDEO_NTSC $CONFIG_GP2X_ONLY_TV
 dep_bool '  GP2X SVIDEO BOOTING(PAL).' CONFIG_MACH_GP2X_SVIDEO_PAL $CONFIG_GP2X_ONLY_TV
-dep_tristate 'MMSP2 USB function support' CONFIG_MMSP2_USBDEV $CONFIG_ARCH_MMSP2
-dep_tristate '  Support for MMSP2 USB network link function' CONFIG_MMSP2_USBDEV_NETLINK $CONFI
+dep_tristate '  MMSP2 USB function support' CONFIG_MMSP2_USBDEV $CONFIG_ARCH_MMSP2
+dep_tristate '    Support for MMSP2 USB network link function' CONFIG_MMSP2_USBDEV_NETLINK $CONFIG_MMSP2_USBDEV
+dep_tristate '  Squidges mmuhack module (always build as module)' CONFIG_GP2X_MMUHACK $CONFIG_ARCH_MMSP2
 endmenu
+
+# senquack - make sure mmuhack is built as a module
+if [ "$CONFIG_GP2X_MMUHACK" = "y" ]; then
+	define_tristate CONFIG_GP2X_MMUHACK m
+fi
 
 # Definitions to make life easier
 if [ "$CONFIG_ARCH_ARCA5K" = "y" -o \

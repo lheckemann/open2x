@@ -63,12 +63,30 @@ int g_stick_click_mode = OPEN2X_STICK_CLICK_DISABLED;
 int g_button_mapping[19] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
 int g_button_remapping = 0;		// When this is 0, remapping is off, 1 is on
 
+//senquack - USB joypad control of gp2x via gpiod
+int g_button_forcing = 0;	// 0 if disabled, 1 if enabled
+
 //senquack - new boolean allows replacement of mmuhack.o:
 //				When this is 1, pages mapped through mmap are configured as both cached and
 //				bufferable (which is what mmuhack allows).  When it is 0, pages are only
 //				reported as bufferable (which is still an improvement over the default when
 //				a program doesn't use mmuhack).  0 is the default.
 int g_cache_high_memory = 0;
+
+//senquack - array that holds whitelist of PIDs we won't kill off if user presses SW reset button combo
+//					(gets filled by GMenu2X before program launches.. GMenu2X fills it with all the PIDs
+//					of programs currently running running (that aren't GMenu2X itself) before launching
+//					a selected program.  It fills this list by using special Open2X ioctl calls to /dev/GPIO 
+//					defined in drivers/char/mmsp2-key.c
+int g_pid_whitelist[40];	// 40 seems a conservative maximum for number of running processes
+int g_pid_whitelist_size = 0;	// How many entries in the array? Gets set to 0 when whitelist is cleared.
+//int g_pid_whitelist_timer = 0;	// Only when this is 0 will another request for 
+											//		software reset be acknowledged, to avoid doing a dozen resets when
+											//		only one was intended.
+int g_gmenu2x_relaunch_needed = 0;	// When the process killer kills off everything, it sets this to one.
+												// 	A userland process reads polls this through an ioctl call in 
+												// 	mmsp2-key.c and relaunches gmenu2x when needed and sets this back
+												// 	to zero through another ioctl call.
 #endif	/* CONFIG_MACH_GP2X */
 
 /*

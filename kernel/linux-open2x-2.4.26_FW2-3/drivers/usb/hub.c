@@ -611,15 +611,19 @@ static int usb_hub_port_reset(struct usb_device *hub, int port,
 			return status;
 		}
 
-		dbg("port %d of hub %d not enabled, trying reset again...",
-			port + 1, hub->devnum);
+	//senquack - on my (unpowered) cradle, I get endless streams of this crap on one port,
+	//	for my own sanity I have disabled these two messages
+//		dbg("port %d of hub %d not enabled, trying reset again...",
+//			port + 1, hub->devnum);
 		delay = HUB_LONG_RESET_TIME;
 	}
 
 	if(port == 1) return -1;
-	err("Cannot enable port %i of hub %d, disabling port.",
-		port + 1, hub->devnum);
-	err("Maybe the USB cable is bad?");
+	//senquack - on my (unpowered) cradle, I get endless streams of this crap on one port,
+	//	for my own sanity I have disabled these two messages
+//	err("Cannot enable port %i of hub %d, disabling port.",
+//		port + 1, hub->devnum);
+//	err("Maybe the USB cable is bad?");
 
 	return -1;
 }

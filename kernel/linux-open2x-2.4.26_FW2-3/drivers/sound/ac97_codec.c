@@ -448,8 +448,14 @@ static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 		//senquack - 115 proved to be too quiet for some apps like Supertux
 //		left = (left * g_volume_scale) / 115;
 //		right = (right * g_volume_scale) / 115;
-		left = (left * g_volume_scale) / 85;
-		right = (right * g_volume_scale) / 85;
+
+#ifdef CONFIG_MACH_GP2XF200
+		left = (left * g_volume_scale) / 100;
+		right = (right * g_volume_scale) / 100;
+#else
+		left = (left * g_volume_scale) / 80;
+		right = (right * g_volume_scale) / 80;
+#endif
 
 		if (left > 100) {
 			left = 100;
@@ -484,12 +490,14 @@ static void ac97_write_mixer(struct ac97_codec *codec, int oss_channel,
 //			left += 8;
 //			right += 8;
 			//senquack - changed this to 7 to perfectly match F100's volume
-			left += 6;
-			right += 6;
+//			left += 7;
+//			right += 7;
+			left += 2;
+			right += 2;
 #endif
 			
 			//senquack - ok the above seems to put us somewhere in the range 0-25
-	printk("senquack - left: %d left_pcm: %d right %d right_pcm %d\n", left,left_pcm,right,right_pcm);
+//	printk("senquack - left: %d left_pcm: %d right %d right_pcm %d\n", left,left_pcm,right,right_pcm);
 
 			val = (left << 8) | right;
 			val_pcm = (left_pcm << 8) | right_pcm;

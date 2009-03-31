@@ -19,6 +19,7 @@
 
 //#include <asm/hardware.h> // mmsp2 register map in kernel src
 
+//senquack - all of these globals defined in sys.c:
 //senquack - added new defines for stick-click emulation (mostly used in sched.c)
 #define OPEN2X_STICK_CLICK_DISABLED		0	// stick-click emulation disabled (default)
 #define OPEN2X_STICK_CLICK_DPAD			1	// stick-click emulated by pressing UP+DOWN+LEFT+RIGHT
@@ -28,12 +29,25 @@
 extern int g_stick_click_mode; // defined in kernel/sys.c, sue me, it works.. 
 extern int g_button_mapping[19];	// array of gp2x button mappings used in mmsp2-key.c (in kernel/sys.c)
 extern int g_button_remapping;		// When this is 0, remapping is off, 1 is on	(in kernel/sys.c)
+
+//senquack - USB joypad control of gp2x via gpiod
+extern int g_button_forcing;	// 0 if disabled, 1 if enabled
+
 //senquack - new boolean allows replacement of mmuhack.o:
 //				When this is 1, pages mapped through mmap are configured as both cached and
 //				bufferable (which is what mmuhack allows).  When it is 0, pages are only
 //				reported as bufferable (which is still an improvement over the default when
 //				a program doesn't use mmuhack).  0 is the default.
 extern int g_cache_high_memory;
+extern int g_pid_whitelist[40];	// 40 seems a conservative maximum for number of running processes
+extern int g_pid_whitelist_size;	// How many entries in the array? Gets set to 0 when whitelist is cleared.
+extern int g_pid_whitelist_timer;	// Only when this is 0 will another request for 
+											//		software reset be acknowledged, to avoid doing a dozen resets when
+											//		only one was intended.
+extern int g_gmenu2x_relaunch_needed;	// When the process killer kills off everything, it sets this to one.
+												// 	A userland process reads polls this through an ioctl call in 
+												// 	mmsp2-key.c and relaunches gmenu2x when needed and sets this back
+												// 	to zero through another ioctl call.
 
 
 #define MMSP20_UART_CHANNELS    4

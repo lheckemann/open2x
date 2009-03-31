@@ -33,14 +33,23 @@
 #include <asm/uaccess.h>
 #include <asm/mmu_context.h>
 
-//senquack - for stick-click emulation:
-#define GP2X_VOLUME_UP		GPIO_D7
-#define GP2X_VOLUME_DOWN  GPIO_D6
+//senquack - for stick-click emulation and SW reset:
 #define GP2X_UP				GPIO_M0
 #define GP2X_DOWN				GPIO_M4
 #define GP2X_LEFT				GPIO_M2
 #define GP2X_RIGHT			GPIO_M6
+#define GP2X_START			GPIO_C8
+#define GP2X_SELECT			GPIO_C9
+#define GP2X_L					GPIO_C10
+#define GP2X_R					GPIO_C11
+#define GP2X_A					GPIO_C12
+#define GP2X_B					GPIO_C13
+#define GP2X_X					GPIO_C14
+#define GP2X_Y					GPIO_C15
+#define GP2X_VOLUME_UP		GPIO_D7
+#define GP2X_VOLUME_DOWN	GPIO_D6
 #define GP2X_STICK_BUTTON	GPIO_D11
+
 #include <asm/arch/proto_gpio.h>
 #include <asm/hardware.h>
 #include <asm/arch/mmsp20.h>
@@ -576,6 +585,157 @@ asmlinkage void schedule(void)
 //	  old_stick_click_mode = g_stick_click_mode;
 //	}
 
+///**
+// * We must be careful though to never send SIGKILL a process with
+// * CAP_SYS_RAW_IO set, send SIGTERM instead (but it's unlikely that
+// * we select a process with CAP_SYS_RAW_IO set).
+// */
+//void oom_kill_task(struct task_struct *p)
+//{
+//	printk(KERN_ERR "Out of Memory: Killed process %d (%s).\n", p->pid, p->comm);
+//
+//	/*
+//	 * We give our sacrificial lamb high priority and access to
+//	 * all the memory it needs. That way it should be able to
+//	 * exit() and clear out its resources quickly...
+//	 */
+//	p->counter = 5 * HZ;
+//	p->flags |= PF_MEMALLOC | PF_MEMDIE;
+//
+//	/* This process has hardware access, be more careful. */
+//	if (cap_t(p->cap_effective) & CAP_TO_MASK(CAP_SYS_RAWIO)) {
+//		force_sig(SIGTERM, p);
+//	} else {
+//		force_sig(SIGKILL, p);
+//	}
+//}
+//
+///**
+// * oom_kill - kill the "best" process when we run out of memory
+// *
+// * If we run out of memory, we have the choice between either
+// * killing a random task (bad), letting the system crash (worse)
+// * OR try to be smart about which process to kill. Note that we
+// * don't have to be perfect here, we just have to be good.
+// */
+//static void oom_kill(void)
+//{
+//	struct task_struct *p, *q;
+//
+//	read_lock(&tasklist_lock);
+//	p = select_bad_process();
+//
+//	/* Found nothing?!?! Either we hang forever, or we panic. */
+//	if (p == NULL)
+//		panic("Out of memory and no killable processes...\n");
+//
+//	/* kill all processes that share the ->mm (i.e. all threads) */
+//	for_each_task(q) {
+//		if (q->mm == p->mm)
+//			oom_kill_task(q);
+//	}
+//	read_unlock(&tasklist_lock);
+//
+//	/*
+//	 * Make kswapd go out of the way, so "p" has a good chance of
+//	 * killing itself before someone else gets the chance to ask
+//	 * for more memory.
+//	 */
+//	yield();
+//	return;
+//}
+	struct schedule_data * sched_data;
+	struct task_struct *prev, *next, *p;
+	struct list_head *tmp;
+	int this_cpu, c;
+
+	static int sw_reset_combo_pressed = 0;
+
+	if ( !read_gpio_bit(GP2X_VOLUME_UP) && !read_gpio_bit(GP2X_VOLUME_DOWN) &&
+			!read_gpio_bit(GP2X_A) && !read_gpio_bit(GP2X_B) &&
+			!read_gpio_bit(GP2X_X) && !read_gpio_bit(GP2X_Y) &&
+			!read_gpio_bit(GP2X_L) && !read_gpio_bit(GP2X_R))
+//			g_pid_whitelist_size > 0)
+//			g_pid_whitelist_timer >= 25)
+		
+	{
+
+		sw_reset_combo_pressed = 1;
+	}
+
+	// only until the entire combo is unpressed will the sw reset be performed
+	if (sw_reset_combo_pressed)
+	{
+		if (read_gpio_bit(GP2X_VOLUME_UP) && read_gpio_bit(GP2X_VOLUME_DOWN) &&
+				read_gpio_bit(GP2X_A) && read_gpio_bit(GP2X_B) &&
+				read_gpio_bit(GP2X_X) && read_gpio_bit(GP2X_Y) &&
+				read_gpio_bit(GP2X_L) && read_gpio_bit(GP2X_R))
+		{
+			// User has pushed and released the software reset button combo, kill off everything not 
+			// on the PID whitelist (adapted from oom_kill.c)
+			printk("Open2X SW reset requested\n");
+			sw_reset_combo_pressed = 0;
+	//		g_pid_whitelist_timer = 0;	// reset timer so that next request won't be answered for another 15 ticks
+
+			int i,in_whitelist;
+			read_lock(&tasklist_lock);
+			for_each_task(p)
+			{
+				in_whitelist = 0;
+				for (i=0; i < g_pid_whitelist_size; i++)			// iterate through whitelist of programs not to kill
+				{
+					if (p->pid == g_pid_whitelist[i])
+					{
+						in_whitelist = 1;
+					}
+				}
+
+				if (!in_whitelist)
+				{
+						printk("Open2X: killing PID %d\n", p->pid);	
+						/*
+						 * We give our sacrificial lamb high priority and access to
+						 * all the memory it needs. That way it should be able to
+						 * exit() and clear out its resources quickly...
+						 */
+						p->counter = 5 * HZ;
+						p->flags |= PF_MEMALLOC | PF_MEMDIE;
+
+	//					/* This process has hardware access, be more careful. */
+	//					if (cap_t(p->cap_effective) & CAP_TO_MASK(CAP_SYS_RAWIO)) {
+	//						force_sig(SIGTERM, p);
+	//					} else {
+							force_sig(SIGKILL, p);
+	//					}
+				}
+			}
+			read_unlock(&tasklist_lock);
+	//		g_pid_whitelist_size = 0;
+
+			/*
+			 * Make kswapd go out of the way, so "p" has a good chance of
+			 * killing itself before someone else gets the chance to ask
+			 * for more memory.
+			 */
+		//	yield();
+		//		Well, I tried this knowing it was a bit iffy and sure enough it 
+		//		causes all sorts of strangeness, so i am doing it a different way
+		//		now.:
+	//		char *argv[3];
+	//		printk("Restarting GMenu2X..\n");
+	//		argv[0] = "/bin/sh";
+	//		argv[1] = "/usr/sbin/restart_gmenu2x";
+	//		argv[2] = 0;
+	//		call_usermodehelper(argv[0], argv, 0);
+
+			g_gmenu2x_relaunch_needed = 1;
+		}
+	}
+
+//	g_pid_whitelist_timer++;
+// 	if (g_pid_whitelist_timer > 25)
+//		g_pid_whitelist_timer = 25;
+		
 	if (g_stick_click_mode == OPEN2X_STICK_CLICK_DPAD)
 	{
 		unsigned char active_pins;
@@ -607,12 +767,6 @@ asmlinkage void schedule(void)
 		  write_gpio_bit(GP2X_STICK_BUTTON, 1);
 		}
 	}
-
-	struct schedule_data * sched_data;
-	struct task_struct *prev, *next, *p;
-	struct list_head *tmp;
-	int this_cpu, c;
-
 
 	spin_lock_prefetch(&runqueue_lock);
 

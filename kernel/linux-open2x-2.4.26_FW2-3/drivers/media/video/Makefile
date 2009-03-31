@@ -55,6 +55,8 @@ obj-$(CONFIG_VIDEO_VINO) += saa7191.o indycam.o vino.o
 obj-$(CONFIG_VIDEO_STRADIS) += stradis.o i2c-old.o
 obj-$(CONFIG_VIDEO_OV9640) += mmsp2_ov9640.o mmsp2_swi2c.o
 obj-$(CONFIG_VIDEO_CX25874) += mmsp2_cx25874.o mmsp2_swi2c.o
+# senquack - added new driver:
+obj-$(CONFIG_VIDEO_CX25874_OPEN2X) += mmsp2_cx25874_open2x.o mmsp2_swi2c.o
 obj-$(CONFIG_VIDEO_SAA7113H) += mmsp2_saa7113h.o mmsp2_swi2c.o
 obj-$(CONFIG_VIDEO_CPIA) += cpia.o
 obj-$(CONFIG_VIDEO_CPIA_PP) += cpia_pp.o

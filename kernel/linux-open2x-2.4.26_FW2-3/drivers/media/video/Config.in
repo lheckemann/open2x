@@ -29,6 +29,8 @@ if [ "$CONFIG_SIBYTE_SWARM" = "y" -a "$CONFIG_I2C" != "n" ]; then
 fi
 dep_tristate '  MMSP-II OV9640 Video For Linux' CONFIG_VIDEO_OV9640 $CONFIG_VIDEO_DEV
 dep_tristate '  MMSP-II CX25874 Video Encoder For Linux' CONFIG_VIDEO_CX25874 $CONFIG_VIDEO_DEV
+#senquack - added new device driver:
+dep_tristate '  MMSP-II CX25874 Backdoor Open2X Interface (for tv_daemon)' CONFIG_VIDEO_CX25874_OPEN2X $CONFIG_VIDEO_DEV
 dep_tristate '  MMSP-II SAA7113H Video Decoder For Linux' CONFIG_VIDEO_SAA7113H $CONFIG_VIDEO_DEV
 dep_tristate '  CPiA Video For Linux' CONFIG_VIDEO_CPIA $CONFIG_VIDEO_DEV
 if [ "$CONFIG_VIDEO_CPIA" != "n" ]; then

@@ -5,14 +5,16 @@
 # Rewritten to use lists instead of if-statements.
 #
 
+# senquack - added gp2x directory for MMUHACK
 
 mod-subdirs :=	dio hil mtd sbus video macintosh usb input telephony ide \
 		message/i2o message/fusion scsi md ieee1394 pnp isdn atm \
-		fc4 net/hamradio i2c l3 acpi bluetooth serial usb/gadget
+		fc4 net/hamradio i2c l3 acpi bluetooth serial usb/gadget gp2x
 
-subdir-y :=	parport serial char block net sound misc media cdrom hotplug pld
+subdir-y :=	parport serial char block net sound misc media cdrom hotplug pld gp2x
 subdir-m :=	$(subdir-y)
 
+subdir-$(CONFIG_GP2X_MMUHACK) += gp2x
 
 subdir-$(CONFIG_DIO)		+= dio
 subdir-$(CONFIG_PCI)		+= pci
@@ -55,5 +57,6 @@ subdir-$(CONFIG_BLUEZ)		+= bluetooth
 subdir-$(CONFIG_SSI)		+= ssi
 
 subdir-$(CONFIG_ARCH_AT91RM9200)+= at91
+
 
 include $(TOPDIR)/Rules.make

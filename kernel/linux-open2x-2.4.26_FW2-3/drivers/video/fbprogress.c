@@ -378,7 +378,6 @@ void fbcon_render_char( int offset, int x, int y, unsigned char fgcol[], unsigne
     }
 }
 
-
 void fbcon_write( char *str, int x, int y, int len, unsigned char fgcol[], unsigned char bgcol[])
 {
   char *idx= "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789():;-+. ";
@@ -449,6 +448,55 @@ void fbcon_register_progress(void)
 }
 
 
+//senquack - changing this to display text centered on GP2X's screen
+//void fbcon_progress( unsigned int progress, char *text )
+//{
+//    /* Redraw entire progress bar. */
+//
+//	//   senquack - fix for progress bar disappearing after init is called
+////    struct display *p = &fb_display[fg_console]; /* draw to vt in foreground */
+//    struct display *p = &fb_display[0]; /* draw to vt in foreground */
+//    int depth = p->var.bits_per_pixel;
+//    int line = p->next_line;                     /* _bytes_/screen line */
+//    unsigned char *fb = p->screen_base;
+//    unsigned int i, w, l;
+//
+//    last_progress= progress;
+//
+//    printk("FBCON: fbcon_progress called\n");
+//    if( (depth != 8) && (depth != 15) && (depth != 16) && (depth != 24) && (depth != 32) )
+//         return;
+//
+//    w= (progress>100?100:progress);   /* force to percentage boundries */
+//#   if REVERSE_DIRECTION
+//        w= 100 - w;                   /* flip about the axis at 50% */
+//#   endif
+//    w= (w*PB_LENGTH) / 100;              /* scale pixel coord to length of bar */
+//
+//    depth = (depth+7)/8;
+//    fb += PROGRESS_BAR_X * depth + PROGRESS_BAR_Y * line;
+//
+//    for( l= 0; l < PROGRESS_BAR_HEIGHT; l++ ){
+//        for( i= 0; i < PROGRESS_BAR_WIDTH; i++ ){
+//#           if STRIPE_BAR
+//                memcpy(fb,
+//                       ( PIXEL_FG(i,l, w)
+//                         ? &fg_color[i*depth]
+//                         : &bg_color[i*depth] ),
+//                       depth);
+//#           else
+//                memcpy(fb,
+//                       ( PIXEL_FG(i,l, w)
+//                         ? fg_color
+//                         : bg_color ),
+//                       depth);
+//#           endif
+//            fb+=depth;
+//	}
+//        fb+= line - PROGRESS_BAR_WIDTH * depth;
+//    }
+//    fbcon_write( text, TEXT_X, TEXT_Y,  MAX_TEXT_LEN, fg_text, bg_text );
+//}
 void fbcon_progress( unsigned int progress, char *text )
 {
     /* Redraw entire progress bar. */
@@ -495,7 +543,13 @@ void fbcon_progress( unsigned int progress, char *text )
 	}
         fb+= line - PROGRESS_BAR_WIDTH * depth;
     }
-    fbcon_write( text, TEXT_X, TEXT_Y,  MAX_TEXT_LEN, fg_text, bg_text );
+
+//    fbcon_write( text, TEXT_X, TEXT_Y,  MAX_TEXT_LEN, fg_text, bg_text );
+	 //senquack - first, clear out the old text with 17 spaces (max width)
+    fbcon_write( "                 ", TEXT_X, TEXT_Y,  MAX_TEXT_LEN, fg_text, bg_text );
+	 //senquack - center it on the GP2X's screen
+	 int at_x = 160 - (strlen(text) << 2);
+    fbcon_write( text, at_x, TEXT_Y,  MAX_TEXT_LEN, fg_text, bg_text );
 }
 
 

@@ -66,6 +66,7 @@ obj-$(CONFIG_INPUT_TURBOGRAFX)	+= turbografx.o
 obj-$(CONFIG_INPUT_AMIJOY)	+= amijoy.o
 
 obj-$(CONFIG_INPUT_GP2X)	+= gp2xjoy.o
+obj-$(CONFIG_INPUT_DUMMY)	+= dummyjoy.o
 
 # The global Rules.make.
 

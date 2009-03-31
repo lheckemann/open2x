@@ -43,6 +43,48 @@
 
 //senquack - moved this outside the ifdef below for stick click emulation purposes:
 #define TACT_SW				GPIO_D11
+//senquack - added these definitions for use in gpiod-related code (USB joy control of GP2X)
+#define GP2X_UP				GPIO_M0
+#define GP2X_UPLEFT			GPIO_M1
+#define GP2X_LEFT				GPIO_M2
+#define GP2X_DOWNLEFT		GPIO_M3
+#define GP2X_DOWN				GPIO_M4
+#define GP2X_DOWNRIGHT		GPIO_M5
+#define GP2X_RIGHT			GPIO_M6
+#define GP2X_UPRIGHT			GPIO_M7
+#define GP2X_START			GPIO_C8
+#define GP2X_SELECT			GPIO_C9
+#define GP2X_L					GPIO_C10
+#define GP2X_R					GPIO_C11
+#define GP2X_A					GPIO_C12
+#define GP2X_B					GPIO_C13
+#define GP2X_X					GPIO_C14
+#define GP2X_Y					GPIO_C15
+#define GP2X_VOLUME_UP		GPIO_D7
+#define GP2X_VOLUME_DOWN	GPIO_D6
+#define GP2X_STICK			GPIO_D11
+
+//senquack - GP2X buttons as seen by userland:
+// (for use with USB joy->GPIO emulation)
+#define GP2X_BUTTON_UP              (0)
+#define GP2X_BUTTON_DOWN            (4)
+#define GP2X_BUTTON_LEFT            (2)
+#define GP2X_BUTTON_RIGHT           (6)
+#define GP2X_BUTTON_UPLEFT          (1)
+#define GP2X_BUTTON_UPRIGHT         (7)
+#define GP2X_BUTTON_DOWNLEFT        (3)
+#define GP2X_BUTTON_DOWNRIGHT       (5)
+#define GP2X_BUTTON_CLICK           (18)
+#define GP2X_BUTTON_A               (12)
+#define GP2X_BUTTON_B               (13)
+#define GP2X_BUTTON_X               (15)
+#define GP2X_BUTTON_Y               (14)
+#define GP2X_BUTTON_L               (11)
+#define GP2X_BUTTON_R               (10)
+#define GP2X_BUTTON_START           (8)
+#define GP2X_BUTTON_SELECT          (9)
+#define GP2X_BUTTON_VOLUP           (16)
+#define GP2X_BUTTON_VOLDOWN         (17)
 
 #ifndef CONFIG_MACH_GP2XF200
 #else
@@ -106,8 +148,33 @@
 #define GP2X_REMAP_BUTTON_17	67
 #define GP2X_REMAP_BUTTON_18	68
 #define GP2X_DISABLE_REMAPPING	69
+
+// senquack - allows the gpiod daemon to set GP2X buttons to on/off even if the user isn't pressing
+// 		anything on the GP2X itself.  For USB gamepad control of the GP2X.
+// Argument to button_forcing is 1 if it is to be enabled, 0 if disabled:
+#define GP2X_BUTTON_FORCING	70
+// Argument to force_button ioctl is a 32-bit unsigned int.  The lower 16-bits should be set to 0x0001 
+// 	if button is to be pressed down and 0x0000 if unpressed.  The upper 16-bits should be the button
+// 	number to set, 0-18
+#define GP2X_FORCE_BUTTON	71
+
 //senquack - new option to allow caching of mmap'd upper memory (what mmuhack does)
 #define GP2X_SET_UPPER_MEMORY_CACHING	80
+//senquack - array that holds whitelist of PIDs we won't kill off if user presses SW reset button combo
+//					(gets filled by GMenu2X before program launches.. GMenu2X fills it with all the PIDs
+//					of programs currently running running (that aren't GMenu2X itself) before launching
+//					a selected program.  It fills this list by using special Open2X ioctl calls to /dev/GPIO 
+//					defined in drivers/char/mmsp2-key.c
+// WHITELIST_CLEAR command clears the 40-member PID array, fills it with -1's
+// WHITELIST_ADD will add a new array entry with the PID taken from the ioctl argument
+#define GP2X_WHITELIST_CLEAR	90
+#define GP2X_WHITELIST_ADD		91
+// GET_GMENU2X_RELAUNCH_NEEDED allows the gmenu2x relaunch daemon to see if the process killer 
+// 	has indicated a relaunch of gmenu2x is needed.  Once the daemon relaunches GMenu2X, it will
+// 	issue the ioctl SET_GMENU2X_RELAUNCH_NEEDED with the argument 0 to reset this flag.
+#define GP2X_GET_GMENU2X_RELAUNCH_NEEDED	92
+#define GP2X_SET_GMENU2X_RELAUNCH_NEEDED	93
+
 
 
 /* UCLK = 95.xxxMHz. It's default value. */
@@ -380,7 +447,7 @@ ssize_t MMSP2key_read(struct file *filp, char *Putbuf, size_t length, loff_t *f_
 //#define GP2X_SET_STICK_CLICK_EMULATION_MODE		40
 int MMSP2key_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
 {
-	int int_param;
+	int int_param, i;
 
 	switch (cmd)
 	{
@@ -441,10 +508,191 @@ int MMSP2key_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, uns
 			break;
 		case GP2X_DISABLE_REMAPPING:
 			g_button_remapping = 0;
-			int i;
 			for (i = 0; i < 19; i++)
 			{
 				g_button_mapping[i] = i;
+			}
+			break;
+		case GP2X_BUTTON_FORCING:
+			// g_button_forcing is buried in kernel/sys.c:
+			// (cannot store globals here, they get trashed)
+			if (get_user(int_param, (int *)arg))
+				return -EFAULT;
+			if (int_param == 0)
+			{
+				printk("kernel: GP2X gpiod button forcing disabled\n");
+				g_button_forcing = int_param;
+				// We must now configure all button GPIO ports to their
+				// normal unaltered state.Special care must be taken 
+				// with the stick click port since we also allow stick-click emulation
+				if (g_stick_click_mode == OPEN2X_STICK_CLICK_DISABLED)
+					set_gpio_ctrl(GP2X_STICK,GPIOMD_IN,GPIOPU_EN);		// original GPH GPIO configuration
+
+				// GPIO reads 0 when pressed, 1 if not pressed
+				write_gpio_bit(GP2X_UP, 1);		
+				write_gpio_bit(GP2X_UPLEFT, 1);
+				write_gpio_bit(GP2X_LEFT, 1);		
+				write_gpio_bit(GP2X_DOWNLEFT, 1);		
+				write_gpio_bit(GP2X_DOWN, 1);		
+				write_gpio_bit(GP2X_DOWNRIGHT, 1);		
+				write_gpio_bit(GP2X_RIGHT, 1);	
+				write_gpio_bit(GP2X_UPRIGHT, 1);		
+				write_gpio_bit(GP2X_L, 1);
+				write_gpio_bit(GP2X_R, 1);
+				write_gpio_bit(GP2X_A, 1);
+				write_gpio_bit(GP2X_B, 1);
+				write_gpio_bit(GP2X_X, 1);	
+				write_gpio_bit(GP2X_Y, 1);		
+				write_gpio_bit(GP2X_SELECT, 1);	
+				write_gpio_bit(GP2X_START, 1);		
+				write_gpio_bit(GP2X_VOLUME_UP, 1);		
+				write_gpio_bit(GP2X_VOLUME_DOWN, 1);		
+
+				// original GPIO configuration for all non-stick-click buttons:
+				set_gpio_ctrl(GP2X_UP,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_UPLEFT,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_LEFT,GPIOMD_IN,GPIOPU_EN);
+				set_gpio_ctrl(GP2X_DOWNLEFT,GPIOMD_IN,GPIOPU_EN);
+				set_gpio_ctrl(GP2X_DOWN,GPIOMD_IN,GPIOPU_EN);
+				set_gpio_ctrl(GP2X_DOWNRIGHT,GPIOMD_IN,GPIOPU_EN);
+				set_gpio_ctrl(GP2X_RIGHT,GPIOMD_IN,GPIOPU_EN);
+				set_gpio_ctrl(GP2X_UPRIGHT,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_L,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_R,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_A,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_B,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_X,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_Y,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_SELECT,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_START,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_VOLUME_UP,GPIOMD_IN,GPIOPU_EN);	
+				set_gpio_ctrl(GP2X_VOLUME_DOWN,GPIOMD_IN,GPIOPU_EN);	
+			}
+			else if (int_param == 1)
+			{
+				printk("kernel: GP2X gpiod button forcing enabled\n");
+				g_button_forcing = int_param;
+
+				// new GPIO configuration for emulation for all other buttons:
+				set_gpio_ctrl(GP2X_UP,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_UPLEFT,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_LEFT,GPIOMD_OUT,GPIOPU_DIS);
+				set_gpio_ctrl(GP2X_DOWNLEFT,GPIOMD_OUT,GPIOPU_DIS);
+				set_gpio_ctrl(GP2X_DOWN,GPIOMD_OUT,GPIOPU_DIS);
+				set_gpio_ctrl(GP2X_DOWNRIGHT,GPIOMD_OUT,GPIOPU_DIS);
+				set_gpio_ctrl(GP2X_RIGHT,GPIOMD_OUT,GPIOPU_DIS);
+				set_gpio_ctrl(GP2X_UPRIGHT,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_L,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_R,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_A,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_B,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_X,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_Y,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_SELECT,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_START,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_VOLUME_UP,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_VOLUME_DOWN,GPIOMD_OUT,GPIOPU_DIS);	
+				set_gpio_ctrl(GP2X_STICK,GPIOMD_OUT,GPIOPU_DIS);		
+
+				// GPIO reads 0 when pressed, 1 if not pressed
+				write_gpio_bit(GP2X_UP, 1);		
+				write_gpio_bit(GP2X_UPLEFT, 1);
+				write_gpio_bit(GP2X_LEFT, 1);		
+				write_gpio_bit(GP2X_DOWNLEFT, 1);		
+				write_gpio_bit(GP2X_DOWN, 1);		
+				write_gpio_bit(GP2X_DOWNRIGHT, 1);		
+				write_gpio_bit(GP2X_RIGHT, 1);	
+				write_gpio_bit(GP2X_UPRIGHT, 1);		
+				write_gpio_bit(GP2X_L, 1);
+				write_gpio_bit(GP2X_R, 1);
+				write_gpio_bit(GP2X_A, 1);
+				write_gpio_bit(GP2X_B, 1);
+				write_gpio_bit(GP2X_X, 1);	
+				write_gpio_bit(GP2X_Y, 1);		
+				write_gpio_bit(GP2X_SELECT, 1);	
+				write_gpio_bit(GP2X_START, 1);		
+				write_gpio_bit(GP2X_VOLUME_UP, 1);		
+				write_gpio_bit(GP2X_VOLUME_DOWN, 1);		
+			}
+			break;
+		// Argument to force_button ioctl is a 32-bit unsigned int.  
+		// The lower 16-bits should be set to 0x0001 if button is to 
+		// be pressed down and 0x0000 if unpressed.  The upper 16-bits 
+		// should be the button number to set, 0-18 (bits 16-20)
+		case GP2X_FORCE_BUTTON:
+			// g_button_forcing is buried in kernel/sys.c:
+			// (cannot store globals here, they get trashed)
+			if (get_user(int_param, (int *)arg))
+				return -EFAULT;
+
+			if (g_button_forcing)		// only force buttons when it has been specifically enabled
+			{
+				unsigned int uint_param = (unsigned int)int_param;
+				int button = (uint_param >> 16) & 0x1F;
+				int state = ~uint_param & 0x1;
+//				printk("kernel: forcing GP2X button %d to %d\n", button, state);
+				switch (button)
+				{
+					case GP2X_BUTTON_UP:
+						write_gpio_bit(GP2X_UP,state);
+						break;
+					case GP2X_BUTTON_UPLEFT:
+						write_gpio_bit(GP2X_UPLEFT,state);
+						break;
+					case GP2X_BUTTON_LEFT:
+						write_gpio_bit(GP2X_LEFT,state);
+						break;
+					case GP2X_BUTTON_DOWNLEFT:
+						write_gpio_bit(GP2X_DOWNLEFT,state);
+						break;
+					case GP2X_BUTTON_DOWN:
+						write_gpio_bit(GP2X_DOWN,state);
+						break;
+					case GP2X_BUTTON_DOWNRIGHT:
+						write_gpio_bit(GP2X_DOWNRIGHT,state);
+						break;
+					case GP2X_BUTTON_RIGHT:
+						write_gpio_bit(GP2X_RIGHT,state);
+						break;
+					case GP2X_BUTTON_UPRIGHT:
+						write_gpio_bit(GP2X_UPRIGHT,state);
+						break;
+					case GP2X_BUTTON_START:
+						write_gpio_bit(GP2X_START,state);
+						break;
+					case GP2X_BUTTON_SELECT:
+						write_gpio_bit(GP2X_SELECT,state);
+						break;
+					case GP2X_BUTTON_L:
+						write_gpio_bit(GP2X_L,state);
+						break;
+					case GP2X_BUTTON_R:
+						write_gpio_bit(GP2X_R,state);
+						break;
+					case GP2X_BUTTON_A:
+						write_gpio_bit(GP2X_A,state);
+						break;
+					case GP2X_BUTTON_B:
+						write_gpio_bit(GP2X_B,state);
+						break;
+					case GP2X_BUTTON_X:
+						write_gpio_bit(GP2X_X,state);
+						break;
+					case GP2X_BUTTON_Y:
+						write_gpio_bit(GP2X_Y,state);
+						break;
+					case GP2X_BUTTON_VOLUP:
+						write_gpio_bit(GP2X_VOLUME_UP,state);
+						break;
+					case GP2X_BUTTON_VOLDOWN:
+						write_gpio_bit(GP2X_VOLUME_DOWN,state);
+						break;
+					case GP2X_BUTTON_CLICK:
+						write_gpio_bit(GP2X_STICK,state);
+						break;
+					default:
+						break;
+				}	// switch
 			}
 			break;
 		case GP2X_SET_UPPER_MEMORY_CACHING:
@@ -462,6 +710,38 @@ int MMSP2key_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, uns
 				printk("kernel: upper memory caching for future mmaps enabled\n");
 				g_cache_high_memory = int_param;
 			}
+			break;
+		// WHITELIST_CLEAR command clears the 40-member PID array, fills it with -1's
+		case GP2X_WHITELIST_CLEAR:
+			g_pid_whitelist_size = 0;	
+			for (i = 0; i < 40; i++)
+			{
+				g_pid_whitelist[i] = -1;
+			}
+			printk("kernel: open2x PID whitelist emptied.\n");
+			break;
+		// WHITELIST_ADD will add a new array entry with the PID taken from the ioctl argument
+		case GP2X_WHITELIST_ADD:
+			if (get_user(int_param, (int *)arg))
+				return -EFAULT;
+			if (g_pid_whitelist_size <= 39)
+			{
+				g_pid_whitelist[g_pid_whitelist_size] = int_param;
+				g_pid_whitelist_size++;
+			}
+			printk("kernel: open2x PID whitelist new PID: %d, size now: %d\n", int_param, g_pid_whitelist_size);
+			break;
+		// GET_GMENU2X_RELAUNCH_NEEDED allows the gmenu2x relaunch daemon to see if the process killer 
+		// 	has indicated a relaunch of gmenu2x is needed.  Once the daemon relaunches GMenu2X, it will
+		// 	issue the ioctl SET_GMENU2X_RELAUNCH_NEEDED with the argument 0 to reset this flag.
+		case GP2X_GET_GMENU2X_RELAUNCH_NEEDED:
+			return g_gmenu2x_relaunch_needed;
+			break;
+		case GP2X_SET_GMENU2X_RELAUNCH_NEEDED:
+			if (get_user(int_param, (int *)arg))
+				return -EFAULT;
+			if (int_param == 1 || int_param == 0)
+				g_gmenu2x_relaunch_needed = int_param;
 			break;
 		default:
 			break;

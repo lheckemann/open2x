@@ -406,10 +406,33 @@ static struct file_operations input_fops = {
 	open: input_open_file,
 };
 
+//senquack - need to handle js0 a bit differently now that we are emulating GP2X buttons
+//	with it
+//devfs_handle_t input_register_minor(char *name, int minor, int minor_base)
+//{
+//	char devfs_name[16];
+//	sprintf(devfs_name, name, minor);
+//	return devfs_register(input_devfs_handle, devfs_name, DEVFS_FL_DEFAULT, INPUT_MAJOR, minor + minor_base,
+//		S_IFCHR | S_IRUGO | S_IWUSR, &input_fops, NULL);
+//}
 devfs_handle_t input_register_minor(char *name, int minor, int minor_base)
 {
 	char devfs_name[16];
 	sprintf(devfs_name, name, minor);
+//	if (strcmp(devfs_name, "js0") == 0)
+//	{
+//		printk("Open2X kernel: registering of js0 detected, renaming to js9.\n");
+//		strcpy(devfs_name, "js9");
+//	}
+	if (devfs_name[0] == 'j' && devfs_name[1] == 's')
+	{
+		printk("Open2X kernel: devfs registering of USB joy detected, renaming.\n");
+		char tmpchar;
+		tmpchar = devfs_name[2];
+		strcpy(devfs_name, "o2x_js");
+		devfs_name[6] = tmpchar;
+		devfs_name[7] = 0;
+	}
 	return devfs_register(input_devfs_handle, devfs_name, DEVFS_FL_DEFAULT, INPUT_MAJOR, minor + minor_base,
 		S_IFCHR | S_IRUGO | S_IWUSR, &input_fops, NULL);
 }
