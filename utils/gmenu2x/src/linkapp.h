@@ -27,6 +27,9 @@
 
 #include "link.h"
 
+//senquack
+#include "open2x.h"
+
 using std::string;
 
 class GMenu2X;
@@ -54,6 +57,31 @@ private:
 	// senquack - new Open2X support for configurable caching of upper memory so mmuhack.o is 
 	// 	no longer necessary:
 	int o2x_upper_memory_cached;
+
+	//senquack - new Open2X support for TV tweaking daemon:
+	bool o2x_tv_daemon_enabled;
+	bool o2x_tv_daemon_tweak_yuv;
+	bool o2x_tv_daemon_scaling_tweak;
+	int o2x_tv_daemon_xoffset;
+	int o2x_tv_daemon_yoffset;
+	int o2x_tv_daemon_xscale;
+	int o2x_tv_daemon_yscale;
+	int o2x_tv_daemon_vxscale;
+	int o2x_tv_daemon_vyscale;
+	int o2x_tv_daemon_first_delay;
+	int o2x_tv_daemon_delay;
+	bool o2x_tv_daemon_tweak_only_once;
+	//	Deprecated:
+//	bool o2x_tv_daemon_force_720_pitch;
+//	bool o2x_tv_daemon_stubborn_fix;
+	bool o2x_tv_daemon_always_started;
+	bool o2x_tv_daemon_enable_tv_mode;
+
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  It should be configurable because it will greatly interfere
+	// 	with apps like Picodrive that already know how to use USB joysticks.
+	bool o2x_link_uses_joy2xd;	
+	bool o2x_joy2xd_hides_js0;
 
 	void drawRun();
 
@@ -94,6 +122,50 @@ public:
 	// 	no longer necessary:
 	void setUpperMemoryCachingStatus(int upper_memory_cached);
 	bool getUpperMemoryCachingStatus(void);
+
+	//senquack - new Open2X support for TV tweaking daemon:
+	bool 	getTVDaemonStatus(void);
+	void 	setTVDaemonStatus(bool daemon_enabled);
+	bool 	getTVDaemonTweakYuv(void);
+	void 	setTVDaemonTweakYuv(bool tweak_yuv);
+	bool 	getTVDaemonScalingTweak(void);
+	void 	setTVDaemonScalingTweak(bool scaling_tweak);
+	int 	getTVDaemonXOffset(void);
+	void 	setTVDaemonXOffset(int xoffset);
+	int 	getTVDaemonYOffset(void);
+	void 	setTVDaemonYOffset(int yoffset);
+	int 	getTVDaemonXScale(void);
+	void 	setTVDaemonXScale(int xscale);
+	int 	getTVDaemonYScale(void);
+	void 	setTVDaemonYScale(int yscale);
+	int 	getTVDaemonVXScale(void);
+	void 	setTVDaemonVXScale(int vxscale);
+	int 	getTVDaemonVYScale(void);
+	void 	setTVDaemonVYScale(int vyscale);
+	int 	getTVDaemonFirstDelay(void);
+	void 	setTVDaemonFirstDelay(int delay);
+	int 	getTVDaemonDelay(void);
+	void 	setTVDaemonDelay(int delay);
+	bool 	getTVDaemonTweakOnlyOnce(void);
+	void 	setTVDaemonTweakOnlyOnce(bool tweak_only_once);
+	//	Deprecated:
+//	bool 	getTVDaemonForce720Pitch(void);
+//	void 	setTVDaemonForce720Pitch(bool force_720_pitch);
+//	bool 	getTVDaemonStubbornFix(void);
+//	void 	setTVDaemonStubbornFix(bool stubborn_fix);
+	bool 	getTVDaemonAlwaysStarted(void);
+	void 	setTVDaemonAlwaysStarted(bool always_started);
+	bool 	getTVDaemonEnableTVMode(void);
+	void 	setTVDaemonEnableTVMode(bool enable_tv_mode);
+
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  It should be configurable because it will greatly interfere
+	// 	with apps like Picodrive that already know how to use USB joysticks.
+	void setJoy2xdStatus(bool enabled);
+	bool getJoy2xdStatus(void);
+	void setJoy2xdHidesJs0(bool hides);
+	bool getJoy2xdHidesJs0(void);
+
 
 	string file;
 

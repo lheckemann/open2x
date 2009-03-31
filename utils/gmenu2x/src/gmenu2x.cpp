@@ -22,6 +22,7 @@
 //senquack - needed for bugfix involving skin.conf:
 #include <iomanip>
 
+
 #include <sstream>
 #include <fstream>
 #include <stdlib.h>
@@ -30,6 +31,14 @@
 #include <SDL.h>
 #include <SDL_gfxPrimitives.h>
 #include <signal.h>
+
+#include <SDL_gp2x.h>
+
+//senquack - tvout stuff:
+#include "mmsp2_regs.h"
+
+//senquack - Open2X defines
+#include "open2x.h"
 
 #include <sys/statvfs.h>
 #include <errno.h>
@@ -74,6 +83,7 @@
 #include "menusettingimage.h"
 #include "menusettingdir.h"
 
+
 #include <sys/mman.h>
 
 #ifdef TARGET_PANDORA
@@ -106,47 +116,751 @@ void GMenu2X::gp2x_init() {
 		//if wm97xx fails to open, set f200 to false to prevent any further access to the touchscreen
 		f200 = ts.init();
 	}
+
+	gp2x_tv_mode = gp2x_memregs[0x2800>>1] & 0x100;
+	
 #endif
 }
 
 void GMenu2X::gp2x_deinit() {
 #ifdef TARGET_GP2X
 	if (gp2x_mem!=0) {
-		gp2x_memregs[0x28DA>>1]=0x4AB;
-		gp2x_memregs[0x290C>>1]=640;
+	//senquack
+//		gp2x_memregs[0x28DA>>1]=0x4AB;
+//		gp2x_memregs[0x290C>>1]=640;
 		close(gp2x_mem);
 	}
 	if (batteryHandle!=0) close(batteryHandle);
 	if (f200) ts.deinit();
+
+	if (cx25874)
+	{
+		close(cx25874);
+		cx25874 = 0;
+	}
 #endif
 }
 
+//senquack - pulled from Rlyeh's minlib for improved TVout:
+// NOTE: this appears to wait indefinitely, might not be compatible with SDL, disabling.
+/* Function: gp2x_video_waitvsync
+   This function halts the program until a vertical sync is done.
+
+   See also:
+   <gp2x_video_waithsync> 
+
+   Credits:
+   rlyeh (original code)
+   K-teto (fixed this function for firmware 2.0.0) */
+
+//void GMenu2X::gp2x_video_waitvsync(void)
+//{
+//    while(  gp2x_memregs[0x1182>>1]&(1<<4))
+//    {
+//        asm volatile ("nop");
+//        asm volatile ("nop");
+//        asm volatile ("nop");
+//        asm volatile ("nop");
+//
+//        //asm volatile ("" ::: "memory");
+//    }
+//
+//    while(!(gp2x_memregs[0x1182>>1]&(1<<4)))
+//    {
+//        asm volatile ("nop");
+//        asm volatile ("nop");
+//        asm volatile ("nop");
+//        asm volatile ("nop");
+//
+//        //asm volatile ("" ::: "memory");
+//    }
+//}
+
+//senquack - pulled from Rlyeh's minlib for improved TVout:
+/* Function: gp2x_i2c_write
+   This function writes a byte into an I2C address.
+   
+   Parameters:
+   id (0..) - i2c ID
+   addr - address to write data to.
+   data (0..255) - data to be written.
+
+   See also:
+   <gp2x_i2c_read>
+   
+   Credits:
+   rlyeh */
+
+void GMenu2X::gp2x_i2c_write(unsigned char id, unsigned char addr, unsigned char data)
+{
+#ifdef TARGET_GP2X
+ i2cw a;
+ a.id = id, a.addr = addr, a.data = data;
+ ioctl(cx25874, _IOW('v', 0x00, i2cw), &a); //CX25874_I2C_WRITE_BYTE
+#endif
+}
+
+//senquack - pulled from Rlyeh's minlib for improved TVout:
+/* Function: gp2x_i2c_read
+   This function reads a byte from an I2C address.
+   
+   Parameters:
+   id (0..) - i2c ID
+   addr - address to write data to.
+   
+   See also:
+   <gp2x_i2c_write>
+   
+   Credits:
+   rlyeh */
+
+unsigned char GMenu2X::gp2x_i2c_read(unsigned char id, unsigned char addr)
+{
+#ifdef TARGET_GP2X
+ unsigned char temp;
+ i2cr a;
+ a.id = id, a.addr = addr, a.pdata = &temp ;
+ ioctl(cx25874, _IOW('v', 0x01, i2cr), &a); //CX25874_I2C_READ_BYTE
+
+ return (*a.pdata);
+#endif
+}
+
+//senquack - pulled from Rlyeh's minlib for improved TVout:
+//int GMenu2X::gp2x_tv_getmode(void)
+//{
+//// return gp2x_tv_lastmode;
+//	return gp2x_tv_mode;	// LCD, PAL or NTSC
+//}
+
+//senquack - pulled from Rlyeh's minlib for improved TVout (modified slightly)
+/* Function: gp2x_misc_lcd
+   This function enables or disables the LCD backlight.
+
+   Parameters:
+   on (0..1) - turns LCD backlight off (0) or on (1)  
+
+   Credits:
+   RobBrown, Coder_TimT */
+ 
+void GMenu2X::gp2x_misc_lcd(int on)
+{
+#ifdef TARGET_GP2X
+ if(f200)
+ {
+  if(on) gp2x_memregs[0x1076 >> 1] |= 0x0800; else gp2x_memregs[0x1076 >> 1] &= ~0x0800;
+ }
+ else
+ {
+  if(on) gp2x_memregs[0x106E>>1] |= 4; else gp2x_memregs[0x106E>>1] &= ~4;
+ }
+#endif
+}
+
+
+void GMenu2X::gp2x_video_RGB_setscaling(int W, int H)
+{
+#ifdef TARGET_GP2X
+  int bpp=(gp2x_memregs[0x28DA>>1]>>9)&0x3;
+
+  float mul = (gp2x_memregs[0x2800>>1] & 0x100 ? 512.0 : 1024.0);
+  
+  // scale horizontal
+  gp2x_memregs[0x2906>>1]=(unsigned short)((float)mul *(W/320.0));
+  // scale vertical
+//  gp2x_memregs[0x2908>>1]=(unsigned  long)((float)320.0*bpp *(H/240.0));
+  gp2x_memregs[0x2908>>1]=(unsigned  short)((float)320.0*bpp *(H/240.0));
+	gp2x_memregs[0x290A>>1]=0;
+#endif
+}
+
+//senquack - pulled from Rlyeh's minlib for improved TVout:
+/* Function: gp2x_tv_setmode
+   This function set TV out mode on or off.
+   
+   Parameters:
+   mode - set mode to <LCD>, <PAL> or <NTSC>. 
+   addr - address to write data to.
+   
+   See also:
+   <gp2x_tv_adjust>
+   
+   Credits:
+   rlyeh */
+
+//void GMenu2X::gp2x_tv_setmode(unsigned char mode)
+//{
+//#ifdef TARGET_GP2X
+// if(mode != LCD && mode != PAL && mode != NTSC) return;
+// 
+// gp2x_tv_lastmode = mode;
+//  
+//// if(!gp2x_dev[0]) gp2x_dev[0] = open("/dev/cx25874",O_RDWR);
+// if(!cx25874) cx25874 = open("/dev/cx25874",O_RDWR);
+//
+// gp2x_misc_lcd(1);
+// 
+// if(mode == LCD)
+// {
+//  ioctl(cx25874, _IOW('v', 0x02, unsigned char), 0);
+//  close(cx25874);
+//  cx25874 = 0;
+//   
+//  return;
+// }
+// 
+// ioctl(cx25874, _IOW('v', 0x02, unsigned char), mode);
+//  
+// //gp2x_video_RGB_setwindows(0x11,-1,-1,-1,319,239);              
+// gp2x_video_RGB_setscaling(320,240); 
+// //gp2x_video_YUV_setparts(-1,-1,-1,-1,319,239);
+// gp2x_video_YUV_setscaling(0,320,240);
+// gp2x_video_YUV_setscaling(1,320,240);
+// gp2x_video_YUV_setscaling(2,320,240);
+// gp2x_video_YUV_setscaling(3,320,240);
+//  
+// gp2x_misc_lcd(0);
+//
+// if(mode == NTSC)
+// {
+//    gp2x_tv_adjust(25, -7);
+// }
+// else
+// {
+//    gp2x_tv_adjust(25,  20);
+// }
+//
+// //senquack - experiment (this seems to allow the tv to show the whole screen instead of half
+// //now, but it still flickers on the vertical axis
+////		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+////		gp2x_memregs[0x28E8>>1]=239;
+// 
+//#endif
+//}
+
+////senquack - pulled from Rlyeh's minlib for improved TVout:
+///* Function: gp2x_tv_adjust
+//   This function adjusts and centers screen to TV.
+//   
+//   Parameters:
+//   horizontal (-50..0..35) - number of pixels to move the image horizontally.
+//   vertical (-15..0..45) - number of pixels to move the image vertically.
+//   
+//   Note:
+//   - horizontal and vertical are both signed.
+//   - default setting for NTSC is (16, -7) 
+//   - default setting for PAL  is (16, 19)
+//   
+//   See also:
+//   <gp2x_tv_setmode>
+//   
+//   Credits:
+//   rlyeh */
+//
+//void GMenu2X::gp2x_tv_adjust(signed char horizontal, signed char vertical)
+//{
+//#ifdef TARGET_GP2X
+//    int lines, syncs_start, syncs_end;
+//
+//    //horizontal adjustment
+////    gp2x_video_waitvsync();
+//    gp2x_cx25784_write(0x8c, (unsigned char) (50 - 11 + 3 - horizontal) );
+//    
+//    //vertical adjustment
+//    if(gp2x_tv_mode == PAL) 
+//        lines = 288, syncs_start = 1, syncs_end = 24; 
+//    else 
+//        lines = 240, syncs_start = 1, syncs_end = 22;
+//    
+//    lines -= vertical, syncs_end += vertical;
+//       
+////    gp2x_video_waitvsync();
+//    gp2x_memregs[0x2818 >> 1]  =  lines - 1;
+//    gp2x_memregs[0x2820 >> 1] &= (0xFF00);
+//    gp2x_memregs[0x2820 >> 1] |= (syncs_start << 8);
+//    gp2x_memregs[0x2822 >> 1] &= ~(0x1FF);
+//    gp2x_memregs[0x2822 >> 1] |=  syncs_end; // syncs_end = verBackPorch+verFontPorch - 1
+//
+//    if(gp2x_tv_mode == PAL)
+//    {
+//     //bottom screen image cut off (PAL 320x288 full -> PAL 320x240 centered w/ black borders)
+//     int real_lines = 288, 
+//         wanted_lines = 240, 
+//         top_spacing = (real_lines - wanted_lines) / 2,
+//         active_lines = wanted_lines + top_spacing;
+//     
+////     gp2x_video_waitvsync();
+//    
+//     active_lines += -top_spacing +5 + vertical;
+//     
+//     gp2x_cx25784_write(0x84, active_lines & 0xFF); //reduce overscan, VACTIVE_0
+//     gp2x_cx25784_write(0x86, 0x26 | ((active_lines & 0x100)>>1) );
+//      
+//     gp2x_cx25784_write(0x94, active_lines & 0xFF); //reduce overscan, VACTIVE_1
+//     gp2x_cx25784_write(0x96, 0x31 | ((active_lines & 0x300)>>8) );
+//    }
+//#endif
+//}
+
+//senquack - first two are originals:
+//void GMenu2X::gp2x_tvout_on(bool pal) {
+//#ifdef TARGET_GP2X
+//	if (gp2x_mem!=0) {
+//		/*Ioctl_Dummy_t *msg;
+//		int TVHandle = ioctl(SDL_videofd, FBMMSP2CTRL, msg);*/
+//		if (cx25874!=0) gp2x_tvout_off();
+//		//if tv-out is enabled without cx25874 open, stop
+//		//if (gp2x_memregs[0x2800>>1]&0x100) return;
+//		cx25874 = open("/dev/cx25874",O_RDWR);
+//		ioctl(cx25874, _IOW('v', 0x02, unsigned char), pal ? 4 : 3);
+//		gp2x_memregs[0x2906>>1]=512;
+//		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+//		//		senquack - trying to fix vertical flickering:
+////		gp2x_memregs[0x28E8>>1]=239;
+//	}
+//#endif
+//}
+//
+//void GMenu2X::gp2x_tvout_off() {
+//#ifdef TARGET_GP2X
+//	if (gp2x_mem!=0) {
+//		close(cx25874);
+//		cx25874 = 0;
+//		gp2x_memregs[0x2906>>1]=1024;
+//	}
+//#endif
+//}
+//void GMenu2X::gp2x_tvout_on(bool pal) {
+//#ifdef TARGET_GP2X
+//	
+//	SDL_GP2X_TV(1);
+//	SDL_GP2X_TVMode(pal ? PAL : NTSC);
+////	gp2x_tv_setmode(pal ? PAL : NTSC);
+//	
+//	//relaunch GMenu2X:
+////		SDL_Quit();
+////		chdir(getExePath().c_str());
+////		execlp("./gmenu2x", "./gmenu2x", NULL);
+//#endif
+//}
+//
+//void GMenu2X::gp2x_tvout_off() {
+//#ifdef TARGET_GP2X
+////	gp2x_tv_setmode(LCD);
+//	SDL_GP2X_TVMode(LCD);
+//	SDL_GP2X_TV(0);
+//
+//	//relaunch GMenu2X:
+////		SDL_Quit();
+////		chdir(getExePath().c_str());
+////		execlp("./gmenu2x", "./gmenu2x", NULL);
+//#endif
+//}
 void GMenu2X::gp2x_tvout_on(bool pal) {
 #ifdef TARGET_GP2X
-	if (gp2x_mem!=0) {
-		/*Ioctl_Dummy_t *msg;
-		int TVHandle = ioctl(SDL_videofd, FBMMSP2CTRL, msg);*/
-		if (cx25874!=0) gp2x_tvout_off();
-		//if tv-out is enabled without cx25874 open, stop
-		//if (gp2x_memregs[0x2800>>1]&0x100) return;
-		cx25874 = open("/dev/cx25874",O_RDWR);
-		ioctl(cx25874, _IOW('v', 0x02, unsigned char), pal ? 4 : 3);
-		gp2x_memregs[0x2906>>1]=512;
-		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
-		gp2x_memregs[0x28E8>>1]=239;
+	unsigned int bytes_per_pixel = (gp2x_memregs[0x28DA>>1]>>9)&0x3;
+	unsigned int width = 320;
+	unsigned int height = 240;
+	unsigned int pitch, phys_pitch;
+
+	cx25874 = open("/dev/cx25874",O_RDWR);
+//	open special open2x device driver that doesn't reset the hardware on opening
+//	cx25874 = open("/dev/cx25874_open2x",o_rdwr);
+	if (cx25874 == -1)
+	{
+		cx25874 = 0;
+#if debug
+		printf("error opening /dev/cx25874.\n");
+#endif
+		return;
 	}
+
+	ioctl(cx25874, _IOW('v', 0x02, unsigned char), pal ? PAL : NTSC);
+
+	close(cx25874);
+
+	//relaunch GMenu2X (screen is garbled until we do).. we'll tweak it after restart
+	gp2x_deinit();
+	SDL_Quit();
+	chdir(getExePath().c_str());
+	execlp("./gmenu2x", "./gmenu2x", NULL);
+
+//	gp2x_tv_mode = true;
+//	
+//	if (bytes_per_pixel == 1)
+//	{
+//		// in 8bpp mode
+//		printf("8bpp tweak\n");
+//		pitch = phys_pitch = width;
+//		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1] << 1;
+//	} else 
+//	{
+//		// in 16bpp mode
+//		printf("16bpp tweak\n");
+//		pitch = phys_pitch = width << 1;
+////		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+//		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1] << 1;
+//	}
+//		
+////	int w_passed = (long)(320.0 * (100.0 / (float)xscale_percent));
+////	int h_passed = (long)(240.0 * (100.0 / (float)yscale_percent)); 
+////	gp2x_video_RGB_setscaling( w_passed, h_passed );
+////senquack -for now ,just pass 320x240
+//	gp2x_video_RGB_setscaling( 320, 240 );
+//
+//	gp2x_memregs[MLC_STL_HW] = phys_pitch;
+//  gp2x_memregs[MLC_STL_CNTL] = MLC_STL_BPP_16 | MLC_STL1ACT;
+//  gp2x_memregs[MLC_STL_MIXMUX] = 0;
+//  gp2x_memregs[MLC_STL_ALPHAL] = 255;
+//  gp2x_memregs[MLC_STL_ALPHAH] = 255;
+//  gp2x_memregs[MLC_OVLAY_CNTR] |= DISP_STL1EN;
+//
+//	//		Rlyeh's tv image centering:
+//	int xoffset, yoffset;
+//	if (pal)
+//	{
+//		cout << "pal mode" << endl;
+//		xoffset = confInt["tvoutXOffsetPAL"];
+//		yoffset = confInt["tvoutYOffsetPAL"];
+//	} else
+//	{
+//		cout << "ntsc mode" << endl;
+//		xoffset = confInt["tvoutXOffsetNTSC"];
+//		yoffset = confInt["tvoutYOffsetNTSC"];
+//	}
+//
+//	 int lines, syncs_start, syncs_end;
+//
+//	 //horizontal adjustment
+//	//    gp2x_video_waitvsync();
+//	 gp2x_cx25874_write(0x8c, (unsigned char) (50 - 11 + 3 - xoffset) );
+//	 
+//	 //vertical adjustment
+//	//    if(gp2x_tv_getmode() == PAL) 
+//	 if(pal) 
+//		  lines = 288, syncs_start = 1, syncs_end = 24; 
+//	 else 
+//		  lines = 240, syncs_start = 1, syncs_end = 22;
+//	 
+//	 lines -= yoffset, syncs_end += yoffset;
+//		 
+//	//    gp2x_video_waitvsync();
+//	 gp2x_memregs[0x2818 >> 1]  =  lines - 1;
+//	 gp2x_memregs[0x2820 >> 1] &= (0xFF00);
+//	 gp2x_memregs[0x2820 >> 1] |= (syncs_start << 8);
+//	 gp2x_memregs[0x2822 >> 1] &= ~(0x1FF);
+//	 gp2x_memregs[0x2822 >> 1] |=  syncs_end; // syncs_end = verBackPorch+verFontPorch - 1
+//
+//	 if(pal)
+//	 {
+//	  //bottom screen image cut off (PAL 320x288 full -> PAL 320x240 centered w/ black borders)
+//	  int real_lines = 288, 
+//			wanted_lines = 240, 
+//			top_spacing = (real_lines - wanted_lines) / 2,
+//			active_lines = wanted_lines + top_spacing;
+//	  
+//	//     gp2x_video_waitvsync();
+//	  active_lines += -top_spacing +5 + yoffset;
+//	  
+//	  gp2x_cx25874_write(0x84, active_lines & 0xFF); //reduce overscan, VACTIVE_0
+//	  gp2x_cx25874_write(0x86, 0x26 | ((active_lines & 0x100)>>1) );
+//		
+//	  gp2x_cx25874_write(0x94, active_lines & 0xFF); //reduce overscan, VACTIVE_1
+//	  gp2x_cx25874_write(0x96, 0x31 | ((active_lines & 0x300)>>8) );
+//	}
+//
+//	close(cx25874);
+//	cx25874 = 0;
 #endif
 }
 
 void GMenu2X::gp2x_tvout_off() {
 #ifdef TARGET_GP2X
-	if (gp2x_mem!=0) {
+	gp2x_tv_mode = false;
+
+	if (cx25874 != 0)
 		close(cx25874);
-		cx25874 = 0;
-		gp2x_memregs[0x2906>>1]=1024;
+
+	cx25874 = open("/dev/cx25874",O_RDWR);
+	if (cx25874 != -1)
+	{
+		ioctl(cx25874, _IOW('v', 0x02, unsigned char), LCD);
+		gp2x_video_RGB_setscaling( 320, 240 );
+		close(cx25874);
+		cx25874=0;	
 	}
+	gp2x_misc_lcd(1);		// turn backlight back on
+
+	return;
 #endif
 }
+
+//senquack - TV out 
+void GMenu2X::toggleTvOut() {
+#ifdef TARGET_GP2X
+//senquack
+//	if (cx25874!=0)
+	if (gp2x_tv_mode)
+		gp2x_tvout_off();
+	else
+		gp2x_tvout_on(confStr["tvoutEncoding"] == "PAL");
+#endif
+}
+
+////senquack - new function to make tv out better
+//void GMenu2X::tweakTvOut(bool pal)	{
+//#ifdef TARGET_GP2X
+//	if (gp2x_tv_mode == LCD)
+//	{
+//		cout << "Cannot tweak TV, not in TV mode." << endl;
+//		return;
+//	}
+//
+//	if (gp2x_mem!=0) {
+//		cout << "Tweaking TV output" << endl;
+//		
+//		if (!cx25874)
+//		{
+//			cx25874 = open("/dev/cx25874",O_RDWR);
+//			if (cx25874 == -1)
+//			{
+//				cx25874 = 0;
+//				cout << "Error opening /dev/cx25874" << endl;
+//				return;
+//			}
+//		}
+//
+//	  unsigned int phys_width = gp2x_memregs[DPC_X_MAX] + 1;
+//	  unsigned int phys_height = gp2x_memregs[DPC_Y_MAX] + 1;
+//	  unsigned int phys_ilace = (gp2x_memregs[DPC_CNTL] & DPC_INTERLACE) ? 1 : 0;
+//	  // Set up the new mode framebuffer, making sanity adjustments
+//	  // 64 <= width <= 1024, multiples of 8 only
+//	  //senquack - note: changing this causes the screen to be totally corrupted
+//	  unsigned int width = 320;
+//
+//		width = (width + 7) & 0x7f8;
+//	  if (width < 64) width = 64;
+//	  if (width > 1024) width = 1024;
+//
+//	  // 64 <= height <= 768
+//	  unsigned int height = 240;
+//	  //  senquack - adding 8 or 16 here allows the entire screen to be displayed but with cutout
+//	  //  lines
+//	//  unsigned int height = 256;
+//	  if (height < 64) height = 64;
+//	  if (height > 768) height = 768;
+//
+//	  unsigned int phys_pitch;
+//	  unsigned int pitch = phys_pitch = width * 2;
+//
+//	  //	senquack-enabling this causes pixels to be doubled horizontally:
+////	  phys_pitch *= 2;
+//
+//	  unsigned int scale_x = (1024 * width) / phys_width;
+//	  // and y-scale is scale * pitch
+//	  unsigned int scale_y = (height * pitch) / phys_height;
+//	  // xscale and yscale are set so that virtual_x * xscale = phys_x (16.16)
+//	  unsigned int xscale = (phys_width << 16) / width;
+//	  unsigned int yscale = (phys_height << 16) / height;
+//	  //	  senquack - rgb_setscaling sets these two registers, let's try it instead
+////	  gp2x_memregs[MLC_STL_HSC] = scale_x;
+////	  gp2x_memregs[MLC_STL_VSCL] = scale_y & 0xffff;
+//	  gp2x_video_RGB_setscaling(320, 240);
+//
+//	  gp2x_memregs[MLC_STL_VSCH] = scale_y >> 16;
+//	  gp2x_memregs[MLC_STL_HW] = phys_pitch;
+////	  gp2x_memregs[MLC_STL_CNTL] = MLC_STL_BPP_16 | MLC_STL1ACT;
+//	  
+//	  //senquack - without this, only half the screen is shown:
+//		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+//	  
+//	//		Rlyeh's tvadjust:
+//
+//		// load Rlyeh's default offsets
+//		int horizontal, vertical;
+////		if (pal)
+////		{
+////			horizontal = 16; vertical = 19;
+////		} else
+////		{
+////			//senquack - on my NTSC TV, 10 is better than 16 for horizontal:
+////			horizontal = 10, vertical = -7;
+////		}
+//		if (pal)
+//		{
+//			cout << "pal mode" << endl;
+//			horizontal = confInt["tvoutXOffsetPAL"];
+//		  	vertical = confInt["tvoutYOffsetPAL"];
+//		} else
+//		{
+//			cout << "ntsc mode" << endl;
+//			horizontal = confInt["tvoutXOffsetNTSC"];
+//		  	vertical = confInt["tvoutYOffsetNTSC"];
+//		}
+//		cout << "tweaks: horiz= " << horizontal << " vert= " << vertical << endl;
+//
+//		 int lines, syncs_start, syncs_end;
+//
+//		 //horizontal adjustment
+//	//    gp2x_video_waitvsync();
+//		 gp2x_cx25784_write(0x8c, (unsigned char) (50 - 11 + 3 - horizontal) );
+//		 
+//		 //vertical adjustment
+//	//    if(gp2x_tv_getmode() == PAL) 
+//		 if(pal) 
+//			  lines = 288, syncs_start = 1, syncs_end = 24; 
+//		 else 
+//			  lines = 240, syncs_start = 1, syncs_end = 22;
+//		 
+//		 lines -= vertical, syncs_end += vertical;
+//			 
+//	//    gp2x_video_waitvsync();
+//		 gp2x_memregs[0x2818 >> 1]  =  lines - 1;
+//		 gp2x_memregs[0x2820 >> 1] &= (0xFF00);
+//		 gp2x_memregs[0x2820 >> 1] |= (syncs_start << 8);
+//		 gp2x_memregs[0x2822 >> 1] &= ~(0x1FF);
+//		 gp2x_memregs[0x2822 >> 1] |=  syncs_end; // syncs_end = verBackPorch+verFontPorch - 1
+//
+//	//    if(gp2x_tv_getmode() == PAL)
+//		 if(pal)
+//		 {
+//		  //bottom screen image cut off (PAL 320x288 full -> PAL 320x240 centered w/ black borders)
+//		  int real_lines = 288, 
+//				wanted_lines = 240, 
+//				top_spacing = (real_lines - wanted_lines) / 2,
+//				active_lines = wanted_lines + top_spacing;
+//		  
+//	//     gp2x_video_waitvsync();
+//		 
+//		  active_lines += -top_spacing +5 + vertical;
+//		  
+//		  gp2x_cx25784_write(0x84, active_lines & 0xFF); //reduce overscan, VACTIVE_0
+//		  gp2x_cx25784_write(0x86, 0x26 | ((active_lines & 0x100)>>1) );
+//			
+//		  gp2x_cx25784_write(0x94, active_lines & 0xFF); //reduce overscan, VACTIVE_1
+//		  gp2x_cx25784_write(0x96, 0x31 | ((active_lines & 0x300)>>8) );
+//		 }
+//	}
+//#endif
+//}
+//senquack - new function to make tv out better
+void GMenu2X::tweakTvOut(bool pal)	{
+#ifdef TARGET_GP2X
+	if (cx25874 != 0)
+		close(cx25874);
+
+// Every time you open this stupid device is resets itself. Must reset display mode first thing.
+	cx25874 = open("/dev/cx25874",O_RDWR);
+	if (cx25874 != -1)
+	{
+		ioctl(cx25874, _IOW('v', 0x02, unsigned char), pal ? PAL : NTSC);
+	}
+
+	unsigned int bytes_per_pixel = (gp2x_memregs[0x28DA>>1]>>9)&0x3;
+	unsigned int width = 320;
+	unsigned int height = 240;
+	unsigned int pitch, phys_pitch;
+
+	if (bytes_per_pixel == 1)
+	{
+		// in 8bpp mode
+		printf("8bpp tweak\n");
+		pitch = phys_pitch = width;
+		// pretty sure endx should be one less than this (after messing more with tv out)
+//		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1] << 1;
+		gp2x_memregs[0x28E4>>1] = (gp2x_memregs[0x290C>>1] << 1) - 1;
+	} else 
+	{
+		// in 16bpp mode
+		printf("16bpp tweak\n");
+		pitch = phys_pitch = width << 1;
+		// pretty sure endx should be one less than this (after messing more with tv out)
+//		gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+		gp2x_memregs[0x28E4>>1] = (gp2x_memregs[0x290C>>1]) - 1;
+	}
+		
+//	int w_passed = (long)(320.0 * (100.0 / (float)xscale_percent));
+//	int h_passed = (long)(240.0 * (100.0 / (float)yscale_percent)); 
+//	gp2x_video_RGB_setscaling( w_passed, h_passed );
+//senquack -for now ,just pass 320x240
+	int xscale_percent = confInt["tvoutXScale"];
+	if (xscale_percent < TV_MIN_XSCALE || xscale_percent > TV_MAX_YSCALE)
+	{
+		xscale_percent = confInt["tvoutXScale"] = 100;
+	}
+	int yscale_percent = confInt["tvoutYScale"];
+	if (yscale_percent < TV_MIN_YSCALE || yscale_percent > TV_MAX_YSCALE)
+	{
+		yscale_percent = confInt["tvoutYScale"] = 100;
+	}
+
+//	gp2x_video_RGB_setscaling( 320, 240 );
+	int w_passed = (long)(320.0 * (100.0 / (float)xscale_percent));
+	int h_passed = (long)(240.0 * (100.0 / (float)yscale_percent)); 
+	gp2x_video_RGB_setscaling( w_passed, h_passed );
+
+	//		Rlyeh's tv image centering:
+	int xoffset, yoffset;
+	if (pal)
+	{
+		cout << "pal mode" << endl;
+		xoffset = confInt["tvoutXOffsetPAL"];
+		yoffset = confInt["tvoutYOffsetPAL"];
+	} else
+	{
+		cout << "ntsc mode" << endl;
+		xoffset = confInt["tvoutXOffsetNTSC"];
+		yoffset = confInt["tvoutYOffsetNTSC"];
+	}
+
+	 int lines, syncs_start, syncs_end;
+
+	 //horizontal adjustment
+	//    gp2x_video_waitvsync();
+	 gp2x_cx25874_write(0x8c, (unsigned char) (50 - 11 + 3 - xoffset) );
+	 
+	 //vertical adjustment
+	//    if(gp2x_tv_getmode() == PAL) 
+	 if(pal) 
+		  lines = 288, syncs_start = 1, syncs_end = 24; 
+	 else 
+		  lines = 240, syncs_start = 1, syncs_end = 22;
+	 
+	 lines -= yoffset, syncs_end += yoffset;
+		 
+	//    gp2x_video_waitvsync();
+	 gp2x_memregs[0x2818 >> 1]  =  lines - 1;
+	 gp2x_memregs[0x2820 >> 1] &= (0xFF00);
+	 gp2x_memregs[0x2820 >> 1] |= (syncs_start << 8);
+	 gp2x_memregs[0x2822 >> 1] &= ~(0x1FF);
+	 gp2x_memregs[0x2822 >> 1] |=  syncs_end; // syncs_end = verBackPorch+verFontPorch - 1
+
+	 //	 Changed this block to be optional and by default, off, because PAL users
+	 //	 report problems with cut-off bottom image.  Not completely sure if this has
+	 //	 anything to do with it yet, though:
+//	 if(pal)
+	 if(pal && confInt["tvoutPalOverscanFix"])
+	 {
+	  //bottom screen image cut off (PAL 320x288 full -> PAL 320x240 centered w/ black borders)
+	  int real_lines = 288, 
+			wanted_lines = 240, 
+			top_spacing = (real_lines - wanted_lines) / 2,
+			active_lines = wanted_lines + top_spacing;
+	  
+	//     gp2x_video_waitvsync();
+	  active_lines += -top_spacing +5 + yoffset;
+	  
+	  gp2x_cx25874_write(0x84, active_lines & 0xFF); //reduce overscan, VACTIVE_0
+	  gp2x_cx25874_write(0x86, 0x26 | ((active_lines & 0x100)>>1) );
+		
+	  gp2x_cx25874_write(0x94, active_lines & 0xFF); //reduce overscan, VACTIVE_1
+	  gp2x_cx25874_write(0x96, 0x31 | ((active_lines & 0x300)>>8) );
+	}
+
+	close(cx25874);
+	cx25874 = 0;
+}
+
 
 GMenu2X::GMenu2X(int argc, char *argv[]) {
 	//senquack - added ability to detect Open2X fw version number
@@ -160,7 +874,8 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 //	}
 	if (fileExists(OPEN2X_VERSION_FILENAME)) {
 		fwType = "open2x";
-		ifstream inf(OPEN2X_VERSION_FILENAME.c_str());
+//		ifstream inf(OPEN2X_VERSION_FILENAME.c_str());
+		ifstream inf(OPEN2X_VERSION_FILENAME);
 		if (inf.is_open()) {
 			string line;
 			if (!inf.eof() )
@@ -182,6 +897,17 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 #else
 	f200 = true;
 #endif
+
+	//senquack - New functions used under Open2X.  Everytime GMenu2X starts, it takes a look at all processes
+	//		currently running.  It tells the kernel all the PIDs it finds (excluding GMenu2X itself).  The kernel
+	//		keeps this list in memory when programs are run.  If the user presses a specific button combo, the
+	//		kernel will kill off all PIDs not in this whitelist and then restart GMenu2X.  This is so users can
+	//		recover from program crashes or hangs (or when a program won't let you exit!).
+	if (fwType == "open2x")
+	{
+		generatePidWhitelist();
+	}
+
 
 	confStr.set_empty_key(" ");
 	confStr.set_deleted_key("");
@@ -217,16 +943,34 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 	o2x_use_autorun_on_SD = false;	// Never autoexec /mnt/sd/autorun.gpu by default.
 	o2x_SD_read_only = false;
 
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  It should be configurable because it will greatly interfere
+	// 	with apps like Picodrive that already know how to use USB joysticks.
+	o2x_gmenu2x_starts_joy2xd = true; 	// Is Joy2Xd enabled?
+												// If this is true, GMenu2X will start the joy2xd
+												// daemon at startup, and it will remain loaded
+												// during program executions and will be restarted 
+												// every time GMenu2X reloads) If an app specifically
+												// disabled joy2xd in its link settings, joy2xd is
+												// killed before launch of the program, then restarted
+												// when gmenu2x comes back up, unless this bool is false.
+
 	// senquack - stick click emulation for Open2X:
 	o2x_stick_click_mode = f200 ? OPEN2X_STICK_CLICK_DPAD : OPEN2X_STICK_CLICK_DISABLED;	
 
 	usbnet = samba = inet = web = false;
 	useSelectionPng = false;
 
+	
+
 	//load config data
 	readConfig();
 	if (fwType=="open2x") {
+		// senquack - new Open2x TV tweaking daemon should be killed when GMenu2X restarts
+		system("killall tv_daemon");
+		
 		readConfigOpen2x();
+
 		//	VOLUME SCALING
 		switch(o2x_volumeMode) {
 			case VOLUME_MODE_MUTE:   setVolumeScaler(VOLUME_SCALER_MUTE); break;
@@ -242,6 +986,14 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 
 		// senquack - UPPER MEMORY CACHING
 		setUpperMemoryCaching(0);
+
+		// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+		// 	a USB gamepad.  It should be configurable because it will greatly interfere
+		// 	with apps like Picodrive that already know how to use USB joysticks.
+		if (o2x_gmenu2x_starts_joy2xd)
+		{
+			activateJoy2xd();	// launch the daemon (kill off old instances first)
+		}
 		
 	} else
 		readCommonIni();
@@ -261,15 +1013,17 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 
 	gp2x_init();
 
+	//senquack
 	//Fix tv-out
-	if (gp2x_mem!=0) {
-		if (gp2x_memregs[0x2800>>1]&0x100) {
-			gp2x_memregs[0x2906>>1]=512;
-			//gp2x_memregs[0x290C>>1]=640;
-			gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
-		}
-		gp2x_memregs[0x28E8>>1]=239;
-	}
+//	if (gp2x_mem!=0) {
+//		if (gp2x_memregs[0x2800>>1]&0x100) {
+//			gp2x_memregs[0x2906>>1]=512;
+////			gp2x_memregs[0x290C>>1]=640;
+//			gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+//		}
+//	}
+	//senquack - pulled from Rlyeh's minlib for improved TVout:
+//	gp2x_tv_lastmode = LCD;
 #endif
 
 	//Screen
@@ -286,7 +1040,34 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 		SDL_Surface *tmps = SDL_SetVideoMode(resX, resY, confInt["videoBpp"], SDL_SWSURFACE);
 		SDL_ShowCursor(0);
 		s->enableVirtualDoubleBuffer(tmps);
+		
+		//senquack
+		//Fix tv-out
+//		if (gp2x_mem!=0) {
+//			if (gp2x_memregs[0x2800>>1]&0x100) {
+//				tweakTvOut(confStr["tvoutEncoding"] == "PAL");
+//			}
+//		}
+		// After SDL initialization, it is necessary to tweak tv-related registers:
+		if (gp2x_tv_mode) 
+		{
+			// TV out appears to be enabled, let's assume it is in the mode that is stored in
+			// GMenu2X's configuration 
+			cx25874 = open("/dev/cx25874",O_RDWR);
+			if (cx25874 == -1)
+			{
+				cout << "Error opening /dev/cx25874" << endl;
+				cx25874 = 0;
+			} else 
+			{
+//				senquack - tweakTvOut will do this for us:
+//				ioctl(cx25874, _IOW('v', 0x02, unsigned char), 
+//					(confStr["tvoutEncoding"] == "PAL") ? PAL: NTSC);
+				tweakTvOut(confStr["tvoutEncoding"] == "PAL");
+			}
+		}
 	}
+#endif
 #else
 	s->raw = SDL_SetVideoMode(resX, resY, confInt["videoBpp"], SDL_HWSURFACE|SDL_DOUBLEBUF);
 #endif
@@ -315,7 +1096,20 @@ GMenu2X::GMenu2X(int argc, char *argv[]) {
 	setInputSpeed();
 	initServices();
 
+	//senquack - we now support a separate gamma setting for TV mode
+#ifdef TARGET_GP2X
+	if (gp2x_tv_mode)
+	{
+		setGamma(confInt["tvoutGamma"]);
+	}
+	else
+	{
+		setGamma(confInt["gamma"]);
+	}
+#else
 	setGamma(confInt["gamma"]);
+#endif
+
 	setVolume(confInt["globalVolume"]);
 
 	//senquack - New option, alwaysUseFastTimings, allows us to set fast ram timings as
@@ -363,11 +1157,20 @@ void GMenu2X::quit() {
 	SDL_Quit();
 #ifdef TARGET_GP2X
 	if (gp2x_mem!=0) {
-		//Fix tv-out
-		if (gp2x_memregs[0x2800>>1]&0x100) {
-			gp2x_memregs[0x2906>>1]=512;
-			gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
-		}
+		//		senquack
+//		//Fix tv-out
+//		if (gp2x_memregs[0x2800>>1]&0x100) {
+//			gp2x_memregs[0x2906>>1]=512;
+//			gp2x_memregs[0x28E4>>1]=gp2x_memregs[0x290C>>1];
+//			//senquack - copied this line from the other "fix tv out" section, it seemed to be
+//			//missing
+//		}
+
+		//senquack - make sure SDL didn't change any of our tv tweaks when exiting
+//		if (gp2x_memregs[0x2800>>1]&0x100) {
+//		if (gp2x_tv_mode != LCD) {
+//			tweakTvOut(gp2x_tv_mode == PAL);
+//		}
 		gp2x_deinit();
 	}
 #endif
@@ -498,16 +1301,18 @@ void GMenu2X::initMenu() {
 				menu->addActionLink(i,tr["About Open2X"],MakeDelegate(this,&GMenu2X::aboutOpen2X),tr["Info about Open2X"],"skin:icons/about.png");
 				menu->addActionLink(i,tr["Open2x"],MakeDelegate(this,&GMenu2X::settingsOpen2x),tr["Configure Open2x system settings"],"skin:icons/o2xconfigure.png");
 				menu->addActionLink(i,tr["Restore Apps"],MakeDelegate(this,&GMenu2X::restoreO2XAppSection),tr["Restore Open2X application section's links to defaults"],"skin:icons/o2xconfigure.png");
-				menu->addActionLink(i,tr["Unmount SD"],MakeDelegate(this,&GMenu2X::unmountSD),tr["Safely unmount SD card before removal (hotbutton: X)"],"skin:icons/explorer.png");
 			}
 			menu->addActionLink(i,tr["Skin"],MakeDelegate(this,&GMenu2X::skinMenu),tr["Configure skin"],"skin:icons/skin.png");
 			menu->addActionLink(i,tr["Wallpaper"],MakeDelegate(this,&GMenu2X::changeWallpaper),tr["Change GMenu2X wallpaper"],"skin:icons/wallpaper.png");
 #ifdef TARGET_GP2X
 			menu->addActionLink(i,"TV",MakeDelegate(this,&GMenu2X::toggleTvOut),tr["Activate/deactivate tv-out"],"skin:icons/tv.png");
-			menu->addActionLink(i,"USB Sd",MakeDelegate(this,&GMenu2X::activateSdUsb),tr["Activate Usb on SD"],"skin:icons/usb.png");
+			//senquack
 			if (fwType=="gph" && !f200)
+			{
 				menu->addActionLink(i,"USB Nand",MakeDelegate(this,&GMenu2X::activateNandUsb),tr["Activate Usb on Nand"],"skin:icons/usb.png");
+				menu->addActionLink(i,"USB Sd",MakeDelegate(this,&GMenu2X::activateSdUsb),tr["Activate Usb on SD"],"skin:icons/usb.png");
 			//menu->addActionLink(i,"USB Root",MakeDelegate(this,&GMenu2X::activateRootUsb),tr["Activate Usb on the root of the Gp2x Filesystem"],"skin:icons/usb.png");
+			}
 #endif
 			if (fileExists(path+"log.txt"))
 				menu->addActionLink(i,tr["Log Viewer"],MakeDelegate(this,&GMenu2X::viewLog),tr["Displays last launched program's output"],"skin:icons/ebook.png");
@@ -581,19 +1386,21 @@ void GMenu2X::aboutOpen2X() {
 
 	split(text,"Open2X was made possible by:\n\
 ----\n\
-Alex\n\
 Coder\n\
 DJWillis\n\
 Jycet\n\
 Lithosphere\n\
 Mindless\n\
 Orkie\n\
-Paeryn\n\
 PokeParadox\n\
 Ryo\n\
 Senor Quack\n\
 Wejp\n\
 \n\
+Open2X boot graphic made by Alex\n\
+Gamepad icon for joy2xd made by Gort\n\
+Credit for much hardware info to Rlyeh and Squidge\n\
+Credit for HW-accelerated SDL to Paeryn\n\
 (If you are missing from this list, please contact us in #open2x on freenode)","\n");
 	TextDialog td(this, "Open2X", tr.translate("Version $1 (Build date: $2)",fwVersion.c_str(),__DATE__,NULL), "icons/about.png", &text);
 	td.exec();
@@ -664,6 +1471,22 @@ void GMenu2X::readConfig() {
 	evalIntConf( &confInt["showServices"], 0, 0, 1 );
 	evalIntConf( &confInt["alwaysUseFastTimings"], 0, 0, 1 );
 
+	//senquack - added adjustable TV-out offsets for proper centering and
+	//				adjustable scaling:
+	//   These value ranges and defaults were taken from Rlyeh's minlib:
+//   horizontal (-50..0..35) - number of pixels to move the image horizontally.
+//   vertical (-15..0..45) - number of pixels to move the image vertically.
+//   - default setting for NTSC is (16, -7) 
+//   - default setting for PAL  is (16, 19)
+// NOTE: on my NTSC TV, I found 10 to be better than 16 for the X offset
+	evalIntConf( &confInt["tvoutXOffsetNTSC"], 10, TV_MIN_XOFFSET, TV_MAX_XOFFSET);
+	evalIntConf( &confInt["tvoutYOffsetNTSC"], -7, TV_MIN_YOFFSET, TV_MAX_YOFFSET);
+	evalIntConf( &confInt["tvoutXOffsetPAL"], 16, TV_MIN_XOFFSET, TV_MAX_XOFFSET);
+	evalIntConf( &confInt["tvoutYOffsetPAL"], 19, TV_MIN_YOFFSET, TV_MAX_YOFFSET);
+	evalIntConf( &confInt["tvoutXScale"], 100, TV_MIN_XSCALE, TV_MAX_XSCALE);
+	evalIntConf( &confInt["tvoutYScale"], 100, TV_MIN_YSCALE, TV_MAX_YSCALE);
+	evalIntConf( &confInt["tvoutGamma"], 1, 1,100 );
+	evalIntConf( &confInt["tvoutPalOverscanFix"], 0, 0, 1 );
 	if (confStr["tvoutEncoding"] != "PAL") confStr["tvoutEncoding"] = "NTSC";
 	resX = constrain( confInt["resolutionX"], 320,1920 );
 	resY = constrain( confInt["resolutionY"], 240,1200 );
@@ -704,7 +1527,11 @@ void GMenu2X::readConfigOpen2x() {
 				else if (name=="USB_NET_IP") o2x_usb_net_ip = value;
 				else if (name=="TELNET_ON_BOOT") o2x_telnet_on_boot = value == "y" ? true : false;
 				else if (name=="FTP_ON_BOOT") o2x_ftp_on_boot = value == "y" ? true : false;
-				else if (name=="GP2XJOY_ON_BOOT") o2x_gp2xjoy_on_boot = value == "y" ? true : false;
+//				else if (name=="GP2XJOY_ON_BOOT") o2x_gp2xjoy_on_boot = value == "y" ? true : false;
+				// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+				// 	a USB gamepad.  It should be configurable because it will greatly interfere
+				// 	with apps like Picodrive that already know how to use USB joysticks.
+				else if (name=="GMENU2X_STARTS_JOY2XD") o2x_gmenu2x_starts_joy2xd = value == "y" ? true : false;
 				else if (name=="USB_HOST_ON_BOOT") o2x_usb_host_on_boot = value == "y" ? true : false;
 				else if (name=="USB_HID_ON_BOOT") o2x_usb_hid_on_boot = value == "y" ? true : false;
 				else if (name=="USB_STORAGE_ON_BOOT") o2x_usb_storage_on_boot = value == "y" ? true : false;
@@ -732,7 +1559,12 @@ void GMenu2X::writeConfigOpen2x() {
 		inf << "USB_NET_IP=" << o2x_usb_net_ip << endl;
 		inf << "TELNET_ON_BOOT=" << ( o2x_telnet_on_boot ? "y" : "n" ) << endl;
 		inf << "FTP_ON_BOOT=" << ( o2x_ftp_on_boot ? "y" : "n" ) << endl;
-		inf << "GP2XJOY_ON_BOOT=" << ( o2x_gp2xjoy_on_boot ? "y" : "n" ) << endl;
+//		inf << "GP2XJOY_ON_BOOT=" << ( o2x_gp2xjoy_on_boot ? "y" : "n" ) << endl;
+		// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+		// 	a USB gamepad.  It should be configurable because it can interfere
+		// 	with apps specific apps that already know how to use USB joysticks. 
+		// 	(Sometimes they're fine even then)
+		inf << "GMENU2X_STARTS_JOY2XD=" << ( o2x_gmenu2x_starts_joy2xd ? "y" : "n" ) << endl;
 		inf << "USB_HOST_ON_BOOT=" << ( (o2x_usb_host_on_boot || o2x_usb_hid_on_boot || o2x_usb_storage_on_boot) ? "y" : "n" ) << endl;
 		inf << "USB_HID_ON_BOOT=" << ( o2x_usb_hid_on_boot ? "y" : "n" ) << endl;
 		inf << "USB_STORAGE_ON_BOOT=" << ( o2x_usb_storage_on_boot ? "y" : "n" ) << endl;
@@ -1300,6 +2132,16 @@ void GMenu2X::options() {
 	//senquack - new option to always use fast RAM timings
 	bool alwaysUseFastTimings = confInt["alwaysUseFastTimings"];
 
+	//senquack - added adjustable TV-out offsets for proper centering:
+	int tvoutXOffsetNTSC = confInt["tvoutXOffsetNTSC"];
+	int tvoutYOffsetNTSC = confInt["tvoutYOffsetNTSC"];
+	int tvoutXOffsetPAL = confInt["tvoutXOffsetPAL"];
+	int tvoutYOffsetPAL = confInt["tvoutYOffsetPAL"];
+	int tvoutXScale = confInt["tvoutXScale"];
+	int tvoutYScale = confInt["tvoutYScale"];
+	int tvoutGamma = confInt["tvoutGamma"];
+	int tvoutPalOverscanFix = confInt["tvoutPalOverscanFix"];
+
 	FileLister fl_tr("translations");
 	fl_tr.browse();
 	fl_tr.files.insert(fl_tr.files.begin(),"English");
@@ -1319,7 +2161,25 @@ void GMenu2X::options() {
 	//G
 	sd.addSetting(new MenuSettingInt(this,tr["Gamma"],tr["Set gp2x gamma value (default: 10)"],&confInt["gamma"],1,100));
 	sd.addSetting(new MenuSettingMultiString(this,tr["Tv-Out encoding"],tr["Encoding of the tv-out signal"],&confStr["tvoutEncoding"],&encodings));
+	
+	//senquack - added adjustable TV-out offsets for proper centering:
+	//   These value ranges and defaults were taken from Rlyeh's minlib:
+//   horizontal (-50..0..35) - number of pixels to move the image horizontally.
+//   vertical (-15..0..45) - number of pixels to move the image vertically.
+//   - default setting for NTSC is (16, -7) 
+//   - default setting for PAL  is (16, 19)
+// NOTE: on my NTSC TV, I found 10 to be better than 16 for the X offset
+	sd.addSetting(new MenuSettingInt(this,tr["TV X Offset (NTSC)"],tr["NTSC TV image offset left/right (default: 10)"],&confInt["tvoutXOffsetNTSC"],TV_MIN_XOFFSET,TV_MAX_XOFFSET));
+	sd.addSetting(new MenuSettingInt(this,tr["TV Y Offset (NTSC)"],tr["NTSC TV image offset up/down (default: -7)"],&confInt["tvoutYOffsetNTSC"],TV_MIN_YOFFSET,TV_MAX_YOFFSET));
+	sd.addSetting(new MenuSettingInt(this,tr["TV X Offset (PAL)"],tr["PAL TV image offset left/right (default: 16)"],&confInt["tvoutXOffsetPAL"],TV_MIN_XOFFSET,TV_MAX_XOFFSET));
+	sd.addSetting(new MenuSettingInt(this,tr["TV Y Offset (PAL)"],tr["PAL TV image offset up/down (default: 19)"],&confInt["tvoutYOffsetPAL"],TV_MIN_YOFFSET,TV_MAX_YOFFSET));
+	sd.addSetting(new MenuSettingInt(this,tr["TV X Scaling %"],tr["TV image horizontal stretch/shrink (default: 100%)"],&confInt["tvoutXScale"],TV_MIN_XSCALE,TV_MAX_XSCALE));
+	sd.addSetting(new MenuSettingInt(this,tr["TV Y Scaling %"],tr["TV image vertical stretch/shrink (default: 100%)"],&confInt["tvoutYScale"],TV_MIN_YSCALE,TV_MAX_YSCALE));
+	sd.addSetting(new MenuSettingInt(this,tr["TV Gamma"],tr["Set gp2x tv-out gamma value (default: 8)"],&confInt["tvoutGamma"],1,100));
+	sd.addSetting(new MenuSettingBool(this,tr["TV PAL Overscan Fix"],tr["Enable Rlyeh's PAL-mode tweak (untested)"],&confInt["tvoutPalOverscanFix"]));
+
 	sd.addSetting(new MenuSettingBool(this,tr["Show root"],tr["Show root folder in the file selection dialogs"],&showRootFolder));
+	
 	//senquack - added new option to always use fast RAM timings:
 	sd.addSetting(new MenuSettingBool(this,tr["RAM timings always fast"],tr["Always use fast RAM timings (overrides link settings)"],&confInt["alwaysUseFastTimings"]));
 	//senquack - added optional display of uptime :
@@ -1328,9 +2188,15 @@ void GMenu2X::options() {
 	if (fwType != "open2x")
 		sd.addSetting(new MenuSettingBool(this,tr["Show services"],tr["Show services icons in status bar"],&confInt["showServices"]));
 
+
 	if (sd.exec() && sd.edited()) {
 		//G
+		//senquack - tv now has a separate gamma setting:
+#ifdef TARGET_GP2X
+		if (prevgamma != confInt["gamma"] && !gp2x_tv_mode) setGamma(confInt["gamma"]);
+#else
 		if (prevgamma != confInt["gamma"]) setGamma(confInt["gamma"]);
+#endif
 		if (curMenuClock!=confInt["menuClock"]) setClock(confInt["menuClock"]);
 		if (curGlobalVolume!=confInt["globalVolume"]) setVolume(confInt["globalVolume"]);
 		if (lang == "English") lang = "";
@@ -1356,17 +2222,40 @@ void GMenu2X::options() {
 				applyDefaultTimings();
 			}
 		}
+#ifdef TARGET_GP2X
+		if (	gp2x_tv_mode	&&
+				(	tvoutXOffsetNTSC != confInt["tvoutXOffsetNTSC"] 	||
+					tvoutYOffsetNTSC != confInt["tvoutYOffsetNTSC"] 	||
+					tvoutXOffsetPAL != confInt["tvoutXOffsetPAL"] 		||
+					tvoutYOffsetPAL != confInt["tvoutYOffsetPAL"] 		||
+					tvoutXScale != confInt["tvoutXScale"] 					||
+					tvoutYScale != confInt["tvoutYScale"] 					||	
+					tvoutYScale != confInt["tvoutGamma"] 					||
+					tvoutPalOverscanFix != confInt["tvoutPalOverscanFix"] 					))
+		{
+			// User altered some tvout settings, apply immediately if in tv mode
+			tweakTvOut(confStr["tvoutEncoding"] == "PAL");
+			setGamma(confInt["tvoutGamma"]);
+		}
+#endif
+
 		writeConfig();
 	}
 }
 
 void GMenu2X::settingsOpen2x() {
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  It should be configurable because it will greatly interfere
+	// 	with apps like Picodrive that already know how to use USB joysticks.
+	int gmenu2x_starts_joy2xd = o2x_gmenu2x_starts_joy2xd;
+	
 	SettingsDialog sd(this,tr["Open2x Settings"]);
 	sd.addSetting(new MenuSettingBool(this,tr["USB net on boot"],tr["Allow USB networking to be started at boot time"],&o2x_usb_net_on_boot));
 	sd.addSetting(new MenuSettingString(this,tr["USB net IP"],tr["IP address to be used for USB networking"],&o2x_usb_net_ip));
 	sd.addSetting(new MenuSettingBool(this,tr["Telnet on boot"],tr["Allow telnet to be started at boot time"],&o2x_telnet_on_boot));
 	sd.addSetting(new MenuSettingBool(this,tr["FTP on boot"],tr["Allow FTP to be started at boot time"],&o2x_ftp_on_boot));
-	sd.addSetting(new MenuSettingBool(this,tr["GP2XJOY on boot"],tr["Create a js0 device for GP2X controls"],&o2x_gp2xjoy_on_boot));
+	sd.addSetting(new MenuSettingBool(this,tr["Joy2xd USB->GP2X control"],tr["Enable daemon allowing control of GP2X from USB gamepads"],&o2x_gmenu2x_starts_joy2xd));
+//	sd.addSetting(new MenuSettingBool(this,tr["GP2XJOY on boot"],tr["Create a js0 device for GP2X controls"],&o2x_gp2xjoy_on_boot));
 	sd.addSetting(new MenuSettingBool(this,tr["USB host on boot"],tr["Allow USB host to be started at boot time"],&o2x_usb_host_on_boot));
 	sd.addSetting(new MenuSettingBool(this,tr["USB HID on boot"],tr["Allow USB HID to be started at boot time"],&o2x_usb_hid_on_boot));
 	sd.addSetting(new MenuSettingBool(this,tr["USB storage on boot"],tr["Allow USB storage to be started at boot time"],&o2x_usb_storage_on_boot));
@@ -1393,6 +2282,16 @@ void GMenu2X::settingsOpen2x() {
 		setVolume(confInt["globalVolume"]);
 		// senquack - STICK CLICK EMULATION:
 		setStickClickEmulation(o2x_stick_click_mode); 
+		// senquack - USB joystick -> GP2X control daemon:
+		if (gmenu2x_starts_joy2xd != o2x_gmenu2x_starts_joy2xd)
+		{
+			if (o2x_gmenu2x_starts_joy2xd)
+			{
+				activateJoy2xd();
+			} else {
+				deactivateJoy2xd();
+			}
+		}
 	}
 }
 
@@ -1421,14 +2320,6 @@ void GMenu2X::skinMenu() {
 	}
 }
 
-void GMenu2X::toggleTvOut() {
-#ifdef TARGET_GP2X
-	if (cx25874!=0)
-		gp2x_tvout_off();
-	else
-		gp2x_tvout_on(confStr["tvoutEncoding"] == "PAL");
-#endif
-}
 
 void GMenu2X::setSkin(string skin, bool setWallpaper) {
 	confStr["skin"] = skin;
@@ -1547,6 +2438,31 @@ void GMenu2X::activateRootUsb() {
 		mb.exec();
 		system("scripts/usboff.sh root");
 	}
+}
+
+void GMenu2X::activateJoy2xd() {
+#ifdef TARGET_GP2X
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  
+	if (fwType == "open2x") {
+//		string cmdline = "/etc/init.d/Ojoy2xd start";
+		// very important this is not start, only should be called with start
+		// on first startup from the init scripts.
+		string cmdline = "/etc/init.d/Ojoy2xd restart";
+		system(cmdline.c_str());
+	}
+#endif
+}
+
+void GMenu2X::deactivateJoy2xd() {
+#ifdef TARGET_GP2X
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  
+	if (fwType == "open2x") {
+		string cmdline = "/etc/init.d/Ojoy2xd stop";
+		system(cmdline.c_str());
+	}
+#endif
 }
 
 //senquack - new action allows safe SD removal (removal of SDs with EXT filesystems
@@ -1780,12 +2696,53 @@ void GMenu2X::editLink() {
 	//G
 	int linkGamma = menu->selLinkApp()->gamma();
 	
-	//senquack - new open2x gpio remapping support:
+	//senquack - new open2x /dev/gpio (SDL) button remapping support:
 	int link_o2x_gpio_mapping[19];
 	bool link_o2x_gpio_remapping = false;
 	// senquack - new Open2X support for configurable caching of upper memory so mmuhack.o is 
 	// 	no longer necessary:
-	bool link_o2x_upper_memory_cached = false;
+	bool link_o2x_upper_memory_cached;
+	//senquack - new Open2X support for TV tweaking daemon:
+	bool link_o2x_tv_daemon_enabled;
+	// Tweak YUV layer?
+	bool link_o2x_tv_daemon_tweak_yuv;
+	// Hit scaling registers?
+	bool link_o2x_tv_daemon_scaling_tweak;
+	int link_o2x_tv_daemon_xoffset;
+	int link_o2x_tv_daemon_yoffset;
+	int link_o2x_tv_daemon_xscale;
+	int link_o2x_tv_daemon_yscale;
+	int link_o2x_tv_daemon_vxscale;
+	int link_o2x_tv_daemon_vyscale;
+	// Delay before first tweaking:
+	int link_o2x_tv_daemon_first_delay;
+	// Delay inbetween subsequent tweaks:
+	int link_o2x_tv_daemon_delay;
+	// Tweak just once after pausing for the delay above and terminate?
+	bool link_o2x_tv_daemon_tweak_only_once;
+//	// Needed for some things like gngeo:
+//	bool link_o2x_tv_daemon_force_720_pitch;
+	// Not normally needed, since tv mode should already be enabled:
+	bool link_o2x_tv_daemon_enable_tv_mode;
+	//	DEPRECATED:
+//	// Special fix for some games that used a buggy SDL, like Tilematch and some
+//	// of Ruckage's earlier games:
+//	bool link_o2x_tv_daemon_stubborn_fix;
+	// Rage2X segfaults when started in TVout mode, but will allow you to 
+	// turn TV mode on from inside it.  This option lets you launch the tv tweaker
+	// even when TV mode isn't enabled (it actually works)
+	bool link_o2x_tv_daemon_always_started;
+
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  It should be configurable because it will greatly interfere
+	// 	with apps like Picodrive that already know how to use USB joysticks.
+	bool link_o2x_link_uses_joy2xd;
+	// When this is true, a hack is implemented that presents a dummy js0 
+	// joystick to all applications, and the first USB joystick is thus
+	// not seen at all by any apps.  This is very useful for some apps like
+	// PocketSNES that don't have very flexible button remapping and won't
+	// let player 2 use the second joystick otherwise.
+	bool link_o2x_joy2xd_hides_js0;	
 
 	if (fwType == "open2x")
 	{
@@ -1797,6 +2754,27 @@ void GMenu2X::editLink() {
 		}
 
 		link_o2x_upper_memory_cached = menu->selLinkApp()->getUpperMemoryCachingStatus();
+
+		link_o2x_tv_daemon_enabled = menu->selLinkApp()->getTVDaemonStatus();
+		link_o2x_tv_daemon_tweak_yuv = menu->selLinkApp()->getTVDaemonTweakYuv();
+		link_o2x_tv_daemon_scaling_tweak = menu->selLinkApp()->getTVDaemonScalingTweak();
+		link_o2x_tv_daemon_xoffset = menu->selLinkApp()->getTVDaemonXOffset();
+		link_o2x_tv_daemon_yoffset = menu->selLinkApp()->getTVDaemonYOffset();
+		link_o2x_tv_daemon_xscale = menu->selLinkApp()->getTVDaemonXScale();
+		link_o2x_tv_daemon_yscale = menu->selLinkApp()->getTVDaemonYScale();
+		link_o2x_tv_daemon_vxscale = menu->selLinkApp()->getTVDaemonVXScale();
+		link_o2x_tv_daemon_vyscale = menu->selLinkApp()->getTVDaemonVYScale();
+		link_o2x_tv_daemon_delay = menu->selLinkApp()->getTVDaemonDelay();
+		link_o2x_tv_daemon_first_delay = menu->selLinkApp()->getTVDaemonFirstDelay();
+		link_o2x_tv_daemon_tweak_only_once = menu->selLinkApp()->getTVDaemonTweakOnlyOnce();
+//		link_o2x_tv_daemon_force_720_pitch = menu->selLinkApp()->getTVDaemonForce720Pitch();
+		link_o2x_tv_daemon_enable_tv_mode = menu->selLinkApp()->getTVDaemonEnableTVMode();
+		//		Deprecated:
+//		link_o2x_tv_daemon_stubborn_fix = menu->selLinkApp()->getTVDaemonStubbornFix();
+		link_o2x_tv_daemon_always_started = menu->selLinkApp()->getTVDaemonAlwaysStarted();
+
+		link_o2x_link_uses_joy2xd = menu->selLinkApp()->getJoy2xdStatus();
+		link_o2x_joy2xd_hides_js0 = menu->selLinkApp()->getJoy2xdHidesJs0();
 	}
 
 	string diagTitle = tr.translate("Edit link: $1",linkTitle.c_str(),NULL);
@@ -1810,7 +2788,11 @@ void GMenu2X::editLink() {
 	sd.addSetting(new MenuSettingFile(this,tr["Manual"],tr["Select a graphic/textual manual or a readme"],&linkManual,".man.png,.txt"));
 	sd.addSetting(new MenuSettingInt(this,tr["Clock (default: 200)"],tr["Cpu clock frequency to set when launching this link"],&linkClock,50,confInt["maxClock"]));
 	sd.addSetting(new MenuSettingBool(this,tr["Tweak RAM Timings"],tr["This usually speeds up the application at the cost of stability"],&linkUseRamTimings));
-	sd.addSetting(new MenuSettingInt(this,tr["Volume (default: -1)"],tr["Volume to set for this link"],&linkVolume,-1,100));
+	//	senquack - default volume is now 67 (that has always been the GP2X's default)  and the
+	//		volume always gets set before launching a link now (so that one program cannot affect
+	//		another's volume)
+//	sd.addSetting(new MenuSettingInt(this,tr["Volume (default: -1)"],tr["Volume to set for this link"],&linkVolume,-1,100));
+	sd.addSetting(new MenuSettingInt(this,tr["Volume (default: 67)"],tr["Volume to set for this link"],&linkVolume,-1,100));
 	sd.addSetting(new MenuSettingString(this,tr["Parameters"],tr["Parameters to pass to the application"],&linkParams, diagTitle,diagIcon));
 	sd.addSetting(new MenuSettingDir(this,tr["Selector Directory"],tr["Directory to scan for the selector"],&linkSelDir));
 	sd.addSetting(new MenuSettingBool(this,tr["Selector Browser"],tr["Allow the selector to change directory"],&linkSelBrowser));
@@ -1822,11 +2804,28 @@ void GMenu2X::editLink() {
 	sd.addSetting(new MenuSettingBool(this,tr["Wrapper"],tr["Explicitly relaunch GMenu2X after this link's execution ends"],&menu->selLinkApp()->wrapper));
 	sd.addSetting(new MenuSettingBool(this,tr["Don't Leave"],tr["Don't quit GMenu2X when launching this link"],&menu->selLinkApp()->dontleave));
 
-	//senquack - new open2x gpio remapping support:
+	//senquack - new open2x gpio remapping support, upper memory caching support, TV daemon support:
 	if (fwType == "open2x")
 	{
-		sd.addSetting(new MenuSettingBool(this,tr["Cache upper memory"],tr["(Replaces mmuhack - can cause incompatibility)"], &link_o2x_upper_memory_cached));
-		sd.addSetting(new MenuSettingBool(this,tr["Open2X Control Remapping"],tr["Enable remapping of controls reported to SDL games"], &link_o2x_gpio_remapping));
+		sd.addSetting(new MenuSettingBool(this,tr["Cache upper memory"],tr["Force full MMUhack - unnecessary and can cause glitches"], &link_o2x_upper_memory_cached));
+		sd.addSetting(new MenuSettingBool(this,tr["TV Tweaker Daemon"],tr["Runs in background when TV mode is enabled"], &link_o2x_tv_daemon_enabled));
+		sd.addSetting(new MenuSettingBool(this,tr["TV YUV Tweaked"],tr["Only useful for video and very rare apps like LemonBoy2X"], &link_o2x_tv_daemon_tweak_yuv));
+		sd.addSetting(new MenuSettingBool(this,tr["TV Scaling Tweak"],tr["Known to be incompatible with LemonBoy2X"], &link_o2x_tv_daemon_scaling_tweak));
+		sd.addSetting(new MenuSettingInt(this,tr["TV X Offset"],tr["Defaults - NTSC: 10  PAL: 10"],&link_o2x_tv_daemon_xoffset,TV_MIN_XOFFSET,TV_MAX_XOFFSET));
+		sd.addSetting(new MenuSettingInt(this,tr["TV Y Offset"],tr["Defaults - NTSC: -7  PAL: 19"],&link_o2x_tv_daemon_yoffset,TV_MIN_YOFFSET,TV_MAX_YOFFSET));
+		sd.addSetting(new MenuSettingInt(this,tr["TV X Scaling %"],tr["TV image horizontal stretch/shrink (default: 100%)"],&link_o2x_tv_daemon_xscale,TV_MIN_XSCALE,TV_MAX_XSCALE));
+		sd.addSetting(new MenuSettingInt(this,tr["TV Y Scaling %"],tr["TV image vertical stretch/shrink (default: 100%)"],&link_o2x_tv_daemon_yscale,TV_MIN_YSCALE,TV_MAX_YSCALE));
+		sd.addSetting(new MenuSettingInt(this,tr["TV YUV X Scaling %"],tr["YUV image horizontal stretch/shrink (default: 100%)"],&link_o2x_tv_daemon_vxscale,TV_MIN_VXSCALE,TV_MAX_VXSCALE));
+		sd.addSetting(new MenuSettingInt(this,tr["TV YUV Y Scaling %"],tr["YUV image vertical stretch/shrink (default: 100%)"],&link_o2x_tv_daemon_vyscale,TV_MIN_VYSCALE,TV_MAX_VYSCALE));
+		sd.addSetting(new MenuSettingInt(this,tr["TV First Tweak Delay"],tr["Seconds to wait before the first tweaking (default: 4)"],&link_o2x_tv_daemon_first_delay,TV_DAEMON_MIN_FIRST_DELAY,TV_DAEMON_MAX_FIRST_DELAY));
+		sd.addSetting(new MenuSettingInt(this,tr["TV Tweaking Delay"],tr["Seconds to wait inbetween maintenance tweaks (default: 1)"],&link_o2x_tv_daemon_delay,TV_DAEMON_MIN_DELAY,TV_DAEMON_MAX_DELAY));
+		sd.addSetting(new MenuSettingBool(this,tr["TV Tweaked Only Once "],tr["Daemon waits, tweaks only once, and terminates"], &link_o2x_tv_daemon_tweak_only_once));
+		//		Deprecated:
+//		sd.addSetting(new MenuSettingBool(this,tr["TV Forced to 720 Pitch"],tr["Try this if screen is garbled on apps like gngeo."], &link_o2x_tv_daemon_force_720_pitch));
+//		sd.addSetting(new MenuSettingBool(this,tr["TV Fixed Stubbornly"],tr["Try this if screen is garbled or interlaced"], &link_o2x_tv_daemon_stubborn_fix));
+		sd.addSetting(new MenuSettingBool(this,tr["TV Daemon Always Started"],tr["Always launch even when in LCD mode (Useful for Rage2X)"], &link_o2x_tv_daemon_always_started));
+		sd.addSetting(new MenuSettingBool(this,tr["TV Mode Forced On"],tr["Daemon waits, forces TV mode on, and then tweaks"], &link_o2x_tv_daemon_enable_tv_mode));
+		sd.addSetting(new MenuSettingBool(this,tr["SDL Control Remapping"],tr["Works for all SDL games and others that read /dev/GPIO"], &link_o2x_gpio_remapping));
 		sd.addSetting(new MenuSettingInt(this,tr["Button 0 (Up)"],tr["Remap button 0 (Up)"],&(link_o2x_gpio_mapping[0]),0,18));
 		sd.addSetting(new MenuSettingInt(this,tr["Button 1 (UpLeft)"],tr["Remap button 1 (UpLeft)"],&(link_o2x_gpio_mapping[1]),0,18));
 		sd.addSetting(new MenuSettingInt(this,tr["Button 2 (Left)"],tr["Remap button 2 (Left)"],&(link_o2x_gpio_mapping[2]),0,18));
@@ -1846,6 +2845,8 @@ void GMenu2X::editLink() {
 		sd.addSetting(new MenuSettingInt(this,tr["Button 16 (Vol+)"],tr["Remap button 16 (Vol+)"],&(link_o2x_gpio_mapping[16]),0,18));
 		sd.addSetting(new MenuSettingInt(this,tr["Button 17 (Vol-)"],tr["Remap button 17 (Vol-)"],&(link_o2x_gpio_mapping[17]),0,18));
 		sd.addSetting(new MenuSettingInt(this,tr["Button 18 (Click)"],tr["Remap button 18 (Stick Click)"],&(link_o2x_gpio_mapping[18]),0,18));
+		sd.addSetting(new MenuSettingBool(this,tr["Joy2xd USB->GP2X control"],tr["Control GP2X buttons with USB Joy 0"], &link_o2x_link_uses_joy2xd));
+		sd.addSetting(new MenuSettingBool(this,tr["Joy2xd hides Joy 0"],tr["No events reported from js0 (default: on)"], &link_o2x_joy2xd_hides_js0));
 	}
 
 	if (sd.exec() && sd.edited()) {
@@ -1880,6 +2881,30 @@ void GMenu2X::editLink() {
 			// senquack - new Open2X support for configurable caching of upper memory so mmuhack.o is 
 			// 	no longer necessary:
 			menu->selLinkApp()->setUpperMemoryCachingStatus(link_o2x_upper_memory_cached);
+			//senquack - new support for TV tweaking daemon:
+			menu->selLinkApp()->setTVDaemonStatus(link_o2x_tv_daemon_enabled);
+			menu->selLinkApp()->setTVDaemonTweakYuv(link_o2x_tv_daemon_tweak_yuv);
+			menu->selLinkApp()->setTVDaemonScalingTweak(link_o2x_tv_daemon_scaling_tweak);
+			menu->selLinkApp()->setTVDaemonXOffset(link_o2x_tv_daemon_xoffset);
+			menu->selLinkApp()->setTVDaemonYOffset(link_o2x_tv_daemon_yoffset);
+			menu->selLinkApp()->setTVDaemonXScale(link_o2x_tv_daemon_xscale);
+			menu->selLinkApp()->setTVDaemonYScale(link_o2x_tv_daemon_yscale);
+			menu->selLinkApp()->setTVDaemonVXScale(link_o2x_tv_daemon_vxscale);
+			menu->selLinkApp()->setTVDaemonVYScale(link_o2x_tv_daemon_vyscale);
+			menu->selLinkApp()->setTVDaemonDelay(link_o2x_tv_daemon_first_delay);
+			menu->selLinkApp()->setTVDaemonDelay(link_o2x_tv_daemon_delay);
+			menu->selLinkApp()->setTVDaemonTweakOnlyOnce(link_o2x_tv_daemon_tweak_only_once);
+			//			Deprecated:
+//			menu->selLinkApp()->setTVDaemonForce720Pitch(link_o2x_tv_daemon_force_720_pitch);
+//			menu->selLinkApp()->setTVDaemonStubbornFix(link_o2x_tv_daemon_stubborn_fix);
+			menu->selLinkApp()->setTVDaemonAlwaysStarted(link_o2x_tv_daemon_always_started);
+			menu->selLinkApp()->setTVDaemonEnableTVMode(link_o2x_tv_daemon_enable_tv_mode);
+
+			// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+			// 	a USB gamepad.  It should be configurable because it will greatly interfere
+			// 	with apps like Picodrive that already know how to use USB joysticks.
+			menu->selLinkApp()->setJoy2xdStatus(link_o2x_link_uses_joy2xd);
+			menu->selLinkApp()->setJoy2xdHidesJs0(link_o2x_joy2xd_hides_js0);
 		}
 
 #ifdef DEBUG
@@ -2409,6 +3434,73 @@ void GMenu2X::setUpperMemoryCaching(int caching_enabled) {
 		
 	ioctl(gpioDev, GP2X_SET_UPPER_MEMORY_CACHING, &caching_enabled);
 	close(gpioDev);
+}
+
+//senquack - New functions used under Open2X.  Everytime GMenu2X starts, it takes a look at all processes
+//		currently running.  It tells the kernel all the PIDs it finds (excluding GMenu2X itself).  The kernel
+//		keeps this list in memory when programs are run.  If the user presses a specific button combo, the
+//		kernel will kill off all PIDs not in this whitelist and then restart GMenu2X.  This is so users can
+//		recover from program crashes or hangs (or when a program won't let you exit!).
+void GMenu2X::clearPidWhitelist(void) {
+	int gpioDev = open("/dev/GPIO", O_WRONLY);
+	if (gpioDev == -1)
+		return;	
+		
+	ioctl(gpioDev, GP2X_WHITELIST_CLEAR, 0);
+	close(gpioDev);
+}
+
+void GMenu2X::addPidToWhitelist(int pid) {
+	int gpioDev = open("/dev/GPIO", O_WRONLY);
+	if (gpioDev == -1)
+		return;	
+		
+	ioctl(gpioDev, GP2X_WHITELIST_ADD, &pid);
+	close(gpioDev);
+}
+
+void GMenu2X::generatePidWhitelist(void)
+{
+	clearPidWhitelist();
+
+	char buf[8192], buf2[8192];
+	FILE *f;
+	int pid;
+
+	// Get the output of the ps command as a file
+	f = popen("ps -w", "r");
+
+	if (f)
+	{
+		if (!feof(f))
+		{
+			// skip empty lines
+			fscanf(f, "%8192[\n\r]", buf);
+			// read first line and discard it (it is just column descriptors)
+			fscanf(f, "%8192[^\n^\r]", buf);
+			// chomp endline
+			fscanf(f, "%8192[\n\r]", buf);
+
+			// read remaining lines
+			while (!feof(f))
+			{
+//				// skip empty lines, chomp any endlines
+//				fscanf(f, "%8192[\n\r]", buf);
+				fscanf(f, "%8192[^\n^\r]", buf);
+//				cout << "Processing line: " << endl << buf << endl;
+				// add all PIDs listed to the whitelist, but exclude gmenu2x's and ps's 
+				if (!strstr(buf, "gmenu2x") && !strstr(buf, "ps -w"))
+				{
+					sscanf(buf, "%d %8192[^\n^\r]", &pid, buf2);
+					cout << "GMenu2X: Adding PID " << pid << " to whitelist" << endl;
+					addPidToWhitelist(pid);
+				}
+				// chomp any endlines
+				fscanf(f, "%8192[\n\r]", buf);
+			}
+		}
+		pclose(f);
+	}
 }
 
 string GMenu2X::getExePath() {

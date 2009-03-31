@@ -1,0 +1,14 @@
+#ifndef OPEN2X_H
+#define OPEN2X_H
+
+#define TV_DAEMON_MIN_FIRST_DELAY 1
+#define TV_DAEMON_MAX_FIRST_DELAY 120
+#define TV_DAEMON_DEFAULT_FIRST_DELAY 4
+#define TV_DAEMON_MIN_DELAY 1
+#define TV_DAEMON_MAX_DELAY 120
+#define TV_DAEMON_DEFAULT_DELAY 1
+#define OPEN2X_TV_DAEMON_FULLPATH "/usr/sbin/tv_daemon"
+#define OPEN2X_VERSION_FILENAME "/etc/open2x"
+
+#endif
+

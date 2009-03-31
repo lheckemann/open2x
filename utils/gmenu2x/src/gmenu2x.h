@@ -38,6 +38,9 @@
 #include "touchscreen.h"
 #include "inputmanager.h"
 
+//senquack - open2x defines:
+#include "open2x.h"
+
 //senquack - for new Open2X stick-click emulation
 #define OPEN2X_STICK_CLICK_DISABLED		0	// stick-click emulation disabled (default)
 #define OPEN2X_STICK_CLICK_DPAD			1	// stick-click emulated by pressing UP+DOWN+LEFT+RIGHT
@@ -66,6 +69,10 @@
 #define GP2X_REMAP_BUTTON_18  68
 #define GP2X_DISABLE_REMAPPING   69
 #define GP2X_SET_UPPER_MEMORY_CACHING	80
+//senquack - new ioctl commands for /dev/GPIO that support Open2X process killer/menu restarter
+#define GP2X_WHITELIST_CLEAR  90
+#define GP2X_WHITELIST_ADD    91
+
 
 const int MAX_VOLUME_SCALE_FACTOR = 200;
 const int VOLUME_SCALER_MUTE = 0;
@@ -75,11 +82,43 @@ const int VOLUME_MODE_MUTE = 0;
 const int VOLUME_MODE_PHONES = 1;
 const int VOLUME_MODE_NORMAL = 2;
 const int BATTERY_READS = 10;
-
+//senquack - new TV centering/scaling:
+const int TV_MIN_XOFFSET = -50;
+const int TV_MAX_XOFFSET = 35;
+//senquack - altered because it seems we can go a bit lower and quite a bit higher here:
+//const int TV_MIN_YOFFSET = -15;
+//const int TV_MAX_YOFFSET = 45;
+const int TV_MIN_YOFFSET = -21;
+const int TV_MAX_YOFFSET = 85;
+const int TV_MIN_XSCALE = 12;
+const int TV_MAX_XSCALE = 200;
+const int TV_MIN_YSCALE = 12;
+const int TV_MAX_YSCALE = 200;
+const int TV_MIN_VXSCALE = 12;
+const int TV_MAX_VXSCALE = 200;
+const int TV_MIN_VYSCALE = 12;
+const int TV_MAX_VYSCALE = 200;
+const int TV_DEFAULT_NTSC_XOFFSET = 10;
+const int TV_DEFAULT_NTSC_YOFFSET = -7;
+//senquack - it seems PAL might be better off closet to the NTSC X offset default
+//const int TV_DEFAULT_PAL_XOFFSET	= 16;
+const int TV_DEFAULT_PAL_XOFFSET	= 10;
+const int TV_DEFAULT_PAL_YOFFSET	= 19;
+//const int TV_DAEMON_MIN_DELAY	= 1;
+//const int TV_DAEMON_MAX_DELAY = 120;
+//const int TV_DAEMON_DEFAULT_DELAY = 1;
 const int LOOP_DELAY=30000;
+//const string OPEN2X_TV_DAEMON_FULLPATH = "/opt/tv_daemon/tv_daemon"
 
-//senquack
-const string OPEN2X_VERSION_FILENAME = "/etc/open2x";
+//senquack - moved to open2x.h
+//const string OPEN2X_VERSION_FILENAME = "/etc/open2x";
+
+
+//senquack - pulled from Rlyeh's minlib for improved TVout:
+//enum  { LCD = 0, PAL = 4, NTSC = 3 }; 
+enum  { LCD = 1, PAL = 4, NTSC = 3 }; 
+#define gp2x_cx25874_read(a)    gp2x_i2c_read(0x8A,(a))
+#define gp2x_cx25874_write(a,v) gp2x_i2c_write(0x8A,(a),(v))
 
 using std::string;
 using fastdelegate::FastDelegate0;
@@ -99,6 +138,10 @@ struct MenuOption {
 	string text;
 	MenuAction action;
 };
+
+//senquack - pulled from Rlyeh's minlib for improved TVout:
+typedef struct { unsigned char id,addr,data;} i2cw;
+typedef struct { unsigned char id,addr,*pdata;} i2cr;
 
 class Menu;
 
@@ -162,12 +205,28 @@ private:
 	unsigned short *gp2x_memregs;
 	volatile unsigned short *MEM_REG;
 	int cx25874; //tv-out
+
+	//senquack - pulled from Rlyeh's minlib for improved TVout:
+//	int gp2x_tv_lastmode;
 #endif
+	//senquack - added these for improved tvout from Rlyeh's minlib:
+//	void gp2x_video_waitvsync(void);
+	void gp2x_i2c_write(unsigned char id, unsigned char addr, unsigned char data);
+	unsigned char gp2x_i2c_read(unsigned char id, unsigned char addr);
+//	int gp2x_tv_getmode(void);
+	void gp2x_misc_lcd(int on);
+	void gp2x_video_RGB_setscaling(int W, int H);
+//	void gp2x_tv_setmode(unsigned char mode);
+//	void gp2x_tv_adjust(signed char horizontal, signed char vertical);
+	
 	void gp2x_tvout_on(bool pal);
 	void gp2x_tvout_off();
 	void gp2x_init();
 	void gp2x_deinit();
 	void toggleTvOut();
+
+	//senquack
+	void tweakTvOut(bool pal);
 
 public:
 	GMenu2X(int argc, char *argv[]);
@@ -205,6 +264,9 @@ public:
 	//gp2x type
 	bool f200;
 
+	//senquack - are we currently in TV mode?
+	bool gp2x_tv_mode;
+
 	// Open2x settings ---------------------------------------------------------
 	bool o2x_usb_net_on_boot, o2x_ftp_on_boot, o2x_telnet_on_boot, 
 		  o2x_gp2xjoy_on_boot, o2x_usb_host_on_boot, o2x_usb_hid_on_boot, 
@@ -237,6 +299,14 @@ public:
 //												//		(default for F200 is DPAD)
 //OPEN2X_STICK_CLICK_VOLUPDOWN	2	// stick click emulated by pressing VOLUP+VOLDOWN	
 
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  It should be configurable because it will greatly interfere
+	// 	with apps like Picodrive that already know how to use USB joysticks.
+	bool o2x_gmenu2x_starts_joy2xd; 	// Is Joy2Xd enabled (if USB joy is present)?
+												// If this is true, GMenu2X will start the joy2xd
+												// daemon at startup, and it will remain loaded
+												// during program executions and will be restarted 
+												// every time GMenu2X reloads)
 
 	string o2x_links_folder;
 
@@ -267,6 +337,8 @@ public:
 	void unmountSD();
 	void restoreO2XAppSection();
 	void aboutOpen2X();
+	void activateJoy2xd();
+	void deactivateJoy2xd();
 
 	void about();
 	void viewLog();
@@ -296,6 +368,14 @@ public:
 	// 	no longer necessary:
 	void setUpperMemoryCaching(int caching_enabled);
 
+	//senquack - New functions used under Open2X.  Everytime GMenu2X starts, it takes a look at all processes
+	//		currently running.  It tells the kernel all the PIDs it finds (excluding GMenu2X itself).  The kernel
+	//		keeps this list in memory when programs are run.  If the user presses a specific button combo, the
+	//		kernel will kill off all PIDs not in this whitelist and then restart GMenu2X.  This is so users can
+	//		recover from program crashes or hangs (or when a program won't let you exit!).
+	void clearPidWhitelist(void);
+	void addPidToWhitelist(int pid);
+	void generatePidWhitelist(void);
 
 	void setInputSpeed();
 

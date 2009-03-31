@@ -38,7 +38,11 @@ LinkApp::LinkApp(GMenu2X *gmenu2x, const char* linkfile)
 	wrapper = false;
 	dontleave = false;
 	setClock(200);
-	setVolume(-1);
+	//	senquack - default volume is now 67 (that has always been the GP2X's default)  and the
+	//		volume always gets set before launching a link now (so that one program cannot affect
+	//		another's volume)
+//	setVolume(-1);
+	setVolume(67);
 	//G
 	setGamma(0);
 	selectordir = "";
@@ -58,6 +62,53 @@ LinkApp::LinkApp(GMenu2X *gmenu2x, const char* linkfile)
 	// senquack - new Open2X support for configurable caching of upper memory so mmuhack.o is 
 	// 	no longer necessary:
 	o2x_upper_memory_cached = false;
+
+	//senquack - new Open2X support for TV tweaking daemon:
+	o2x_tv_daemon_enabled = true;
+	o2x_tv_daemon_tweak_yuv = false;
+	o2x_tv_daemon_scaling_tweak = true;
+	// copy in offsets and scale percents from gmenu2x's current tvout settings:
+	o2x_tv_daemon_xoffset = (gmenu2x->confStr["tvoutEncoding"] == "PAL") ? 
+		gmenu2x->confInt["tvoutXOffsetPAL"] 										:
+		gmenu2x->confInt["tvoutXOffsetNTSC"];
+	o2x_tv_daemon_yoffset = (gmenu2x->confStr["tvoutEncoding"] == "PAL") ?
+		gmenu2x->confInt["tvoutYOffsetPAL"]											:
+		gmenu2x->confInt["tvoutYOffsetNTSC"];
+	o2x_tv_daemon_xscale = gmenu2x->confInt["tvoutXScale"];
+	o2x_tv_daemon_yscale = gmenu2x->confInt["tvoutYScale"];
+	o2x_tv_daemon_vxscale = 100;
+	o2x_tv_daemon_vyscale = 100;
+	// Delay before first tweak:
+	o2x_tv_daemon_first_delay = TV_DAEMON_DEFAULT_FIRST_DELAY;	
+	// Delay inbetween subsequent tweaks:
+	o2x_tv_daemon_delay = TV_DAEMON_DEFAULT_DELAY;	
+	// Tweak just once after pausing for the delay above and terminate?
+	o2x_tv_daemon_tweak_only_once = false;		
+	//	Deprecated:
+//	// Needed for some things like gngeo:
+//	o2x_tv_daemon_force_720_pitch = false;	
+	// Special fix for some games that used a buggy SDL, like Tilematch and some
+	// of Ruckage's earlier games:
+//	o2x_tv_daemon_stubborn_fix = false;
+	// Rage2X segfaults when started in TVout mode, but will allow you to 
+	// turn TV mode on from inside it.  This option lets you launch the tv tweaker
+	// even when TV mode isn't enabled (it actually works)
+	o2x_tv_daemon_always_started = false;
+	// Not normally needed, since tv mode should already be enabled:
+	o2x_tv_daemon_enable_tv_mode = false;
+
+	// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+	// 	a USB gamepad.  It should be configurable because it will greatly interfere
+	// 	with apps like Picodrive that already know how to use USB joysticks.
+	o2x_link_uses_joy2xd = true;
+
+	// When this is true, a hack is implemented that presents a dummy js0 
+	// joystick to all applications, and the first USB joystick is thus
+	// not seen at all by any apps.  This is very useful for some apps like
+	// PocketSNES that don't have very flexible button remapping and won't
+	// let player 2 use the second joystick otherwise.
+	o2x_joy2xd_hides_js0 = true;
+
 
 	string line;
 	ifstream infile (linkfile, ios_base::in);
@@ -189,6 +240,60 @@ LinkApp::LinkApp(GMenu2X *gmenu2x, const char* linkfile)
 		// 	no longer necessary:
 		} else if (name == "upper_memory_cached") {
 			if (value=="true") o2x_upper_memory_cached = true;
+		//senquack - new Open2X support for TV tweaking daemon:
+		} else if (name == "tv_daemon_enabled") {
+			if (value=="false") o2x_tv_daemon_enabled = false;
+		} else if (name == "tv_daemon_tweak_yuv") {
+			if (value=="true") o2x_tv_daemon_tweak_yuv = true;
+		} else if (name == "tv_daemon_scaling_tweak") {
+			if (value=="false") o2x_tv_daemon_scaling_tweak = false;
+		} else if (name == "tv_daemon_xoffset") {
+			i = atoi(value.c_str());
+			if (i >= TV_MIN_XOFFSET && i <= TV_MAX_XOFFSET)
+				o2x_tv_daemon_xoffset = i;
+		} else if (name == "tv_daemon_yoffset") {
+			i = atoi(value.c_str());
+			if (i >= TV_MIN_YOFFSET && i <= TV_MAX_YOFFSET)
+				o2x_tv_daemon_yoffset = i;
+		} else if (name == "tv_daemon_xscale") {
+			i = atoi(value.c_str());
+			if (i >= TV_MIN_XSCALE && i <= TV_MAX_XSCALE)
+				o2x_tv_daemon_xscale = i;
+		} else if (name == "tv_daemon_yscale") {
+			i = atoi(value.c_str());
+			if (i >= TV_MIN_YSCALE && i <= TV_MAX_YSCALE)
+				o2x_tv_daemon_yscale = i;
+		} else if (name == "tv_daemon_vxscale") {
+			i = atoi(value.c_str());
+			if (i >= TV_MIN_VXSCALE && i <= TV_MAX_VXSCALE)
+				o2x_tv_daemon_vxscale = i;
+		} else if (name == "tv_daemon_vyscale") {
+			i = atoi(value.c_str());
+			if (i >= TV_MIN_VYSCALE && i <= TV_MAX_VYSCALE)
+				o2x_tv_daemon_vyscale = i;
+		} else if (name == "tv_daemon_first_delay") {
+			i = atoi(value.c_str());
+			if (i >= TV_DAEMON_MIN_FIRST_DELAY && i <= TV_DAEMON_MAX_FIRST_DELAY)
+				o2x_tv_daemon_first_delay = i;
+		} else if (name == "tv_daemon_delay") {
+			i = atoi(value.c_str());
+			if (i >= TV_DAEMON_MIN_DELAY && i <= TV_DAEMON_MAX_DELAY)
+				o2x_tv_daemon_delay = i;
+		} else if (name == "tv_daemon_tweak_only_once") {
+			if (value=="true") o2x_tv_daemon_tweak_only_once = true;
+			//		Deprecated:
+//		} else if (name == "tv_daemon_force_720_pitch") {
+//			if (value=="true") o2x_tv_daemon_force_720_pitch = true;
+//		} else if (name == "tv_daemon_stubborn_fix") {
+//			if (value=="true") o2x_tv_daemon_stubborn_fix = true;
+		} else if (name == "tv_daemon_always_started") {
+			if (value=="true") o2x_tv_daemon_always_started = true;
+		} else if (name == "tv_daemon_enable_tv_mode") {
+			if (value=="true") o2x_tv_daemon_enable_tv_mode = true;
+		} else if (name == "link_uses_joy2xd") {
+			if (value=="false") o2x_link_uses_joy2xd = false;
+		} else if (name == "joy2xd_hides_js0") {
+			if (value=="false") o2x_joy2xd_hides_js0 = false;
 		} else {
 			cout << "Unrecognized option: " << name << endl;
 			break;
@@ -331,6 +436,28 @@ bool LinkApp::save() {
 			// senquack - new Open2X support for configurable caching of upper memory so mmuhack.o is 
 			// 	no longer necessary:
 			if (o2x_upper_memory_cached) f << "upper_memory_cached=true"			<< endl;
+
+			//senquack - new Open2X support for TV tweaking daemon:
+			if (!o2x_tv_daemon_enabled) f << "tv_daemon_enabled=false" << endl;
+			if (o2x_tv_daemon_tweak_yuv) f << "tv_daemon_tweak_yuv=true" << endl;
+			if (!o2x_tv_daemon_scaling_tweak) f << "tv_daemon_scaling_tweak=false" << endl;
+			f << "tv_daemon_xoffset=" << o2x_tv_daemon_xoffset << endl;
+			f << "tv_daemon_yoffset=" << o2x_tv_daemon_yoffset << endl;
+			f << "tv_daemon_xscale=" << o2x_tv_daemon_xscale << endl;
+			f << "tv_daemon_yscale=" << o2x_tv_daemon_yscale << endl;
+			f << "tv_daemon_vxscale=" << o2x_tv_daemon_vxscale << endl;
+			f << "tv_daemon_vyscale=" << o2x_tv_daemon_vyscale << endl;
+			f << "tv_daemon_first_delay=" << o2x_tv_daemon_first_delay << endl;
+			f << "tv_daemon_delay=" << o2x_tv_daemon_delay << endl;
+			if (o2x_tv_daemon_tweak_only_once) f << "tv_daemon_tweak_only_once=true" << endl;
+			//			Deprecated:
+//			if (o2x_tv_daemon_force_720_pitch) f << "tv_daemon_force_720_pitch=true" << endl;
+//			if (o2x_tv_daemon_stubborn_fix) f << "tv_daemon_stubborn_fix=true" << endl;
+			if (o2x_tv_daemon_always_started) f << "tv_daemon_always_started=true" << endl;
+			if (o2x_tv_daemon_enable_tv_mode) f << "tv_daemon_enable_tv_mode=true" << endl;
+
+			if (!o2x_link_uses_joy2xd) f << "link_uses_joy2xd=false" << endl;
+			if (!o2x_joy2xd_hides_js0) f << "joy2xd_hides_js0=false" << endl;
 		}
 		
 		f.close();
@@ -550,10 +677,129 @@ void LinkApp::launch(string selectedFile, string selectedDir) {
 			}
 		}
 
+		//senquack - new Open2X support for TV tweaking daemon:
+		if ((gmenu2x->gp2x_tv_mode || getTVDaemonAlwaysStarted()) && getTVDaemonStatus())
+		{
+//			// TV daemon enabled, assemble the parameters 
+////			string tv_cmdline = OPEN2X_TV_DAEMON_FULLPATH;
+////			if (gmenu2x->confStr["tvoutEncoding"] == "PAL")
+////				tv_cmdline += " -p";
+////			if (getTVDaemonEnableTVMode())
+////				tv_cmdline += " -e";
+////			if (getTVDaemonForce720Pitch())
+////				tv_cmdline += " -f720";
+////			if (getTVDaemonTweakOnlyOnce())
+////				tv_cmdline += " -t";
+////			tv_cmdline += " -x" + getTVDaemonXOffset();
+////			tv_cmdline += " -y" + getTVDaemonYOffset();
+////			tv_cmdline += " -X" + getTVDaemonXScale();
+////			tv_cmdline += " -Y" + getTVDaemonYScale();
+//			tv_cmdline += " -d" + (string)getTVDaemonDelay();
+//			tv_cmdline += "&";
+//			fflush(NULL);
+//			cout << "Starting Open2X TV Daemon with following command line: " << endl << tv_cmdline << endl;
+//			cout << endl << endl << endl;
+//			
+//			fflush(NULL);
+//
+//			printf("tvdaemondelay(): %d\n", getTVDaemonDelay());
+//			fflush(NULL);
+//
+//			
+//			system(tv_cmdline.c_str());
+
+			// TV daemon enabled, assemble the parameters:
+			stringstream tv_cmdline_ss;
+			string tmpstr = "";
+			string tv_cmdline = OPEN2X_TV_DAEMON_FULLPATH;
+			if (gmenu2x->confStr["tvoutEncoding"] == "PAL")
+				tv_cmdline += " -p";
+			if (gmenu2x->confInt["tvoutPalOverscanFix"])
+				tv_cmdline += " -P";
+			if (getTVDaemonEnableTVMode())
+				tv_cmdline += " -e";
+			//			Deprecated:
+//			if (getTVDaemonForce720Pitch())
+//				tv_cmdline += " -f720";
+//			if (getTVDaemonStubbornFix())
+//				tv_cmdline += " -s";
+			if (getTVDaemonTweakOnlyOnce())
+				tv_cmdline += " -t";
+			if (getTVDaemonTweakYuv())
+				tv_cmdline += " -V";
+			if (!getTVDaemonScalingTweak())
+				tv_cmdline += " -S";
+			tv_cmdline += " -x";
+			tv_cmdline_ss.clear();
+			tv_cmdline_ss << getTVDaemonXOffset();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += " -y";
+			tv_cmdline_ss.clear();
+			tv_cmdline_ss << getTVDaemonYOffset();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += " -X";
+			tv_cmdline_ss.clear();
+		  	tv_cmdline_ss << getTVDaemonXScale();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += " -Y";
+			tv_cmdline_ss.clear();
+			tv_cmdline_ss << getTVDaemonYScale();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += " -vx";
+			tv_cmdline_ss.clear();
+		  	tv_cmdline_ss << getTVDaemonVXScale();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += " -vy";
+			tv_cmdline_ss.clear();
+			tv_cmdline_ss << getTVDaemonVYScale();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += " -d";
+			tv_cmdline_ss.clear();
+			tv_cmdline_ss << getTVDaemonDelay();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += " -D";
+			tv_cmdline_ss.clear();
+			tv_cmdline_ss << getTVDaemonFirstDelay();
+			tv_cmdline_ss >> tmpstr;
+			tv_cmdline += tmpstr;
+			tv_cmdline += "&";
+
+			fflush(NULL);
+			cout << "Starting Open2X TV Daemon with following command line: " << endl << tv_cmdline << endl;
+			cout << endl << endl << endl;
+			
+			fflush(NULL);
+
+			system(tv_cmdline.c_str());
+
+		}
+
 		// senquack - new Open2X support for configurable caching of upper memory so mmuhack.o is 
 		// 	no longer necessary:
 		if (getUpperMemoryCachingStatus())
 			gmenu2x->setUpperMemoryCaching(1);
+
+		// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+		// 	a USB gamepad.  It should be configurable because it will greatly interfere
+		// 	with apps like Picodrive that already know how to use USB joysticks.
+		if (!getJoy2xdStatus() && gmenu2x->o2x_gmenu2x_starts_joy2xd)
+		{
+			gmenu2x->deactivateJoy2xd();
+		}
+
+		if (getJoy2xdStatus() && gmenu2x->o2x_gmenu2x_starts_joy2xd && getJoy2xdHidesJs0())
+		{
+			string js_cmdline;
+			js_cmdline = "/usr/sbin/joy2xd_make_dummy_js0";
+			system(js_cmdline.c_str());
+		}
 	}
 			
 	if (params!="") command += " " + params;
@@ -702,6 +948,155 @@ void LinkApp::setUpperMemoryCachingStatus(int upper_memory_cached) {
 	o2x_upper_memory_cached = upper_memory_cached;
 }
 
+//senquack - new Open2X support for TV tweaking daemon:
 bool LinkApp::getUpperMemoryCachingStatus(void) {
 	return o2x_upper_memory_cached;
+}
+
+bool LinkApp::getTVDaemonStatus(void) {
+	return o2x_tv_daemon_enabled;
+}
+
+void LinkApp::setTVDaemonStatus(bool daemon_enabled) {
+	o2x_tv_daemon_enabled = daemon_enabled;
+}
+
+bool LinkApp::getTVDaemonTweakYuv(void) {
+	return o2x_tv_daemon_tweak_yuv;
+}
+
+void LinkApp::setTVDaemonTweakYuv(bool tweak_yuv) {
+	o2x_tv_daemon_tweak_yuv = tweak_yuv;
+}
+
+bool LinkApp::getTVDaemonScalingTweak(void) {
+	return o2x_tv_daemon_scaling_tweak;
+}
+
+void LinkApp::setTVDaemonScalingTweak(bool scaling_tweak) {
+	o2x_tv_daemon_scaling_tweak = scaling_tweak;
+}
+int LinkApp::getTVDaemonXOffset(void) {
+	return o2x_tv_daemon_xoffset;
+}
+
+void LinkApp::setTVDaemonXOffset(int xoffset) {
+	o2x_tv_daemon_xoffset = xoffset;
+}
+
+int LinkApp::getTVDaemonYOffset(void) {
+	return o2x_tv_daemon_yoffset;
+}
+
+void LinkApp::setTVDaemonYOffset(int yoffset) {
+	o2x_tv_daemon_yoffset = yoffset;
+}
+
+int LinkApp::getTVDaemonXScale(void) {
+	return o2x_tv_daemon_xscale;
+}
+
+void LinkApp::setTVDaemonXScale(int xscale) {
+	o2x_tv_daemon_xscale = xscale;
+}
+
+int LinkApp::getTVDaemonYScale(void) {
+	return o2x_tv_daemon_yscale;
+}
+
+void LinkApp::setTVDaemonYScale(int yscale) {
+	o2x_tv_daemon_yscale = yscale;
+}
+
+int LinkApp::getTVDaemonVXScale(void) {
+	return o2x_tv_daemon_vxscale;
+}
+
+void LinkApp::setTVDaemonVXScale(int vxscale) {
+	o2x_tv_daemon_vxscale = vxscale;
+}
+
+int LinkApp::getTVDaemonVYScale(void) {
+	return o2x_tv_daemon_vyscale;
+}
+
+void LinkApp::setTVDaemonVYScale(int vyscale) {
+	o2x_tv_daemon_vyscale = vyscale;
+}
+
+int LinkApp::getTVDaemonFirstDelay(void) {
+	return o2x_tv_daemon_first_delay;
+}
+
+void LinkApp::setTVDaemonFirstDelay(int delay) {
+	o2x_tv_daemon_first_delay = delay;
+}
+
+int LinkApp::getTVDaemonDelay(void) {
+	return o2x_tv_daemon_delay;
+}
+
+void LinkApp::setTVDaemonDelay(int delay) {
+	o2x_tv_daemon_delay = delay;
+}
+
+bool LinkApp::getTVDaemonTweakOnlyOnce(void) {
+	return o2x_tv_daemon_tweak_only_once;
+}
+
+void LinkApp::setTVDaemonTweakOnlyOnce(bool tweak_only_once) {
+	o2x_tv_daemon_tweak_only_once = tweak_only_once;
+}
+
+//Deprecated:
+//bool LinkApp::getTVDaemonForce720Pitch(void) {
+//	return o2x_tv_daemon_force_720_pitch;
+//}
+//
+//void LinkApp::setTVDaemonForce720Pitch(bool force_720_pitch) {
+//	o2x_tv_daemon_force_720_pitch = force_720_pitch;
+//}
+//
+//bool LinkApp::getTVDaemonStubbornFix(void) {
+//	return o2x_tv_daemon_stubborn_fix;
+//}
+//
+//void LinkApp::setTVDaemonStubbornFix(bool stubborn_fix) {
+//	o2x_tv_daemon_stubborn_fix = stubborn_fix;
+//}
+
+bool LinkApp::getTVDaemonAlwaysStarted(void) {
+	return o2x_tv_daemon_always_started;
+}
+
+void LinkApp::setTVDaemonAlwaysStarted(bool always_started) {
+	o2x_tv_daemon_always_started = always_started;
+}
+
+bool LinkApp::getTVDaemonEnableTVMode(void) {
+	return o2x_tv_daemon_enable_tv_mode;
+}
+
+void LinkApp::setTVDaemonEnableTVMode(bool enable_tv_mode) {
+	o2x_tv_daemon_enable_tv_mode = enable_tv_mode;
+}
+
+// senquack - new Open2X joy2xd daemon allows control of all GP2X buttons from 
+// 	a USB gamepad.  It should be configurable because it will greatly interfere
+// 	with apps like Picodrive that already know how to use USB joysticks.
+void LinkApp::setJoy2xdStatus(bool enabled) {
+	o2x_link_uses_joy2xd = enabled;
+}
+
+//senquack - new Open2X support for TV tweaking daemon:
+bool LinkApp::getJoy2xdStatus(void) {
+	return o2x_link_uses_joy2xd;
+}
+
+void LinkApp::setJoy2xdHidesJs0(bool hides) {
+	o2x_joy2xd_hides_js0 = hides;
+}
+
+bool LinkApp::getJoy2xdHidesJs0(void) {
+	return o2x_joy2xd_hides_js0;
 }

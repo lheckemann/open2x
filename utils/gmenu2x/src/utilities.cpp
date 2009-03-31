@@ -178,7 +178,7 @@ string getDiskFree() {
 		unsigned int fs_used = 0;
 		unsigned int fs_free = 0;
 		
-		f = popen("df | grep /mnt/sd", "r");
+		f = popen("df /mnt/sd | grep /mnt/sd", "r");
 
 		if (f)
 		{
