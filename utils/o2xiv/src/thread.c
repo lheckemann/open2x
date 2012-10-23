@@ -42,6 +42,8 @@ static bool maybe_jpg( const char *filename ) {
 }
 
 int load_images( void *nothing ) {
+	(void) nothing;
+	
 	unsigned int cur_index = 0, // which indexes are actually loaded
 	             next_index = 0,
 	             prev_index = 0;
@@ -172,7 +174,6 @@ int load_images( void *nothing ) {
 	free(filename);
 	
 	return 0;
-	nothing = NULL; // avoid being unused
 }
 
 // kate: tab-width 4;
